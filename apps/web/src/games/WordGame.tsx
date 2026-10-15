@@ -1,9 +1,13 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
+
+type IntervalId = ReturnType<typeof setInterval>;
+import { DESIGN_SYSTEM } from '../designSystem';
 import { useHubStore } from '../hubStore';
 import { useGameRoomStore } from '../gameRoomStore';
 import { useVoiceStore } from '../voiceStore';
 import { GameRoomLobby } from '../components/GameRoomLobby';
 import { VoiceRoomBar } from '../components/VoiceRoomBar';
+import { soundFx } from '../soundEffects';
 
 interface RoundAnswers {
   name: string;
@@ -50,15 +54,19 @@ export const WordGame: React.FC = () => {
   };
 
   useEffect(() => {
-    let interval: NodeJS.Timeout;
+    const interval = useRef<ReturnType<typeof setInterval> | null>(null);
     if (isPlaying && timerSec > 0) {
-      interval = setInterval(() => {
+      interval.current = setInterval(() => {
         setTimerSec((prev) => prev - 1);
       }, 1000);
     } else if (timerSec === 0 && isPlaying) {
       submitRound();
     }
-    return () => clearInterval(interval);
+    return () => {
+      if (interval.current) {
+        clearInterval(interval.current);
+      }
+    };
   }, [isPlaying, timerSec]);
 
   const submitRound = () => {
@@ -116,7 +124,7 @@ export const WordGame: React.FC = () => {
         gameIcon="📝"
         minPlayers={2}
         maxPlayers={8}
-        bannerGradient="linear-gradient(135deg, #eab308 0%, #ef4444 100%)"
+        bannerGradient="linear-gradient(135deg, DESIGN_SYSTEM.colors.warningLight 0%, DESIGN_SYSTEM.colors.cautionLight 100%)"
         onStart={startMatchFromRoom}
       />
     );
@@ -248,7 +256,7 @@ export const WordGame: React.FC = () => {
               type="text"
               value={answers.name}
               disabled={!isPlaying}
-              onChange={(e) => setAnswers({ ...answers, name: e.target.value })}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) => setAnswers({ ...answers, name: e.target.value })}
               placeholder={`e.g. ${activeLetter}ob`}
               style={{ padding: '14px', borderRadius: '10px', border: '1px solid #475569', background: '#0f172a', color: '#fff', fontSize: '15px', outline: 'none' }}
             />
@@ -260,7 +268,7 @@ export const WordGame: React.FC = () => {
               type="text"
               value={answers.place}
               disabled={!isPlaying}
-              onChange={(e) => setAnswers({ ...answers, place: e.target.value })}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) => setAnswers({ ...answers, place: e.target.value })}
               placeholder={`e.g. ${activeLetter}erlin`}
               style={{ padding: '14px', borderRadius: '10px', border: '1px solid #475569', background: '#0f172a', color: '#fff', fontSize: '15px', outline: 'none' }}
             />
@@ -272,7 +280,7 @@ export const WordGame: React.FC = () => {
               type="text"
               value={answers.animal}
               disabled={!isPlaying}
-              onChange={(e) => setAnswers({ ...answers, animal: e.target.value })}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) => setAnswers({ ...answers, animal: e.target.value })}
               placeholder={`e.g. ${activeLetter}ear`}
               style={{ padding: '14px', borderRadius: '10px', border: '1px solid #475569', background: '#0f172a', color: '#fff', fontSize: '15px', outline: 'none' }}
             />
@@ -284,7 +292,7 @@ export const WordGame: React.FC = () => {
               type="text"
               value={answers.thing}
               disabled={!isPlaying}
-              onChange={(e) => setAnswers({ ...answers, thing: e.target.value })}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) => setAnswers({ ...answers, thing: e.target.value })}
               placeholder={`e.g. ${activeLetter}ook`}
               style={{ padding: '14px', borderRadius: '10px', border: '1px solid #475569', background: '#0f172a', color: '#fff', fontSize: '15px', outline: 'none' }}
             />

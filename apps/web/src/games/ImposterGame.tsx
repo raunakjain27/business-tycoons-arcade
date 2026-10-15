@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { DESIGN_SYSTEM } from '../designSystem';
 import { useHubStore } from '../hubStore';
 import { useGameRoomStore } from '../gameRoomStore';
 import { useVoiceStore } from '../voiceStore';
@@ -152,7 +153,7 @@ export const ImposterGame: React.FC = () => {
         gameIcon="🕵️"
         minPlayers={4}
         maxPlayers={10}
-        bannerGradient="linear-gradient(135deg, #f43f5e 0%, #8b5cf6 100%)"
+        bannerGradient="linear-gradient(135deg, DESIGN_SYSTEM.colors.caution 0%, DESIGN_SYSTEM.colors.purpleLight 100%)"
         onStart={startMatchFromRoom}
       />
     );

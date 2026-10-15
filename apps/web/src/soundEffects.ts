@@ -240,6 +240,13 @@ class SoundEffectsEngine {
   }
 
   /**
+   * 🎉 Victory Fanfare (legacy alias kept for Store / celebration integrations)
+   */
+  public playFanfare(): void {
+    this.playVictory();
+  }
+
+  /**
    * 🎉 Victory Fanfare
    */
   public playVictory() {

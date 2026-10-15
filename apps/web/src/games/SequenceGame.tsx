@@ -1,9 +1,11 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { DESIGN_SYSTEM } from '../designSystem';
 import { useHubStore } from '../hubStore';
 import { useGameRoomStore } from '../gameRoomStore';
 import { useVoiceStore } from '../voiceStore';
 import { GameRoomLobby } from '../components/GameRoomLobby';
 import { VoiceRoomBar } from '../components/VoiceRoomBar';
+import { soundFx } from '../soundEffects';
 
 type Chip = 'blue' | 'green' | null;
 
@@ -187,7 +189,7 @@ export const SequenceGame: React.FC = () => {
     return (
       <GameRoomLobby
         gameId="sequence"
-        gameTitle="Sequence Masters Deluxe"
+        gameTitle="Series Five Masters"
         gameIcon="🎯"
         minPlayers={2}
         maxPlayers={6}
@@ -200,7 +202,7 @@ export const SequenceGame: React.FC = () => {
   return (
     <div style={{ maxWidth: '1060px', margin: '0 auto', padding: '16px', display: 'flex', flexDirection: 'column', gap: '20px' }}>
       {/* Live Voice Room Bar */}
-      <VoiceRoomBar gameTitle="Sequence Masters Deluxe" turnRestricted={false} />
+      <VoiceRoomBar gameTitle="Series Five Masters" turnRestricted={false} />
 
       {/* Header */}
       <div

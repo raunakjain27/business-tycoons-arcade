@@ -1,4 +1,4 @@
-import eventsJson from '../../../packages/content/events.json';
+import eventsJson from '../../../packages/content/events.json' with { type: 'json' };
 import type { TileDef, DistrictDef, TileId } from '../../../packages/engine/types';
 import { getBoard, BOARDS } from '../../../packages/content/boards';
 

@@ -1067,15 +1067,9 @@ function resolveEventCard(
     }
     case 'moveRelative': {
       const steps = (card as any).steps ?? 0;
-      const oldPos = player.position;
-      let newPos = (oldPos + steps) % 40;
-      if (newPos < 0) newPos += 40;
-      if (steps > 0 && (newPos < oldPos || newPos === 0)) {
-        player.cash += state.rules.paydayAmount;
+      if (steps > 0) {
+        movePlayer(state, player, steps, events);
       }
-      player.position = newPos as TileId;
-      player.lastLandedTile = newPos as TileId;
-      resolveTileLanding(state, player, newPos as TileId, events);
       break;
     }
     case 'moveNearest': {
@@ -1084,12 +1078,7 @@ function resolveEventCard(
         const nextIdx = (player.position + s) % 40;
         const def = getTileDef(nextIdx as TileId);
         if (def && def.type === eff) {
-          if (nextIdx < player.position || nextIdx === 0) {
-            player.cash += state.rules.paydayAmount;
-          }
-          player.position = nextIdx as TileId;
-          player.lastLandedTile = nextIdx as TileId;
-          resolveTileLanding(state, player, nextIdx as TileId, events);
+          movePlayer(state, player, s, events);
           break;
         }
       }
@@ -1097,12 +1086,13 @@ function resolveEventCard(
     }
     case 'move':
       if (card.targetTile !== undefined) {
-        if (card.targetTile < player.position || card.targetTile === 0) {
-          player.cash += state.rules.paydayAmount;
+        const delta = ((card.targetTile - player.position) % 40 + 40) % 40;
+        if (delta === 0 && card.targetTile !== player.position) {
+          // targetTile wraps fully around the ring
+          movePlayer(state, player, 40, events);
+        } else {
+          movePlayer(state, player, delta, events);
         }
-        player.position = card.targetTile;
-        player.lastLandedTile = card.targetTile;
-        resolveTileLanding(state, player, card.targetTile as TileId, events);
       }
       break;
     case 'card':

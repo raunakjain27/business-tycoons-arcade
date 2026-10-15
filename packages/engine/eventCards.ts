@@ -10,8 +10,11 @@ import type {
 } from './types';
 import { computeRent, countOwned } from './index';
 import { getBoard } from '../content/boards';
+import eventsData from '../content/events.json' with { type: 'json' };import eventsData from '../content/events.json' with { type: 'json' };
+const eventsDataLocal = eventsData as { cards: EventCardDef[] };
 
 export const BOARD: BoardDef = getBoard('default');
+const ALL_EVENT_CARDS: EventCardDef[] = eventsData.cards;
 
 export function getBoardForState(state?: GameState): BoardDef {
   const key = (state as any)?.boardKey ?? 'default';
@@ -29,8 +32,6 @@ export interface EventCardDef {
   perTower?: number;
 }
 
-const eventsData = require('../content/events.json') as { cards: EventCardDef[] };
-export const ALL_EVENT_CARDS: EventCardDef[] = eventsData.cards;
 
 /**
  * Get an event card definition by its ID.

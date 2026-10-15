@@ -118,7 +118,7 @@ export const AccountModal: React.FC = () => {
               <input
                 type="text"
                 value={nameInput}
-                onChange={(e) => setNameInput(e.target.value)}
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setNameInput(e.target.value)}
                 style={{
                   backgroundColor: 'rgba(0,0,0,0.4)',
                   border: '1px solid rgba(255,255,255,0.2)',

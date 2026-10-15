@@ -1,9 +1,21 @@
 import React, { useState } from 'react';
-import { useHubStore, GAME_CATALOG, GameMetadata, GameId } from '../hubStore';
+import {
+  useHubStore,
+  GAME_CATALOG,
+  GameMetadata,
+  GameId,
+} from '../hubStore';
 import { useGameRoomStore } from '../gameRoomStore';
 import { useUserStore } from '../userStore';
 
-const CATEGORIES = ['All', 'Strategy', 'Card Game', 'Social Deduction', 'Classic', 'Party'];
+const CATEGORIES = [
+  'All',
+  'Strategy',
+  'Card Game',
+  'Social Deduction',
+  'Classic',
+  'Party',
+];
 
 export const Dashboard: React.FC = () => {
   const {
@@ -21,14 +33,16 @@ export const Dashboard: React.FC = () => {
   const [joinError, setJoinError] = useState('');
 
   const filteredGames = GAME_CATALOG.filter((game) => {
-    const matchesCategory = selectedCategory === 'All' || game.category === selectedCategory;
+    const matchesCategory =
+      selectedCategory === 'All' || game.category === selectedCategory;
+    const query = searchQuery.toLowerCase();
     const matchesSearch =
-      game.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      game.description.toLowerCase().includes(searchQuery.toLowerCase());
+      game.title.toLowerCase().includes(query) ||
+      game.description.toLowerCase().includes(query);
     return matchesCategory && matchesSearch;
   });
 
-  const handleJoinByCode = (e?: React.FormEvent) => {
+  const handleJoinByCode = (e?: Event) => {
     if (e) e.preventDefault();
     const trimmed = joinCodeInput.trim().toUpperCase();
     if (!trimmed) {
@@ -41,7 +55,6 @@ export const Dashboard: React.FC = () => {
     }
     setJoinError('');
 
-    // Check if any room matches this code
     const rooms = useGameRoomStore.getState().rooms;
     let foundGame: GameId = 'tambola';
     for (const [gid, r] of Object.entries(rooms)) {
@@ -51,7 +64,6 @@ export const Dashboard: React.FC = () => {
       }
     }
 
-    // Join room
     const targetRoom = useGameRoomStore.getState().getOrCreateRoom(foundGame, 'Host');
     targetRoom.roomCode = trimmed;
     useGameRoomStore.getState().addPlayer(foundGame, user.username || 'Friend', false);
@@ -59,538 +71,601 @@ export const Dashboard: React.FC = () => {
   };
 
   return (
-    <div style={{ maxWidth: '1440px', margin: '0 auto', display: 'flex', flexDirection: 'column', gap: '36px', padding: '0 8px' }}>
-      
-      {/* 1. HERO SHOWCASE WITH PLAYER ACCOUNT STRIP */}
+    <div
+      style={{
+        maxWidth: '1440px',
+        margin: '0 auto',
+        display: 'flex',
+        flexDirection: 'column',
+        gap: '28px',
+        padding: '0 8px 24px',
+      }}
+    >
+      {/* Top strip: headline + account + quick join */}
       <div
         style={{
-          background: 'radial-gradient(ellipse at top left, #2e1065 0%, #17072b 45%, #080314 100%)',
-          borderRadius: '32px',
-          border: '1px solid rgba(255, 255, 255, 0.14)',
-          padding: '44px 40px',
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          flexWrap: 'wrap',
-          gap: '32px',
-          position: 'relative',
-          overflow: 'hidden',
-          boxShadow: '0 30px 80px rgba(0,0,0,0.85), inset 0 1px 0 rgba(255,255,255,0.2)',
+          display: 'grid',
+          gridTemplateColumns: '1fr auto',
+          gap: '20px',
+          alignItems: 'start',
         }}
       >
-        {/* Glow ambient spots */}
-        <div
-          style={{
-            position: 'absolute',
-            top: '-80px',
-            right: '10%',
-            width: '320px',
-            height: '320px',
-            background: 'radial-gradient(circle, rgba(236,72,153,0.3) 0%, transparent 70%)',
-            filter: 'blur(50px)',
-            pointerEvents: 'none',
-          }}
-        />
-
-        <div style={{ position: 'relative', zIndex: 2, maxWidth: '780px' }}>
-          {/* Badge & Quick Stats */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '14px', flexWrap: 'wrap' }}>
+        {/* Headline */}
+        <div style={{ minWidth: 0 }}>
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '10px',
+              marginBottom: '10px',
+              flexWrap: 'wrap',
+            }}
+          >
             <span
               style={{
-                backgroundColor: 'rgba(236, 72, 153, 0.25)',
                 color: '#f472b6',
-                border: '1px solid rgba(236, 72, 153, 0.45)',
-                padding: '5px 14px',
+                background: 'rgba(236, 72, 153, 0.14)',
+                border: '1px solid rgba(236, 72, 153, 0.35)',
+                padding: '4px 10px',
                 borderRadius: '9999px',
-                fontSize: '12px',
-                fontWeight: 900,
+                fontSize: '11.5px',
+                fontWeight: 800,
+                letterSpacing: '0.6px',
                 textTransform: 'uppercase',
-                letterSpacing: '1px',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '6px',
               }}
             >
-              <span>🔥</span> Live Arcade Hub
+              🕹️ Arcade Hub
             </span>
-            <span style={{ color: '#cbd5e1', fontSize: '13px' }}>
-              Turn-Gated Voice • Private Rooms • Instant Play
+            <span style={{ color: '#94a3b8', fontSize: '13px' }}>
+              Play with smart bots or invite friends to a private room
             </span>
           </div>
 
           <h1
             style={{
-              fontSize: '44px',
+              fontSize: '32px',
               fontWeight: 900,
               color: '#ffffff',
-              margin: '0 0 14px 0',
-              lineHeight: 1.15,
-              letterSpacing: '-1px',
+              margin: '0 0 6px 0',
+              letterSpacing: '-0.4px',
+              lineHeight: 1.1,
             }}
           >
-            Business Tycoons & Arcade
+            Choose a game to play
           </h1>
 
-          <p style={{ fontSize: '16px', color: '#cbd5e1', lineHeight: 1.6, margin: '0 0 28px 0', maxWidth: '680px' }}>
-            Select from 9 tournament-grade games: authentic Indian <strong>Tambola (Housie)</strong>, classic <strong>Bingo 75</strong>, property trading in <strong>Business Tycoons</strong>, turn-gated mic trials in <strong>The Traitors</strong>, rapid-fire card warfare in <strong>UNO</strong>, or classic <strong>Ludo</strong>.
+          <p style={{ color: '#94a3b8', fontSize: '14px', margin: 0 }}>
+            Each game opens its own room. Host a private room or jump in with
+            bots and play instantly.
           </p>
-
-          {/* Hero Action Buttons */}
-          <div style={{ display: 'flex', gap: '14px', flexWrap: 'wrap' }}>
-            <button
-              onClick={() => setActiveGame('cornerstone')}
-              style={{
-                background: 'linear-gradient(135deg, #7c3aed 0%, #ec4899 100%)',
-                color: '#ffffff',
-                border: 'none',
-                padding: '16px 32px',
-                borderRadius: '16px',
-                fontSize: '15px',
-                fontWeight: 900,
-                cursor: 'pointer',
-                boxShadow: '0 12px 30px rgba(236, 72, 153, 0.45)',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '10px',
-                transition: 'transform 0.15s ease',
-              }}
-            >
-              <span style={{ fontSize: '20px' }}>🏙️</span>
-              <span>Play Business Tycoons</span>
-            </button>
-
-            <button
-              onClick={() => setActiveGame('traitors')}
-              style={{
-                background: 'linear-gradient(135deg, #831843 0%, #1e1b4b 100%)',
-                color: '#ffffff',
-                border: '1px solid rgba(255, 255, 255, 0.25)',
-                padding: '16px 26px',
-                borderRadius: '16px',
-                fontSize: '15px',
-                fontWeight: 800,
-                cursor: 'pointer',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '8px',
-                boxShadow: '0 10px 25px rgba(131, 24, 67, 0.4)',
-              }}
-            >
-              <span>🗡️</span>
-              <span>The Traitors (Turn-Gated Mic)</span>
-            </button>
-
-            <button
-              onClick={() => setActiveGame('uno')}
-              style={{
-                background: 'rgba(255, 255, 255, 0.08)',
-                color: '#ffffff',
-                border: '1px solid rgba(255, 255, 255, 0.15)',
-                padding: '16px 24px',
-                borderRadius: '16px',
-                fontSize: '15px',
-                fontWeight: 800,
-                cursor: 'pointer',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '8px',
-              }}
-            >
-              <span>🃏</span>
-              <span>UNO Champions</span>
-            </button>
-          </div>
         </div>
 
-        {/* Hero Right Column: Permanent Account Card & Quick Room Join */}
+        {/* Account + quick actions rail */}
         <div
           style={{
             display: 'flex',
-            flexDirection: 'column',
-            gap: '16px',
-            width: '340px',
-            zIndex: 2,
+            gap: '12px',
+            alignItems: 'stretch',
+            flexShrink: 0,
           }}
         >
-          {/* Permanent Player Account Card */}
-          <div
+          {/* Account card */}
+          <button
+            onClick={() => setShowAccountModal(true)}
             style={{
-              background: 'rgba(255, 255, 255, 0.06)',
-              backdropFilter: 'blur(16px)',
-              border: user.isVip ? '1.5px solid #f59e0b' : '1px solid rgba(255, 255, 255, 0.18)',
-              borderRadius: '20px',
-              padding: '18px 20px',
               display: 'flex',
-              flexDirection: 'column',
-              gap: '14px',
-              boxShadow: user.isVip ? '0 0 25px rgba(245, 158, 11, 0.25)' : 'none',
+              alignItems: 'center',
+              gap: '12px',
+              background: 'rgba(255, 255, 255, 0.05)',
+              border: user.isVip
+                ? '1.5px solid #f59e0b'
+                : '1px solid rgba(255, 255, 255, 0.14)',
+              borderRadius: '14px',
+              padding: '10px 14px',
+              cursor: 'pointer',
+              textAlign: 'left',
+              backgroundClip: 'border-box',
+              boxShadow: user.isVip
+                ? '0 0 20px rgba(245, 158, 11, 0.18)'
+                : 'none',
             }}
           >
             <div
-              onClick={() => setShowAccountModal(true)}
+              style={{
+                width: '42px',
+                height: '42px',
+                borderRadius: '12px',
+                background: user.isVip
+                  ? 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)'
+                  : 'linear-gradient(135deg, #7c3aed 0%, #ec4899 100%)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                fontSize: '20px',
+                flexShrink: 0,
+              }}
+            >
+              {user.avatar || '👑'}
+            </div>
+
+            <div style={{ minWidth: 0, lineHeight: 1.25 }}>
+              <div
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                  color: '#ffffff',
+                  fontWeight: 800,
+                  fontSize: '13.5px',
+                  whiteSpace: 'nowrap',
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis',
+                }}
+              >
+                {user.username}
+                {user.isVip && (
+                  <span
+                    style={{
+                      fontSize: '9.5px',
+                      background: '#f59e0b',
+                      color: '#000',
+                      fontWeight: 900,
+                      padding: '1px 5px',
+                      borderRadius: '4px',
+                    }}
+                  >
+                    VIP
+                  </span>
+                )}
+              </div>
+              <div
+                style={{
+                  fontSize: '11.5px',
+                  color: '#94a3b8',
+                  marginTop: '2px',
+                }}
+              >
+                <span style={{ color: '#10b981', fontWeight: 700 }}>
+                  {user.coins}
+                </span>{' '}
+                coins
+              </div>
+            </div>
+          </button>
+
+          {/* Quick actions */}
+          <div
+            style={{
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '8px',
+              flexShrink: 0,
+            }}
+          >
+            <button
+              onClick={() => {
+                const res = useUserStore.getState().claimDailyReward();
+                if (res.success) {
+                  alert(
+                    `🎉 Day ${res.streak} Streak! Claimed +${res.reward} Coins!`
+                  );
+                } else {
+                  alert(
+                    `✨ Daily reward already claimed today! Current Streak: ${res.streak} days.`
+                  );
+                }
+              }}
               style={{
                 display: 'flex',
                 alignItems: 'center',
-                justifyContent: 'space-between',
+                gap: '6px',
+                background: 'rgba(236, 72, 153, 0.12)',
+                border: '1px solid rgba(236, 72, 153, 0.3)',
+                color: '#f472b6',
+                borderRadius: '10px',
+                padding: '8px 12px',
+                fontSize: '12px',
+                fontWeight: 800,
                 cursor: 'pointer',
               }}
             >
-              <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
+              <span>🔥</span>
+              <span>{streakLabel(user.dailyStreak)}</span>
+            </button>
+
+            <button
+              onClick={() => useUserStore.getState().setShowStoreModal(true)}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '6px',
+                background: 'linear-gradient(135deg, #7c3aed 0%, #ec4899 100%)',
+                border: 'none',
+                color: '#ffffff',
+                borderRadius: '10px',
+                padding: '8px 12px',
+                fontSize: '12px',
+                fontWeight: 800,
+                cursor: 'pointer',
+                boxShadow: '0 2px 10px rgba(124, 58, 237, 0.3)',
+              }}
+            >
+              <span>🛍️</span>
+              <span>Store</span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* Quick join private room */}
+      <form
+        onSubmit={handleJoinByCode}
+        style={{
+          display: 'flex',
+          flexWrap: 'wrap',
+          alignItems: 'center',
+          gap: '10px',
+          background: 'rgba(255, 255, 255, 0.04)',
+          border: '1px solid rgba(255, 255, 255, 0.1)',
+          borderRadius: '14px',
+          padding: '12px 14px',
+        }}
+      >
+        <span style={{ color: '#94a3b8', fontSize: '12.5px', fontWeight: 700 }}>
+          🔑 Join private room
+        </span>
+
+        <input
+          type="text"
+          placeholder="ROOM CODE"
+          value={joinCodeInput}
+          onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+            setJoinCodeInput(e.target.value.toUpperCase());
+            setJoinError('');
+          }}
+          maxLength={8}
+          style={{
+            flex: '0 1 160px',
+            background: 'rgba(0, 0, 0, 0.45)',
+            border: '1px solid rgba(255, 255, 255, 0.16)',
+            borderRadius: '10px',
+            padding: '8px 12px',
+            color: '#ffffff',
+            fontSize: '13.5px',
+            fontWeight: 800,
+            letterSpacing: '1.5px',
+            outline: 'none',
+          }}
+        />
+
+        <button
+          type="submit"
+          style={{
+            flex: '0 0 auto',
+            background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+            color: '#ffffff',
+            border: 'none',
+            borderRadius: '10px',
+            padding: '8px 16px',
+            fontSize: '12.5px',
+            fontWeight: 800,
+            cursor: 'pointer',
+            boxShadow: '0 2px 10px rgba(16, 185, 129, 0.35)',
+          }}
+        >
+          Join
+        </button>
+
+        {joinError && (
+          <span
+            style={{
+              color: '#f87171',
+              fontSize: '12px',
+              fontWeight: 600,
+            }}
+          >
+            {joinError}
+          </span>
+        )}
+      </form>
+
+      {/* Catalog header */}
+      <div
+        style={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          flexWrap: 'wrap',
+          gap: '14px',
+        }}
+      >
+        <div>
+          <h2
+            style={{
+              fontSize: '22px',
+              fontWeight: 900,
+              color: '#ffffff',
+              margin: '0 0 2px 0',
+            }}
+          >
+            Games
+          </h2>
+          <p style={{ color: '#94a3b8', fontSize: '13px', margin: 0 }}>
+            {filteredGames.length} game{filteredGames.length === 1 ? '' : 's'}
+            {selectedCategory !== 'All' ? ` in ${selectedCategory}` : ''}
+          </p>
+        </div>
+
+        {/* Search */}
+        <div style={{ position: 'relative', width: '240px' }}>
+          <input
+            type="text"
+            placeholder="Search games..."
+            value={searchQuery}
+            onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSearchQuery(e.target.value)}
+            style={{
+              width: '100%',
+              background: 'rgba(255, 255, 255, 0.05)',
+              border: '1px solid rgba(255, 255, 255, 0.12)',
+              borderRadius: '10px',
+              padding: '9px 14px 9px 34px',
+              color: '#ffffff',
+              fontSize: '13px',
+              outline: 'none',
+              boxSizing: 'border-box',
+            }}
+          />
+          <span
+            style={{
+              position: 'absolute',
+              left: '11px',
+              top: '50%',
+              transform: 'translateY(-50%)',
+              opacity: 0.55,
+              fontSize: '13px',
+              pointerEvents: 'none',
+            }}
+          >
+            🔍
+          </span>
+        </div>
+      </div>
+
+      {/* Category chips */}
+      <div
+        style={{
+          display: 'flex',
+          gap: '8px',
+          overflowX: 'auto',
+          paddingBottom: '2px',
+          margin: 0,
+        }}
+      >
+        {CATEGORIES.map((cat) => {
+          const isSelected = selectedCategory === cat;
+          return (
+            <button
+              key={cat}
+              onClick={() => setSelectedCategory(cat)}
+              style={{
+                padding: '7px 14px',
+                borderRadius: '9999px',
+                border: isSelected
+                  ? '1px solid #c084fc'
+                  : '1px solid rgba(255, 255, 255, 0.1)',
+                background: isSelected
+                  ? 'linear-gradient(135deg, #7c3aed 0%, #ec4899 100%)'
+                  : 'rgba(255, 255, 255, 0.04)',
+                color: '#ffffff',
+                fontSize: '12.5px',
+                fontWeight: isSelected ? 800 : 600,
+                cursor: 'pointer',
+                whiteSpace: 'nowrap',
+                boxShadow: isSelected
+                  ? '0 4px 12px rgba(236, 72, 153, 0.3)'
+                  : 'none',
+              }}
+            >
+              {cat}
+            </button>
+          );
+        })}
+      </div>
+
+      {/* Game grid */}
+      <div
+        style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))',
+          gap: '16px',
+        }}
+      >
+        {filteredGames.map((game) => {
+          const isCurrent = activeGame === game.id;
+          return (
+            <div
+              key={game.id}
+              onClick={() => setActiveGame(game.id)}
+              style={{
+                background: 'rgba(255, 255, 255, 0.03)',
+                borderRadius: '16px',
+                border: isCurrent
+                  ? '1.5px solid #ec4899'
+                  : '1px solid rgba(255, 255, 255, 0.08)',
+                padding: '16px',
+                cursor: 'pointer',
+                position: 'relative',
+                overflow: 'hidden',
+                boxShadow: isCurrent
+                  ? '0 0 0 3px rgba(236, 72, 153, 0.25)'
+                  : '0 6px 16px rgba(0, 0, 0, 0.4)',
+                transition: 'border-color 0.15s ease, box-shadow 0.15s ease',
+              }}
+            >
+              {/* Top accent */}
+              <div
+                style={{
+                  height: '4px',
+                  background: game.bannerGradient,
+                  borderRadius: '2px 2px 0 0',
+                  margin: '-16px -16px 14px',
+                  opacity: 0.9,
+                }}
+              />
+
+              {/* Icon + meta */}
+              <div
+                style={{
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'flex-start',
+                  gap: '10px',
+                }}
+              >
                 <div
                   style={{
-                    width: '48px',
-                    height: '48px',
-                    borderRadius: '16px',
-                    background: user.isVip ? 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)' : 'linear-gradient(135deg, #7c3aed 0%, #ec4899 100%)',
+                    width: '46px',
+                    height: '46px',
+                    borderRadius: '12px',
+                    background: game.bannerGradient,
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
                     fontSize: '24px',
-                    boxShadow: '0 4px 15px rgba(0,0,0,0.4)',
+                    flexShrink: 0,
                   }}
                 >
-                  {user.avatar || '👑'}
-                </div>
-                <div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                    <span style={{ fontSize: '15px', fontWeight: 900, color: '#ffffff' }}>
-                      {user.username}
-                    </span>
-                    {user.isVip && (
-                      <span style={{ fontSize: '10px', background: '#f59e0b', color: '#000', fontWeight: 900, padding: '1px 6px', borderRadius: '4px' }}>
-                        VIP
-                      </span>
-                    )}
-                  </div>
-                  <div style={{ fontSize: '12px', color: '#94a3b8', marginTop: '2px' }}>
-                    Balance: <strong style={{ color: '#10b981' }}>{user.coins} Coins</strong> • Edit Profile ⚙️
-                  </div>
-                </div>
-              </div>
-
-              <span style={{ color: '#c084fc', fontSize: '18px' }}>→</span>
-            </div>
-
-            {/* Quick Actions: Store & Daily Reward */}
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
-              <button
-                onClick={() => {
-                  const res = useUserStore.getState().claimDailyReward();
-                  if (res.success) {
-                    alert(`🎉 Day ${res.streak} Streak! Claimed +${res.reward} Coins!`);
-                  } else {
-                    alert(`✨ Daily reward already claimed today! Current Streak: ${res.streak} days.`);
-                  }
-                }}
-                style={{
-                  background: 'rgba(236, 72, 153, 0.15)',
-                  border: '1px solid rgba(236, 72, 153, 0.35)',
-                  color: '#f472b6',
-                  borderRadius: '10px',
-                  padding: '8px 10px',
-                  fontSize: '11.5px',
-                  fontWeight: 800,
-                  cursor: 'pointer',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  gap: '6px',
-                }}
-              >
-                <span>🔥</span>
-                <span>Streak: {user.dailyStreak || 1}d</span>
-              </button>
-
-              <button
-                onClick={() => useUserStore.getState().setShowStoreModal(true)}
-                style={{
-                  background: 'linear-gradient(135deg, #7c3aed 0%, #ec4899 100%)',
-                  border: 'none',
-                  color: '#ffffff',
-                  borderRadius: '10px',
-                  padding: '8px 10px',
-                  fontSize: '11.5px',
-                  fontWeight: 800,
-                  cursor: 'pointer',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  gap: '6px',
-                  boxShadow: '0 2px 10px rgba(124, 58, 237, 0.3)',
-                }}
-              >
-                <span>🛍️</span>
-                <span>Open Store</span>
-              </button>
-            </div>
-          </div>
-
-          {/* Quick Join Private Room Box */}
-          <form
-            onSubmit={handleJoinByCode}
-            style={{
-              background: 'rgba(255, 255, 255, 0.05)',
-              border: '1px solid rgba(255, 255, 255, 0.12)',
-              borderRadius: '20px',
-              padding: '18px 20px',
-              display: 'flex',
-              flexDirection: 'column',
-              gap: '12px',
-            }}
-          >
-            <div style={{ fontSize: '13px', fontWeight: 800, color: '#e2e8f0', display: 'flex', alignItems: 'center', gap: '6px' }}>
-              <span>🔑</span> Join Private Friend Room
-            </div>
-
-            <div style={{ display: 'flex', gap: '8px' }}>
-              <input
-                type="text"
-                placeholder="ROOM CODE"
-                value={joinCodeInput}
-                onChange={(e) => {
-                  setJoinCodeInput(e.target.value.toUpperCase());
-                  setJoinError('');
-                }}
-                maxLength={8}
-                style={{
-                  flex: 1,
-                  background: 'rgba(0, 0, 0, 0.4)',
-                  border: '1px solid rgba(255, 255, 255, 0.18)',
-                  borderRadius: '12px',
-                  padding: '10px 14px',
-                  color: '#ffffff',
-                  fontSize: '14px',
-                  fontWeight: 800,
-                  letterSpacing: '2px',
-                  outline: 'none',
-                }}
-              />
-              <button
-                type="submit"
-                style={{
-                  background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
-                  color: '#ffffff',
-                  border: 'none',
-                  borderRadius: '12px',
-                  padding: '10px 20px',
-                  fontSize: '13px',
-                  fontWeight: 800,
-                  cursor: 'pointer',
-                  boxShadow: '0 4px 15px rgba(16, 185, 129, 0.4)',
-                }}
-              >
-                Join
-              </button>
-            </div>
-            {joinError && <div style={{ color: '#f87171', fontSize: '11.5px', margin: 0 }}>{joinError}</div>}
-          </form>
-        </div>
-      </div>
-
-      {/* 2. GAME CATALOG & CATEGORY FILTERING */}
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '16px' }}>
-          <div>
-            <h2 style={{ fontSize: '26px', fontWeight: 900, color: '#ffffff', margin: '0 0 4px 0' }}>
-              Explore Arcade Games
-            </h2>
-            <p style={{ fontSize: '14px', color: '#94a3b8', margin: 0 }}>
-              7 titles available. Play locally with smart bots or host private multiplayer friend rooms.
-            </p>
-          </div>
-
-          {/* Search bar */}
-          <div style={{ position: 'relative', width: '280px' }}>
-            <input
-              type="text"
-              placeholder="Search games..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              style={{
-                width: '100%',
-                background: 'rgba(255, 255, 255, 0.05)',
-                border: '1px solid rgba(255, 255, 255, 0.12)',
-                borderRadius: '14px',
-                padding: '10px 16px 10px 38px',
-                color: '#ffffff',
-                fontSize: '13.5px',
-                outline: 'none',
-                boxSizing: 'border-box',
-              }}
-            />
-            <span style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', opacity: 0.6, fontSize: '14px' }}>
-              🔍
-            </span>
-          </div>
-        </div>
-
-        {/* Category Filter Chips */}
-        <div style={{ display: 'flex', gap: '10px', overflowX: 'auto', paddingBottom: '4px' }}>
-          {CATEGORIES.map((cat) => {
-            const isSelected = selectedCategory === cat;
-            return (
-              <button
-                key={cat}
-                onClick={() => setSelectedCategory(cat)}
-                style={{
-                  padding: '8px 18px',
-                  borderRadius: '12px',
-                  border: isSelected ? '1px solid #c084fc' : '1px solid rgba(255, 255, 255, 0.1)',
-                  background: isSelected ? 'linear-gradient(135deg, #7c3aed 0%, #ec4899 100%)' : 'rgba(255, 255, 255, 0.04)',
-                  color: '#ffffff',
-                  fontSize: '13px',
-                  fontWeight: isSelected ? 800 : 600,
-                  cursor: 'pointer',
-                  whiteSpace: 'nowrap',
-                  boxShadow: isSelected ? '0 4px 15px rgba(236, 72, 153, 0.35)' : 'none',
-                  transition: 'all 0.15s ease',
-                }}
-              >
-                {cat}
-              </button>
-            );
-          })}
-        </div>
-
-        {/* 3. GAME GRID (CARDS) */}
-        <div
-          style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))',
-            gap: '24px',
-          }}
-        >
-          {filteredGames.map((game) => {
-            const isCurrent = activeGame === game.id;
-            return (
-              <div
-                key={game.id}
-                onClick={() => setActiveGame(game.id)}
-                style={{
-                  background: 'radial-gradient(ellipse at top, #1c1533 0%, #0e091d 100%)',
-                  borderRadius: '24px',
-                  border: isCurrent ? '2px solid #ec4899' : '1px solid rgba(255, 255, 255, 0.1)',
-                  padding: '24px',
-                  display: 'flex',
-                  flexDirection: 'column',
-                  gap: '16px',
-                  cursor: 'pointer',
-                  position: 'relative',
-                  overflow: 'hidden',
-                  boxShadow: isCurrent ? '0 0 35px rgba(236, 72, 153, 0.35)' : '0 10px 25px rgba(0,0,0,0.5)',
-                  transition: 'all 0.2s cubic-bezier(0.16, 1, 0.3, 1)',
-                }}
-              >
-                {/* Header: Icon, Category & Badge */}
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <div
-                    style={{
-                      width: '54px',
-                      height: '54px',
-                      borderRadius: '16px',
-                      background: game.bannerGradient,
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      fontSize: '28px',
-                      boxShadow: '0 8px 20px rgba(0,0,0,0.3)',
-                    }}
-                  >
-                    {game.icon}
-                  </div>
-
-                  <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-                    {game.badge && (
-                      <span
-                        style={{
-                          background: 'rgba(236, 72, 153, 0.2)',
-                          color: '#f472b6',
-                          border: '1px solid rgba(236, 72, 153, 0.4)',
-                          fontSize: '11px',
-                          fontWeight: 800,
-                          padding: '3px 8px',
-                          borderRadius: '6px',
-                          textTransform: 'uppercase',
-                        }}
-                      >
-                        {game.badge}
-                      </span>
-                    )}
-                    <span
-                      style={{
-                        background: 'rgba(255, 255, 255, 0.06)',
-                        color: '#94a3b8',
-                        fontSize: '11px',
-                        fontWeight: 600,
-                        padding: '3px 8px',
-                        borderRadius: '6px',
-                      }}
-                    >
-                      {game.category}
-                    </span>
-                  </div>
+                  {game.icon}
                 </div>
 
-                {/* Title & Description */}
-                <div>
-                  <h3 style={{ fontSize: '20px', fontWeight: 900, color: '#ffffff', margin: '0 0 8px 0' }}>
-                    {game.title}
-                  </h3>
-                  <p style={{ fontSize: '13.5px', color: '#94a3b8', lineHeight: 1.5, margin: 0, minHeight: '40px' }}>
-                    {game.description}
-                  </p>
-                </div>
-
-                {/* Metadata Row: Players, Rating, Plays */}
                 <div
                   style={{
                     display: 'flex',
-                    justifyContent: 'space-between',
+                    gap: '6px',
+                    flexShrink: 0,
                     alignItems: 'center',
-                    paddingTop: '12px',
-                    borderTop: '1px solid rgba(255, 255, 255, 0.08)',
-                    fontSize: '12.5px',
-                    color: '#cbd5e1',
                   }}
                 >
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
-                    <span>👥</span>
-                    <span>{game.minPlayers} - {game.maxPlayers} Players</span>
-                  </div>
+                  {game.badge && (
+                    <span
+                      style={{
+                        background: 'rgba(236, 72, 153, 0.18)',
+                        color: '#f472b6',
+                        border: '1px solid rgba(236, 72, 153, 0.35)',
+                        fontSize: '10px',
+                        fontWeight: 800,
+                        padding: '2px 6px',
+                        borderRadius: '5px',
+                        textTransform: 'uppercase',
+                        letterSpacing: '0.3px',
+                      }}
+                    >
+                      {game.badge}
+                    </span>
+                  )}
+                  <span
+                    style={{
+                      background: 'rgba(255, 255, 255, 0.06)',
+                      color: '#94a3b8',
+                      fontSize: '10.5px',
+                      fontWeight: 600,
+                      padding: '2px 6px',
+                      borderRadius: '5px',
+                    }}
+                  >
+                    {game.category}
+                  </span>
+                </div>
+              </div>
 
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                    <span>⭐ {game.rating}</span>
-                    <span style={{ color: '#64748b' }}>•</span>
-                    <span>{game.plays} plays</span>
-                  </div>
+              {/* Title */}
+              <h3
+                style={{
+                  fontSize: '16.5px',
+                  fontWeight: 900,
+                  color: '#ffffff',
+                  margin: '10px 0 4px 0',
+                  lineHeight: 1.2,
+                }}
+              >
+                {game.title}
+              </h3>
+
+              {/* Description */}
+              <p
+                style={{
+                  fontSize: '12.5px',
+                  color: '#94a3b8',
+                  lineHeight: 1.45,
+                  margin: 0,
+                  display: '-webkit-box',
+                  WebkitLineClamp: 2,
+                  WebkitBoxOrient: 'vertical',
+                  overflow: 'hidden',
+                }}
+              >
+                {game.description}
+              </p>
+
+              {/* Footer row */}
+              <div
+                style={{
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center',
+                  marginTop: '12px',
+                  paddingTop: '10px',
+                  borderTop: '1px solid rgba(255, 255, 255, 0.06)',
+                  fontSize: '11.5px',
+                  color: '#94a3b8',
+                }}
+              >
+                <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                  <span>👥</span>
+                  <span>
+                    {game.minPlayers}–{game.maxPlayers}
+                  </span>
                 </div>
 
-                {/* Play Button CTA */}
-                <button
+                <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <span>⭐ {game.rating}</span>
+                  <span style={{ color: '#475569' }}>•</span>
+                  <span>{game.plays}</span>
+                </div>
+              </div>
+
+              {/* Primary action */}
+              <div
+                style={{
+                  marginTop: '12px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                }}
+              >
+                <span
                   style={{
-                    width: '100%',
-                    background: isCurrent ? 'linear-gradient(135deg, #7c3aed 0%, #ec4899 100%)' : 'rgba(255, 255, 255, 0.08)',
-                    color: '#ffffff',
-                    border: '1px solid rgba(255, 255, 255, 0.15)',
-                    padding: '12px',
-                    borderRadius: '12px',
+                    flex: 1,
+                    fontSize: '13px',
                     fontWeight: 800,
-                    fontSize: '14px',
-                    cursor: 'pointer',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    gap: '8px',
+                    color: isCurrent ? '#f472b6' : '#e2e8f0',
                   }}
                 >
-                  <span>{isCurrent ? 'Continue Playing' : 'Launch Game'}</span>
-                  <span>→</span>
-                </button>
+                  {isCurrent ? 'Continue Playing' : 'Play Game'}
+                </span>
+                <span style={{ color: '#c084fc', fontSize: '14px' }}>→</span>
               </div>
-            );
-          })}
-        </div>
+            </div>
+          );
+        })}
       </div>
     </div>
   );
 };
+
+function streakLabel(streak: number | undefined): string {
+  const days = streak || 1;
+  if (days >= 7) return `🔥 ${days}d streak`;
+  if (days >= 3) return `✨ ${days}d streak`;
+  return `Streak: ${days}d`;
+}

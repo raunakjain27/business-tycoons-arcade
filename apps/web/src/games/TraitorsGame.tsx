@@ -1,4 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef, type ChangeEvent } from 'react';
+
+type IntervalId = ReturnType<typeof setInterval>;
+import { DESIGN_SYSTEM } from '../designSystem';
 import { useHubStore } from '../hubStore';
 import { useGameRoomStore } from '../gameRoomStore';
 import { useVoiceStore } from '../voiceStore';
@@ -142,15 +145,19 @@ export const TraitorsGame: React.FC = () => {
 
   // Countdown clock for Roundtable speaking turn
   useEffect(() => {
-    let timer: NodeJS.Timeout;
+    const timer = useRef<IntervalId | null>(null);
     if (phase === 'roundtable' && speechTimer > 0) {
-      timer = setInterval(() => {
+      timer.current = setInterval(() => {
         setSpeechTimer((prev) => prev - 1);
       }, 1000);
     } else if (phase === 'roundtable' && speechTimer === 0) {
       passSpeakingTurn();
     }
-    return () => clearInterval(timer);
+    return () => {
+      if (timer.current) {
+        clearInterval(timer.current);
+      }
+    };
   }, [phase, speechTimer, roundtableSpeakerIdx]);
 
   const passSpeakingTurn = () => {
@@ -275,7 +282,7 @@ export const TraitorsGame: React.FC = () => {
     return (
       <GameRoomLobby
         gameId="traitors"
-        gameTitle="The Traitors: Highland Castle"
+        gameTitle="Castle of Betrayal"
         gameIcon="🗡️"
         minPlayers={4}
         maxPlayers={12}
@@ -292,7 +299,7 @@ export const TraitorsGame: React.FC = () => {
   return (
     <div style={{ maxWidth: '1060px', margin: '0 auto', padding: '16px', display: 'flex', flexDirection: 'column', gap: '20px' }}>
       {/* Live Voice Room Bar (Turn-Gated in Roundtable!) */}
-      <VoiceRoomBar gameTitle="The Traitors" turnRestricted={phase === 'roundtable'} />
+      <VoiceRoomBar gameTitle="Castle of Betrayal" turnRestricted={phase === 'roundtable'} />
 
       {/* Atmospheric Castle Top Bar */}
       <div

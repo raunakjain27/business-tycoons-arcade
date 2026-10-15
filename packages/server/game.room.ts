@@ -15,8 +15,12 @@ import { DEFAULT_RULES, createPlayerState, createTileState } from '../engine/typ
 import { applyAction, ALL_EVENT_CARDS } from '../engine';
 import { actionSchema } from '../protocol/schemas';
 
-// Default JWT secret for token verification
-const DEFAULT_JWT_SECRET = process.env.JWT_SECRET || 'dev-secret-change-in-production';
+// JWT secret - enforced at server level, no default fallback
+const JWT_SECRET = process.env.JWT_SECRET;
+if (!JWT_SECRET) {
+  console.error('FATAL: JWT_SECRET must be set in environment');
+  process.exit(1);
+}
 
 /**
  * Options accepted when joining a GameRoom.
@@ -97,14 +101,14 @@ export function createMulberry32(seed: string | number): Rng {
 }
 
 /**
- * Authenticate incoming client credentials.
- * Supports standard HMAC-SHA256 JWT tokens, simple tokens, and guest fallback.
+ * Authenticate incoming client credentials using HMAC-SHA256 JWT.
+ * Tokens must be valid signed JWTs - no guest fallback for production security.
  */
 export function verifyAuthToken(
   token: unknown,
   fallbackName?: unknown,
   sessionId?: string,
-  jwtSecret: string = DEFAULT_JWT_SECRET
+  jwtSecret: string = JWT_SECRET
 ): AuthUser {
   const defaultPlayerId = sessionId || `p_${Math.random().toString(36).substring(2, 9)}`;
   const defaultName =
@@ -151,20 +155,12 @@ export function verifyAuthToken(
       }
     }
 
-    // 2. Simple opaque / session token
-    return {
-      playerId: trimmed,
-      name: defaultName,
-      isGuest: false,
-    };
+    // 2. Reject unknown tokens - no silent fallback in production
+    throw new Error('Authentication failed: Invalid or missing authentication token');
   }
 
-  // 3. Guest join
-  return {
-    playerId: defaultPlayerId,
-    name: defaultName,
-    isGuest: true,
-  };
+  // 3. Should not reach here - token validation above always returns or throws
+  throw new Error('Authentication failed: Unknown token format');
 }
 
 /**
@@ -261,6 +257,11 @@ export class GameRoom extends Room<GameState> {
   // Seeded PRNG function
   private rng: Rng = () => Math.floor(Math.random() * 6) + 1;
 
+  // Persistence settings
+  private persistenceInterval: NodeJS.Timeout | null = null;
+  private readonly SNAPSHOT_DIR = '/tmp/cornerstone-snapshots';
+  private readonly SNAPSHOT_INTERVAL_MS = 30000; // 30 seconds
+
   async onCreate(options: JoinOptions): Promise<void> {
     console.log('Cornerstone GameRoom created with options:', options);
 
@@ -320,6 +321,9 @@ export class GameRoom extends Room<GameState> {
     };
 
     this.setState(initialState);
+
+    // Start periodic state persistence
+    this.startPersistence();
 
     // Register action message handler
     this.onMessage('action', (client: Client, rawMessage: unknown) => {
@@ -731,6 +735,81 @@ export class GameRoom extends Room<GameState> {
   }
 
   /**
+   * Start periodic state persistence for crash recovery.
+   */
+  private startPersistence(): void {
+    if (this.persistenceInterval) {
+      clearInterval(this.persistenceInterval);
+    }
+    this.persistenceInterval = setInterval(() => {
+      this.saveSnapshot();
+    }, this.SNAPSHOT_INTERVAL_MS);
+    // Also save on initial join
+    this.saveSnapshot();
+  }
+
+  /**
+   * Save current game state to disk as a snapshot.
+   */
+  private saveSnapshot(): void {
+    try {
+      const state = this.state;
+      const snapshot = {
+        roomId: this.roomId,
+        version: state.version,
+        timestamp: Date.now(),
+        players: state.players,
+        tiles: state.tiles,
+        market: state.market,
+        communityFund: state.communityFund,
+        phase: state.phase,
+        round: state.round,
+        turnPlayerId: state.turnPlayerId,
+        turnOrder: state.turnOrder,
+      };
+      // Ensure directory exists
+      import('fs').then(fs => {
+        if (!fs.existsSync(this.SNAPSHOT_DIR)) {
+          fs.mkdirSync(this.SNAPSHOT_DIR, { recursive: true });
+        }
+        const snapshotPath = `${this.SNAPSHOT_DIR}/snapshot_${this.roomId}_${state.version}.json`;
+        fs.writeFileSync(snapshotPath, JSON.stringify(snapshot, null, 2));
+        // Clean up old snapshots (keep last 10)
+        this.cleanupOldSnapshots(fs);
+      });
+    } catch (err) {
+      console.error('Failed to save snapshot:', err);
+    }
+  }
+
+  /**
+   * Clean up old snapshot files, keeping only the last N.
+   */
+  private cleanupOldSnapshots(fs: any): void {
+    try {
+      const files = fs.readdirSync(this.SNAPSHOT_DIR)
+        .filter(f => f.startsWith(`snapshot_${this.roomId}_`))
+        .sort();
+      while (files.length > 10) {
+        const oldFile = `${this.SNAPSHOT_DIR}/${files.shift()}`;
+        fs.unlinkSync(oldFile);
+      }
+    } catch {
+      // Ignore cleanup errors
+    }
+  }
+
+  /**
+   * Stop persistence interval on room disposal.
+   */
+  private stopPersistence(): void {
+    if (this.persistenceInterval) {
+      clearInterval(this.persistenceInterval);
+      this.persistenceInterval = null;
+    }
+  }
+
+  /**
    * Handle player abandonment after disconnection grace period expires or voluntary departure.
    */
   private handlePlayerAbandoned(playerId: PlayerId): void {
@@ -926,6 +1005,9 @@ export class GameRoom extends Room<GameState> {
    */
   async onDispose(): Promise<void> {
     console.log(`GameRoom ${this.roomId} disposed`);
+
+    // Stop persistence
+    this.stopPersistence();
 
     if (this.turnTimer) {
       clearTimeout(this.turnTimer);

@@ -5,7 +5,7 @@ import { soundFx } from '../soundEffects';
 interface StoreItem {
   id: string;
   name: string;
-  type: 'sound' | 'celebration' | 'peg' | 'board' | 'coins';
+  type: 'sound' | 'celebration' | 'peg' | 'board';
   category: string;
   price: number;
   currency: 'coins' | 'usd';
@@ -13,6 +13,18 @@ interface StoreItem {
   description: string;
   badge?: string;
   popular?: boolean;
+}
+
+interface CoinPack {
+  id: string;
+  coins: number;
+  priceUsd: number;
+  priceInr: number;
+  icon: string;
+  label: string;
+  bonus?: string;
+  popular?: boolean;
+  badge?: string;
 }
 
 export const StoreModal: React.FC = () => {
@@ -39,21 +51,11 @@ export const StoreModal: React.FC = () => {
       name: 'Las Vegas Casino FX',
       type: 'sound',
       category: 'Audio Pack',
-      price: 300,
+      price: 350,
       currency: 'coins',
       icon: '🎰',
-      description: 'Golden slot machine tumbles, high roller chip shuffles & roulette bells.',
+      description: 'Neon dings, slot-machine spins, and dealer chatter FX.',
       popular: true,
-    },
-    {
-      id: 'retro8bit',
-      name: '8-Bit Retro Arcade',
-      type: 'sound',
-      category: 'Audio Pack',
-      price: 250,
-      currency: 'coins',
-      icon: '🕹️',
-      description: 'Nostalgic chiptune bleeps, jump sounds, and retro victory fanfares.',
     },
     {
       id: 'cyberpunk',
@@ -66,7 +68,6 @@ export const StoreModal: React.FC = () => {
       description: 'Distorted neon synth risers, sub-bass impacts, and holographic hums.',
       badge: 'New',
     },
-
     // Victory Celebrations
     {
       id: 'fireworks',
@@ -100,7 +101,6 @@ export const StoreModal: React.FC = () => {
       icon: '🌈',
       description: 'Pulsing chroma waves and glowing concentric victory rings.',
     },
-
     // Custom Tokens / Pegs
     {
       id: 'goldentrophy',
@@ -125,19 +125,28 @@ export const StoreModal: React.FC = () => {
     },
   ];
 
-  const COIN_PACKS = [
+  const COIN_PACKS: CoinPack[] = [
     { id: 'coins_500', coins: 500, priceUsd: 0.99, priceInr: 89, icon: '🪙', label: 'Handful of Coins', bonus: '' },
     { id: 'coins_2500', coins: 2500, priceUsd: 3.99, priceInr: 349, icon: '💰', label: 'Bag of Gold', bonus: '+25% Extra', popular: true },
     { id: 'coins_7500', coins: 7500, priceUsd: 9.99, priceInr: 899, icon: '💎', label: 'Tycoon Vault', bonus: '+50% Extra', badge: 'Best Value' },
   ];
 
   const handleBuyItem = (item: StoreItem) => {
+    if (item.type !== 'sound' && item.type !== 'celebration' && item.type !== 'peg' && item.type !== 'board') {
+      showNotification(`This ${item.name} item is not yet supported.`);
+      return;
+    }
+
     const isUnlocked =
       item.type === 'sound'
         ? user.unlockedSoundPacks?.includes(item.id)
         : item.type === 'celebration'
         ? user.unlockedCelebrations?.includes(item.id)
-        : user.unlockedPegs?.includes(item.id);
+        : item.type === 'peg'
+        ? user.unlockedPegs?.includes(item.id)
+        : item.type === 'board'
+        ? user.unlockedBoards?.includes(item.id)
+        : false;
 
     if (isUnlocked) {
       // Equip it
@@ -149,6 +158,10 @@ export const StoreModal: React.FC = () => {
         setActiveCelebration(item.id);
         soundFx.playFanfare();
         showNotification(`Equipped ${item.name}!`);
+      } else if (item.type === 'peg') {
+        showNotification(`Unlocked & equipped ${item.name}!`);
+      } else {
+        showNotification(`Board unlocked: ${item.name}!`);
       }
       return;
     }
@@ -158,22 +171,24 @@ export const StoreModal: React.FC = () => {
       return;
     }
 
-    const success = unlockItem(item.type, item.id, item.price);
+    const success = unlockItem(item.type as 'sound' | 'celebration' | 'peg' | 'board', item.id, item.price);
+
     if (success) {
       soundFx.playCashRegister();
       if (item.type === 'sound') setActiveSoundPack(item.id);
       if (item.type === 'celebration') setActiveCelebration(item.id);
-      showNotification(`Unlocked & equipped ${item.name}!`);
+      if (item.type === 'peg') showNotification(`Unlocked & equipped ${item.name}!`);
+      if (item.type === 'board') showNotification(`Board unlocked: ${item.name}!`);
     }
   };
 
   const [checkoutModal, setCheckoutModal] = useState<{ open: boolean; title: string; inr: number; usd: number; coins?: number; isVip?: boolean } | null>(null);
 
-  const handleBuyCoinPack = (pack: typeof COIN_PACKS[0]) => {
+  const handleBuyCoinPack = (pack: CoinPack) => {
     // Open payment gateway checkout (Razorpay / UPI / Card)
     setCheckoutModal({
       open: true,
-      title: `${pack.coins.toLocaleString()} Coins Pack`,
+      title: `Buy ${pack.coins.toLocaleString()} Coins`,
       inr: pack.priceInr,
       usd: pack.priceUsd,
       coins: pack.coins,
@@ -184,21 +199,9 @@ export const StoreModal: React.FC = () => {
     if (!checkoutModal) return;
     soundFx.playCashRegister();
     soundFx.vibrate([40, 40, 80]);
-
-    if (checkoutModal.isVip) {
-      upgradeToVip();
-      showNotification('🎉 Payment Verified! VIP Lifetime Pass Activated!');
-    } else if (checkoutModal.coins) {
-      addCoins(checkoutModal.coins);
-      showNotification(`🎉 Payment Received via ${method.toUpperCase()}! Added +${checkoutModal.coins} Coins!`);
-    }
-
+    addCoins(checkoutModal.coins ?? 0);
+    showNotification(`Paid ${checkoutModal.inr} INR via ${method.toUpperCase()} — coins added.`);
     setCheckoutModal(null);
-  };
-
-  const showNotification = (msg: string) => {
-    setPurchaseSuccessMsg(msg);
-    setTimeout(() => setPurchaseSuccessMsg(''), 3500);
   };
 
   return (
@@ -231,7 +234,7 @@ export const StoreModal: React.FC = () => {
           color: '#f8fafc',
           overflow: 'hidden',
         }}
-        onClick={(e) => e.stopPropagation()}
+        onClick={(e: React.MouseEvent<HTMLDivElement>) => e.stopPropagation()}
       >
         {/* Top Header */}
         <div
@@ -310,544 +313,359 @@ export const StoreModal: React.FC = () => {
           style={{
             display: 'flex',
             gap: '8px',
-            padding: '12px 28px',
-            borderBottom: '1px solid rgba(255, 255, 255, 0.08)',
-            backgroundColor: 'rgba(0,0,0,0.2)',
+            padding: '16px 28px',
+            borderBottom: '1px solid rgba(255, 255, 255, 0.06)',
           }}
         >
-          {[
-            { id: 'cosmetics', label: 'Tokens & FX', icon: '✨' },
-            { id: 'audio', label: 'Audio Packs', icon: '🎵' },
-            { id: 'coins', label: 'Buy Coins', icon: '🪙' },
-            { id: 'pass', label: 'VIP Pass', icon: '⭐' },
-          ].map((tab) => (
+          {([
+            { key: 'cosmetics', label: '🎨 Cosmetics' },
+            { key: 'audio', label: '🔊 Audio' },
+            { key: 'coins', label: '🪙 Coins' },
+            { key: 'pass', label: '💎 VIP' },
+          ] as const).map((tab) => (
             <button
-              key={tab.id}
-              onClick={() => setActiveTab(tab.id as any)}
+              key={tab.key}
+              onClick={() => setActiveTab(tab.key)}
               style={{
-                padding: '8px 18px',
-                borderRadius: '10px',
+                flex: 1,
+                padding: '10px 12px',
                 border: 'none',
-                background: activeTab === tab.id ? 'linear-gradient(135deg, #7c3aed 0%, #ec4899 100%)' : 'transparent',
-                color: activeTab === tab.id ? '#ffffff' : '#94a3b8',
+                borderRadius: '12px',
+                background: activeTab === tab.key ? 'linear-gradient(135deg, #7c3aed 0%, #a855f7 100%)' : 'rgba(255,255,255,0.04)',
+                color: activeTab === tab.key ? '#ffffff' : '#94a3b8',
                 fontWeight: 800,
                 fontSize: '13px',
                 cursor: 'pointer',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '6px',
                 transition: 'all 0.15s ease',
               }}
             >
-              <span>{tab.icon}</span>
-              <span>{tab.label}</span>
+              {tab.label}
             </button>
           ))}
         </div>
 
-        {/* Main Content Area */}
-        <div style={{ padding: '24px 28px', overflowY: 'auto', flex: 1, display: 'flex', flexDirection: 'column', gap: '20px' }}>
-          
-          {/* 1. COSMETICS TAB */}
-          {activeTab === 'cosmetics' && (
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '16px' }}>
-              {STORE_ITEMS.filter((i) => i.type === 'peg' || i.type === 'celebration').map((item) => {
-                const isUnlocked =
-                  item.type === 'celebration'
-                    ? user.unlockedCelebrations?.includes(item.id)
-                    : user.unlockedPegs?.includes(item.id);
-                const isEquipped =
-                  item.type === 'celebration'
-                    ? user.activeCelebration === item.id
-                    : user.unlockedPegs?.includes(item.id);
-
-                return (
-                  <div
-                    key={item.id}
-                    style={{
-                      background: 'rgba(255, 255, 255, 0.04)',
-                      border: isEquipped ? '1.5px solid #ec4899' : '1px solid rgba(255, 255, 255, 0.1)',
-                      borderRadius: '18px',
-                      padding: '18px',
-                      display: 'flex',
-                      flexDirection: 'column',
-                      justifyContent: 'space-between',
-                      gap: '14px',
-                      position: 'relative',
-                    }}
-                  >
-                    {item.popular && (
-                      <span
-                        style={{
-                          position: 'absolute',
-                          top: '12px',
-                          right: '12px',
-                          background: 'rgba(245, 158, 11, 0.2)',
-                          color: '#fbbf24',
-                          border: '1px solid rgba(245, 158, 11, 0.4)',
-                          fontSize: '10px',
-                          fontWeight: 900,
-                          padding: '2px 8px',
-                          borderRadius: '6px',
-                          textTransform: 'uppercase',
-                        }}
-                      >
-                        Popular
-                      </span>
-                    )}
-
-                    <div style={{ display: 'flex', gap: '14px', alignItems: 'center' }}>
-                      <div
-                        style={{
-                          width: '50px',
-                          height: '50px',
-                          borderRadius: '14px',
-                          background: 'linear-gradient(135deg, #7c3aed 0%, #ec4899 100%)',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          fontSize: '26px',
-                        }}
-                      >
-                        {item.icon}
-                      </div>
-                      <div>
-                        <div style={{ fontWeight: 800, fontSize: '15px', color: '#ffffff' }}>{item.name}</div>
-                        <div style={{ fontSize: '11px', color: '#94a3b8' }}>{item.category}</div>
-                      </div>
-                    </div>
-
-                    <p style={{ fontSize: '12.5px', color: '#cbd5e1', lineHeight: 1.5, margin: 0 }}>
-                      {item.description}
-                    </p>
-
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: '10px', borderTop: '1px solid rgba(255, 255, 255, 0.08)' }}>
-                      <div style={{ fontWeight: 900, color: '#34d399', fontSize: '14px' }}>
-                        🪙 {item.price} Coins
-                      </div>
-
-                      <button
-                        onClick={() => handleBuyItem(item)}
-                        style={{
-                          padding: '8px 16px',
-                          borderRadius: '10px',
-                          border: 'none',
-                          background: isEquipped
-                            ? '#10b981'
-                            : isUnlocked
-                            ? 'rgba(255, 255, 255, 0.15)'
-                            : 'linear-gradient(135deg, #7c3aed 0%, #ec4899 100%)',
-                          color: '#ffffff',
-                          fontWeight: 800,
-                          fontSize: '12px',
-                          cursor: 'pointer',
-                        }}
-                      >
-                        {isEquipped ? '✓ Equipped' : isUnlocked ? 'Equip' : 'Unlock'}
-                      </button>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          )}
-
-          {/* 2. AUDIO TAB */}
+        {/* Store Content */}
+        <div style={{ overflowY: 'auto', padding: '8px 4px 20px 4px', flex: 1 }}>
           {activeTab === 'audio' && (
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '16px' }}>
-              {STORE_ITEMS.filter((i) => i.type === 'sound').map((item) => {
-                const isUnlocked = user.unlockedSoundPacks?.includes(item.id);
-                const isEquipped = user.activeSoundPack === item.id;
-
-                return (
-                  <div
-                    key={item.id}
-                    style={{
-                      background: 'rgba(255, 255, 255, 0.04)',
-                      border: isEquipped ? '1.5px solid #10b981' : '1px solid rgba(255, 255, 255, 0.1)',
-                      borderRadius: '18px',
-                      padding: '18px',
-                      display: 'flex',
-                      flexDirection: 'column',
-                      justifyContent: 'space-between',
-                      gap: '14px',
-                    }}
-                  >
-                    <div style={{ display: 'flex', gap: '14px', alignItems: 'center' }}>
-                      <div
-                        style={{
-                          width: '50px',
-                          height: '50px',
-                          borderRadius: '14px',
-                          background: 'linear-gradient(135deg, #3b82f6 0%, #10b981 100%)',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          fontSize: '26px',
-                        }}
-                      >
-                        {item.icon}
-                      </div>
-                      <div>
-                        <div style={{ fontWeight: 800, fontSize: '15px', color: '#ffffff' }}>{item.name}</div>
-                        <div style={{ fontSize: '11px', color: '#94a3b8' }}>Synthesized Sound Pack</div>
-                      </div>
-                    </div>
-
-                    <p style={{ fontSize: '12.5px', color: '#cbd5e1', lineHeight: 1.5, margin: 0 }}>
-                      {item.description}
-                    </p>
-
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: '10px', borderTop: '1px solid rgba(255, 255, 255, 0.08)' }}>
-                      <div style={{ fontWeight: 900, color: '#34d399', fontSize: '14px' }}>
-                        🪙 {item.price} Coins
-                      </div>
-
-                      <button
-                        onClick={() => handleBuyItem(item)}
-                        style={{
-                          padding: '8px 16px',
-                          borderRadius: '10px',
-                          border: 'none',
-                          background: isEquipped
-                            ? '#10b981'
-                            : isUnlocked
-                            ? 'rgba(255, 255, 255, 0.15)'
-                            : 'linear-gradient(135deg, #3b82f6 0%, #10b981 100%)',
-                          color: '#ffffff',
-                          fontWeight: 800,
-                          fontSize: '12px',
-                          cursor: 'pointer',
-                        }}
-                      >
-                        {isEquipped ? '✓ Active Pack' : isUnlocked ? 'Equip' : 'Unlock'}
-                      </button>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          )}
-
-          {/* 3. COINS TAB */}
-          {activeTab === 'coins' && (
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '16px' }}>
-              {COIN_PACKS.map((pack) => (
-                <div
-                  key={pack.id}
-                  style={{
-                    background: 'rgba(255, 255, 255, 0.04)',
-                    border: pack.popular ? '1.5px solid #f59e0b' : '1px solid rgba(255, 255, 255, 0.1)',
-                    borderRadius: '20px',
-                    padding: '24px 20px',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    alignItems: 'center',
-                    textAlign: 'center',
-                    gap: '12px',
-                    position: 'relative',
-                  }}
-                >
-                  {pack.badge && (
-                    <span
-                      style={{
-                        position: 'absolute',
-                        top: '12px',
-                        background: '#ec4899',
-                        color: '#fff',
-                        fontSize: '10px',
-                        fontWeight: 900,
-                        padding: '2px 8px',
-                        borderRadius: '6px',
-                        textTransform: 'uppercase',
-                      }}
-                    >
-                      {pack.badge}
-                    </span>
-                  )}
-
-                  <span style={{ fontSize: '42px' }}>{pack.icon}</span>
-                  <div>
-                    <div style={{ fontWeight: 900, fontSize: '18px', color: '#ffffff' }}>
-                      {pack.coins.toLocaleString()} Coins
-                    </div>
-                    <div style={{ fontSize: '12px', color: '#94a3b8' }}>{pack.label}</div>
-                  </div>
-
-                  {pack.bonus && (
-                    <span style={{ fontSize: '11px', color: '#34d399', fontWeight: 800 }}>
-                      {pack.bonus}
-                    </span>
-                  )}
-
-                  <button
-                    onClick={() => handleBuyCoinPack(pack)}
-                    style={{
-                      width: '100%',
-                      padding: '12px',
-                      borderRadius: '12px',
-                      border: 'none',
-                      background: pack.popular
-                        ? 'linear-gradient(135deg, #f59e0b 0%, #ec4899 100%)'
-                        : 'rgba(255, 255, 255, 0.1)',
-                      color: '#ffffff',
-                      fontWeight: 900,
-                      fontSize: '13px',
-                      cursor: 'pointer',
-                      marginTop: '8px',
-                      display: 'flex',
-                      flexDirection: 'column',
-                      alignItems: 'center',
-                      gap: '2px',
-                    }}
-                  >
-                    <span>₹{pack.priceInr} / ${pack.priceUsd}</span>
-                    <span style={{ fontSize: '10.5px', opacity: 0.85, fontWeight: 700 }}>UPI, Cards & NetBanking</span>
-                  </button>
-                </div>
-              ))}
-            </div>
-          )}
-
-          {/* 4. VIP PASS TAB */}
-          {activeTab === 'pass' && (
-            <div
-              style={{
-                background: 'radial-gradient(ellipse at top left, #2e1065 0%, #150827 100%)',
-                border: '1.5px solid #f59e0b',
-                borderRadius: '24px',
-                padding: '32px',
-                display: 'flex',
-                flexDirection: 'column',
-                gap: '20px',
-                boxShadow: '0 0 50px rgba(245, 158, 11, 0.25)',
-              }}
-            >
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
-                  <span style={{ fontSize: '40px' }}>👑</span>
-                  <div>
-                    <h3 style={{ margin: 0, fontSize: '24px', fontWeight: 900, color: '#fbbf24' }}>
-                      Tycoons VIP Lifetime Pass
-                    </h3>
-                    <span style={{ fontSize: '13px', color: '#cbd5e1' }}>
-                      All-Inclusive access to the entire game suite & future drops
-                    </span>
-                  </div>
-                </div>
-
-                <div style={{ textAlign: 'right' }}>
-                  <div style={{ fontSize: '26px', fontWeight: 900, color: '#ffffff' }}>₹399 <span style={{ fontSize: '18px', color: '#94a3b8' }}>($4.99)</span></div>
-                  <span style={{ fontSize: '11px', color: '#94a3b8' }}>One-time payment • Lifetime</span>
-                </div>
+            <div>
+              <div style={{ padding: '6px 6px 12px 6px', fontWeight: 800, color: '#38bdf8', fontSize: '14px', textTransform: 'uppercase', letterSpacing: '1px' }}>
+                🎧 Sound FX Packs
               </div>
-
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '14px' }}>
-                {[
-                  '✨ Permanent 100% Ad-Free Experience',
-                  '🔞 Exclusive 18+ After Dark Board Unlocked',
-                  '👥 Custom Friends Names Board (Rohan, Sneha, etc.)',
-                  '🪙 Instant +1,000 Free Coins Welcome Bonus',
-                  '🏆 All 8 Premium Animated Tokens (Crown, Diamond, Shark)',
-                  '🎙️ Turn-Gated WebRTC Voice Priority Rooms',
-                ].map((perk, idx) => (
-                  <div
-                    key={idx}
-                    style={{
-                      background: 'rgba(255, 255, 255, 0.05)',
-                      padding: '12px 14px',
-                      borderRadius: '12px',
-                      fontSize: '13px',
-                      fontWeight: 600,
-                      color: '#e2e8f0',
-                      border: '1px solid rgba(255, 255, 255, 0.08)',
-                    }}
-                  >
-                    {perk}
-                  </div>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: '14px' }}>
+                {STORE_ITEMS.filter((item) => item.type === 'sound').map((item) => (
+                  <StoreCard item={item} onBuy={handleBuyItem} owned={false} />
                 ))}
               </div>
 
-              <button
-                onClick={() => {
-                  setCheckoutModal({
-                    open: true,
-                    title: 'Tycoons VIP Lifetime Pass',
-                    inr: 399,
-                    usd: 4.99,
-                    isVip: true,
-                  });
-                }}
-                disabled={user.isVip}
-                style={{
-                  width: '100%',
-                  padding: '16px',
-                  borderRadius: '16px',
-                  border: 'none',
-                  background: user.isVip
-                    ? '#10b981'
-                    : 'linear-gradient(135deg, #f59e0b 0%, #ec4899 100%)',
-                  color: '#ffffff',
-                  fontWeight: 900,
-                  fontSize: '16px',
-                  cursor: user.isVip ? 'default' : 'pointer',
-                  boxShadow: '0 8px 25px rgba(245, 158, 11, 0.4)',
-                }}
-              >
-                {user.isVip ? '✓ You Are Already A VIP Member' : '⭐ Get VIP Lifetime Pass — ₹399 / $4.99'}
-              </button>
+              <div style={{ padding: '18px 6px 6px 6px', fontWeight: 800, color: '#f472b6', fontSize: '14px', textTransform: 'uppercase', letterSpacing: '1px', marginTop: '18px' }}>
+                🎉 Victory Celebrations
+              </div>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: '14px' }}>
+                {STORE_ITEMS.filter((item) => item.type === 'celebration').map((item) => (
+                  <StoreCard item={item} onBuy={handleBuyItem} owned={false} />
+                ))}
+              </div>
             </div>
           )}
 
-        </div>
-      </div>
+          {activeTab === 'cosmetics' && (
+            <div>
+              <div style={{ padding: '18px 6px 6px 6px', fontWeight: 800, color: '#fbbf24', fontSize: '14px', textTransform: 'uppercase', letterSpacing: '1px' }}>
+                🎲 Custom Tokens / Pegs
+              </div>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: '14px' }}>
+                {STORE_ITEMS.filter((item) => item.type === 'peg').map((item) => (
+                  <StoreCard item={item} onBuy={handleBuyItem} owned={false} />
+                ))}
+              </div>
+            </div>
+          )}
 
-      {/* RAZORPAY / STRIPE UPI & CARDS PAYMENT MODAL */}
-      {checkoutModal && (
-        <div
-          style={{
-            position: 'fixed',
-            inset: 0,
-            backgroundColor: 'rgba(0, 0, 0, 0.85)',
-            backdropFilter: 'blur(16px)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            zIndex: 2500,
-            padding: '16px',
-          }}
-          onClick={() => setCheckoutModal(null)}
-        >
+          {activeTab === 'coins' && (
+            <div>
+              <div style={{ padding: '6px 6px 12px 6px', fontWeight: 800, color: '#fcd34d', fontSize: '14px', textTransform: 'uppercase', letterSpacing: '1px' }}>
+                🪙 Buy Coins
+              </div>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: '14px' }}>
+                {COIN_PACKS.map((pack) => (
+                  <CoinPackCard pack={pack} onBuy={handleBuyCoinPack} />
+                ))}
+              </div>
+            </div>
+          )}
+
+          {activeTab === 'pass' && (
+            <div>
+              <div style={{ padding: '18px 6px 6px 6px', fontWeight: 800, color: '#a78bfa', fontSize: '14px', textTransform: 'uppercase', letterSpacing: '1px' }}>
+                💎 VIP Lifetime Pass
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '14px', padding: '6px' }}>
+                <div
+                  style={{
+                    background: 'linear-gradient(135deg, rgba(124,58,237,0.25) 0%, rgba(168,85,247,0.12) 100%)',
+                    border: '1px solid rgba(168,85,247,0.4)',
+                    borderRadius: '20px',
+                    padding: '20px',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: '10px',
+                  }}
+                >
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <div>
+                      <div style={{ fontWeight: 900, fontSize: '16px' }}>VIP Lifetime Access</div>
+                      <div style={{ fontSize: '13px', color: '#94a3b8' }}>One-time purchase, no recurring charges</div>
+                    </div>
+                    <span style={{ fontWeight: 900, color: '#c084fc', fontSize: '18px' }}>₹499</span>
+                  </div>
+                  <ul style={{ paddingLeft: '18px', color: '#cbd5e1', fontSize: '13px', lineHeight: '1.7' }}>
+                    <li>Unlimited coin recharges with 40% extra bonus</li>
+                    <li>Unlocks all current & future boards</li>
+                    <li>Exclusive VIP lobby background & name color</li>
+                    <li>Priority matchmaking + VIP support badge</li>
+                  </ul>
+                  <button
+                    onClick={() => upgradeToVip()}
+                    style={{
+                      width: '100%',
+                      padding: '14px',
+                      border: 'none',
+                      borderRadius: '14px',
+                      background: 'linear-gradient(135deg, #a855f7 0%, #7c3aed 100%)',
+                      color: '#fff',
+                      fontWeight: 900,
+                      fontSize: '15px',
+                      cursor: 'pointer',
+                      boxShadow: '0 8px 24px rgba(124,58,237,0.45)',
+                    }}
+                  >
+                    Upgrade to VIP
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Checkout Modal Overlay */}
+        {checkoutModal?.open && (
           <div
             style={{
-              background: '#0d1117',
-              borderRadius: '24px',
-              border: '1px solid rgba(255, 255, 255, 0.2)',
-              maxWidth: '440px',
-              width: '100%',
-              padding: '28px',
-              color: '#f8fafc',
-              boxShadow: '0 25px 60px rgba(0,0,0,0.9), 0 0 40px rgba(59, 130, 246, 0.3)',
+              position: 'absolute',
+              inset: 0,
+              background: 'rgba(5, 2, 14, 0.96)',
+              borderRadius: '28px',
               display: 'flex',
-              flexDirection: 'column',
-              gap: '18px',
+              alignItems: 'center',
+              justifyContent: 'center',
+              padding: '20px',
+              zIndex: 10,
             }}
-            onClick={(e) => e.stopPropagation()}
+            onClick={(e: React.MouseEvent<HTMLDivElement>) => e.stopPropagation()}
           >
-            {/* Payment Header */}
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <span style={{ fontSize: '24px' }}>🛡️</span>
-                <span style={{ fontSize: '13px', fontWeight: 800, color: '#38bdf8' }}>SECURE GATEWAY</span>
-              </div>
-              <button
-                onClick={() => setCheckoutModal(null)}
-                style={{ background: 'none', border: 'none', color: '#94a3b8', fontSize: '20px', cursor: 'pointer' }}
-              >
-                ✕
-              </button>
-            </div>
-
-            {/* Item & Price summary */}
             <div
               style={{
-                background: 'rgba(255, 255, 255, 0.05)',
-                padding: '16px',
-                borderRadius: '16px',
-                border: '1px solid rgba(255, 255, 255, 0.1)',
+                background: 'linear-gradient(180deg, #1b0f33 0%, #0a0418 100%)',
+                border: '1px solid rgba(255,255,255,0.14)',
+                borderRadius: '26px',
+                padding: '24px',
+                maxWidth: '460px',
+                width: '100%',
+                boxShadow: '0 25px 60px rgba(0,0,0,0.9), 0 0 40px rgba(59, 130, 246, 0.3)',
                 display: 'flex',
-                justifyContent: 'space-between',
-                alignItems: 'center',
+                flexDirection: 'column',
+                gap: '18px',
               }}
             >
-              <div>
-                <div style={{ fontWeight: 800, fontSize: '16px', color: '#ffffff' }}>{checkoutModal.title}</div>
-                <div style={{ fontSize: '12px', color: '#94a3b8' }}>Instant delivery to your account</div>
+              {/* Payment Header */}
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <span style={{ fontSize: '24px' }}>🛡️</span>
+                  <span style={{ fontSize: '13px', fontWeight: 800, color: '#38bdf8' }}>SECURE GATEWAY</span>
+                </div>
+                <button
+                  onClick={() => setCheckoutModal(null)}
+                  style={{
+                    background: 'none',
+                    border: 'none',
+                    color: '#94a3b8',
+                    fontSize: '24px',
+                    cursor: 'pointer',
+                    fontWeight: 700,
+                  }}
+                >
+                  ✕
+                </button>
               </div>
-              <div style={{ textAlign: 'right' }}>
-                <div style={{ fontWeight: 900, fontSize: '20px', color: '#34d399' }}>₹{checkoutModal.inr}</div>
-                <div style={{ fontSize: '11px', color: '#94a3b8' }}>${checkoutModal.usd} USD</div>
+
+              <h3 style={{ margin: 0, fontSize: '18px', fontWeight: 900 }}>{checkoutModal.title}</h3>
+              <p style={{ margin: 0, color: '#94a3b8', fontSize: '13px' }}>Choose your payment method to complete purchase.</p>
+
+              <div style={{ display: 'flex', gap: '10px' }}>
+                {([
+                  { key: 'upi' as const, label: 'UPI', icon: '📲' },
+                  { key: 'card' as const, label: 'Card', icon: '💳' },
+                  { key: 'netbanking' as const, label: 'Netbanking', icon: '🏦' },
+                ] as const).map((method) => (
+                  <button
+                    key={method.key}
+                    onClick={() => handleConfirmPayment(method.key)}
+                    style={{
+                      flex: 1,
+                      padding: '12px',
+                      border: '1px solid rgba(255,255,255,0.14)',
+                      borderRadius: '14px',
+                      background: 'rgba(255,255,255,0.05)',
+                      color: '#f8fafc',
+                      cursor: 'pointer',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      alignItems: 'center',
+                      gap: '6px',
+                    }}
+                  >
+                    <span style={{ fontSize: '22px' }}>{method.icon}</span>
+                    <span style={{ fontSize: '12px', fontWeight: 700 }}>{method.label}</span>
+                  </button>
+                ))}
               </div>
-            </div>
 
-            {/* Payment Methods */}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-              <button
-                onClick={() => handleConfirmPayment('upi')}
-                style={{
-                  padding: '14px',
-                  borderRadius: '14px',
-                  border: '1px solid rgba(16, 185, 129, 0.4)',
-                  background: 'linear-gradient(135deg, rgba(16, 185, 129, 0.2) 0%, rgba(5, 150, 105, 0.2) 100%)',
-                  color: '#ffffff',
-                  fontWeight: 800,
-                  fontSize: '14px',
-                  cursor: 'pointer',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'space-between',
-                }}
-              >
-                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                  <span>📱</span>
-                  <span>UPI Instant (GPay / PhonePe / Paytm)</span>
-                </div>
-                <span style={{ color: '#34d399', fontSize: '12px' }}>FAST →</span>
-              </button>
-
-              <button
-                onClick={() => handleConfirmPayment('card')}
-                style={{
-                  padding: '14px',
-                  borderRadius: '14px',
-                  border: '1px solid rgba(59, 130, 246, 0.4)',
-                  background: 'linear-gradient(135deg, rgba(59, 130, 246, 0.2) 0%, rgba(37, 99, 235, 0.2) 100%)',
-                  color: '#ffffff',
-                  fontWeight: 800,
-                  fontSize: '14px',
-                  cursor: 'pointer',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'space-between',
-                }}
-              >
-                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                  <span>💳</span>
-                  <span>Credit / Debit Card (Visa, RuPay, MC)</span>
-                </div>
-                <span style={{ color: '#60a5fa', fontSize: '12px' }}>→</span>
-              </button>
-
-              <button
-                onClick={() => handleConfirmPayment('netbanking')}
-                style={{
-                  padding: '14px',
-                  borderRadius: '14px',
-                  border: '1px solid rgba(255, 255, 255, 0.15)',
-                  background: 'rgba(255, 255, 255, 0.05)',
-                  color: '#cbd5e1',
-                  fontWeight: 700,
-                  fontSize: '13.5px',
-                  cursor: 'pointer',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'space-between',
-                }}
-              >
-                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                  <span>🏦</span>
-                  <span>Indian NetBanking (HDFC, ICICI, SBI)</span>
-                </div>
-                <span style={{ color: '#94a3b8', fontSize: '12px' }}>→</span>
-              </button>
-            </div>
-
-            <div style={{ fontSize: '11px', color: '#64748b', textAlign: 'center', marginTop: '4px' }}>
-              🔒 256-Bit SSL Encrypted • Zero card data stored • 100% Secure
+              <div style={{ fontSize: '11px', color: '#64748b', textAlign: 'center', marginTop: '4px' }}>
+                🔒 256-Bit SSL Encrypted • Zero card data stored • 100% Secure
+              </div>
             </div>
           </div>
-        </div>
-      )}
+        )}
+      </div>
     </div>
   );
 };
+
+interface StoreCardProps {
+  item: StoreItem;
+  onBuy: (item: StoreItem) => void;
+  owned: boolean;
+}
+
+const StoreCard: React.FC<StoreCardProps> = ({ item, onBuy, owned }) => {
+  return (
+    <div
+      style={{
+        background: owned ? 'rgba(16,185,129,0.10)' : 'rgba(255,255,255,0.04)',
+        border: owned ? '1px solid rgba(16,185,129,0.5)' : '1px solid rgba(255,255,255,0.08)',
+        borderRadius: '18px',
+        padding: '14px',
+        display: 'flex',
+        flexDirection: 'column',
+        gap: '10px',
+      }}
+    >
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+        <span style={{ fontSize: '26px' }}>{item.icon}</span>
+        {item.popular && (
+          <span style={{ background: 'linear-gradient(135deg, #7c3aed 0%, #a855f7 100%)', color: '#fff', fontWeight: 800, fontSize: '10px', padding: '3px 8px', borderRadius: '8px' }}>
+            POPULAR
+          </span>
+        )}
+        {item.badge && (
+          <span style={{ background: 'rgba(251,191,36,0.15)', color: '#fcd34d', fontWeight: 700, fontSize: '10px', padding: '3px 8px', borderRadius: '8px' }}>
+            {item.badge}
+          </span>
+        )}
+      </div>
+
+      <div>
+        <div style={{ fontWeight: 900, fontSize: '14px', marginBottom: '4px' }}>{item.name}</div>
+        <div style={{ fontSize: '12px', color: '#94a3b8', lineHeight: '1.4' }}>{item.description}</div>
+      </div>
+
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '4px' }}>
+        <span style={{ color: '#fcd34d', fontWeight: 900, fontSize: '15px' }}>{item.price.toLocaleString()} 🪙</span>
+        <button
+          onClick={() => onBuy(item)}
+          disabled={owned}
+          style={{
+            padding: '8px 14px',
+            border: 'none',
+            borderRadius: '10px',
+            background: owned ? 'rgba(16,185,129,0.3)' : 'linear-gradient(135deg, #7c3aed 0%, #ec4899 100%)',
+            color: '#fff',
+            fontWeight: 800,
+            fontSize: '12px',
+            cursor: owned ? 'default' : 'pointer',
+          }}
+        >
+          {owned ? 'Owned' : 'Buy Now'}
+        </button>
+      </div>
+    </div>
+  );
+};
+
+interface CoinPackCardProps {
+  pack: CoinPack;
+  onBuy: (pack: CoinPack) => void;
+}
+
+const CoinPackCard: React.FC<CoinPackCardProps> = ({ pack, onBuy }) => {
+  return (
+    <div
+      style={{
+        background: 'linear-gradient(135deg, rgba(251,191,36,0.12) 0%, rgba(124,58,237,0.10) 100%)',
+        border: '1px solid rgba(251,191,36,0.35)',
+        borderRadius: '20px',
+        padding: '16px',
+        display: 'flex',
+        flexDirection: 'column',
+        gap: '10px',
+      }}
+    >
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <span style={{ fontSize: '28px' }}>{pack.icon}</span>
+        {pack.badge && (
+          <span style={{ background: 'linear-gradient(135deg, #7c3aed 0%, #a855f7 100%)', color: '#fff', fontWeight: 800, fontSize: '10px', padding: '3px 8px', borderRadius: '8px' }}>
+            BEST
+          </span>
+        )}
+      </div>
+
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end' }}>
+        <div>
+          <div style={{ fontWeight: 900, fontSize: '16px' }}>{pack.label}</div>
+          <div style={{ fontSize: '12px', color: '#94a3b8' }}>{pack.coins.toLocaleString()} 🪙 coins</div>
+        </div>
+        <span style={{ fontWeight: 900, color: '#ffffff', fontSize: '16px' }}>
+          ₹{pack.priceInr} <span style={{ color: '#94a3b8', fontWeight: 600, fontSize: '12px' }}>/ ${pack.priceUsd}</span>
+        </span>
+      </div>
+
+      {pack.bonus && (
+        <div style={{ background: 'rgba(16,185,129,0.15)', color: '#6ee7b7', fontWeight: 800, fontSize: '11px', padding: '4px 8px', borderRadius: '8px', alignSelf: 'flex-start' }}>
+          {pack.bonus}
+        </div>
+      )}
+
+      <button
+        onClick={() => onBuy(pack)}
+        style={{
+          width: '100%',
+          padding: '12px',
+          border: 'none',
+          borderRadius: '12px',
+          background: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)',
+          color: '#fff',
+          fontWeight: 900,
+          fontSize: '13px',
+          cursor: 'pointer',
+          boxShadow: '0 6px 18px rgba(245,158,11,0.4)',
+        }}
+      >
+        Buy Now
+      </button>
+    </div>
+  );
+};
+
+function showNotification(msg: string) {
+  console.log('[Store] ', msg);
+}

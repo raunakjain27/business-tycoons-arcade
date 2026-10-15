@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { DESIGN_SYSTEM } from '../designSystem';
 import { useHubStore } from '../hubStore';
 import { useGameRoomStore } from '../gameRoomStore';
 import { useVoiceStore } from '../voiceStore';
@@ -175,7 +176,7 @@ export const SnakesLaddersGame: React.FC = () => {
         gameIcon="🐍"
         minPlayers={2}
         maxPlayers={6}
-        bannerGradient="linear-gradient(135deg, #06b6d4 0%, #10b981 100%)"
+        bannerGradient="linear-gradient(135deg, DESIGN_SYSTEM.colors.infoLight 0%, DESIGN_SYSTEM.colors.info 100%)"
         onStart={startMatchFromRoom}
       />
     );

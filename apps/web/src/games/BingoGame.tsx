@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { DESIGN_SYSTEM } from '../designSystem';
 import { useHubStore } from '../hubStore';
 import { useGameRoomStore } from '../gameRoomStore';
 import { useVoiceStore } from '../voiceStore';
@@ -237,7 +238,7 @@ export const BingoGame: React.FC = () => {
         gameIcon="🎱"
         minPlayers={2}
         maxPlayers={12}
-        bannerGradient="linear-gradient(135deg, #3b82f6 0%, #10b981 100%)"
+        bannerGradient="linear-gradient(135deg, DESIGN_SYSTEM.colors.primaryLight 0%, DESIGN_SYSTEM.colors.success 100%)"
         onStart={startMatchFromRoom}
       />
     );

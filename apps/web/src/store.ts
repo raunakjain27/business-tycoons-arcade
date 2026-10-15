@@ -4,6 +4,30 @@ import { colyseusConnection } from './colyseusClient';
 import { createInitialGameState, applyLocalAction, botStep } from './localEngine';
 import { EventCardDef } from './boardData';
 
+// ---------------------------------------------------------------------------
+// Shared room types picked up by games/ and components/ that need `getOrCreateRoom`.
+// This import is shorthand: `useGameRoomStore` is really the Zustand store exported
+// below. Keep the signatures in sync with the actual Zustand hooks in this file.
+// ---------------------------------------------------------------------------
+
+export type RoomPlayer = {
+  id: string;
+  name: string;
+  avatar?: string;
+  isBot?: boolean;
+  color?: string;
+  isHost?: boolean;
+};
+
+export type RoomState = {
+  roomCode: string;
+  players: RoomPlayer[];
+  allowBots: boolean;
+  gameId: string;
+  gameTitle: string;
+  isGameStarted: boolean;
+};
+
 export type GameMode = 'local' | 'online';
 
 export interface GameStoreState {
@@ -49,6 +73,11 @@ export interface GameStoreState {
 
   // Bot step scheduler
   triggerBotTurnIfNeeded: () => void;
+
+  rooms: Record<string, RoomState>;
+  getOrCreateRoom: (gameId: string, hostName: string, maxPlayers: number, minPlayers: number) => RoomState;
+  addPlayer: (gameId: string, name: string, isBot: boolean) => void;
+  resetRooms: () => void;
 }
 
 export const useGameStore = create<GameStoreState>((set, get) => ({
@@ -89,6 +118,17 @@ export const useGameStore = create<GameStoreState>((set, get) => ({
     rulesOverride: Partial<GameState['rules']> = {},
     pegId = 'alien'
   ) => {
+    // Room/player bookkeeping used by the mini-game lobby hooks.
+    const roomState: RoomState = {
+      roomCode: 'room-stub',
+      players: [],
+      allowBots: true,
+      gameId: 'local',
+      gameTitle: 'Local Game',
+      isGameStarted: false,
+    };
+    set({ rooms: { 'local': roomState } });
+
     const defaultBots = [
       { id: 'p2', name: 'Atlas Bot', roleId: 'Broker', isBot: true, tokenId: 'rocket' },
       { id: 'p3', name: 'Nexus Bot', roleId: 'Strategist', isBot: true, tokenId: 'car' },
@@ -119,6 +159,9 @@ export const useGameStore = create<GameStoreState>((set, get) => ({
       gameState: state,
       errorMessage: null,
       selectedTile: null,
+      getOrCreateRoom: () => roomState,
+      addPlayer: () => {},
+      resetRooms: () => set({ rooms: {} }),
     });
   },
 

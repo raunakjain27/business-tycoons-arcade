@@ -1,4 +1,5 @@
 import React, { useEffect } from 'react';
+import './designAnimations.css';
 import { useGameStore } from './store';
 import { Board } from './components/Board';
 import { ActionPanel } from './components/ActionPanel';
@@ -62,12 +63,13 @@ export function App() {
         if (inviteRoom && inviteGame) {
           // Switch to invited game & room
           useHubStore.getState().setActiveGame(inviteGame);
-          const roomState = useGameRoomStore.getState().getOrCreateRoom(inviteGame, 'Host');
-          roomState.roomCode = inviteRoom;
-          // Add joining user to player list
-          useGameRoomStore.getState().addPlayer(inviteGame, user.username || 'Friend', false);
-        }
-      } catch (e) {}
+          const roomState = useGameStore.getState().rooms?.[inviteGame];
+          if (roomState) {
+            roomState.roomCode = inviteRoom;
+            // Add joining user to player list
+            useGameStore.getState().addPlayer(inviteGame, user.username || 'Friend', false);
+          }
+        }        } catch {}
     }
 
     if (!gameState) {
