@@ -379,38 +379,89 @@ export const BingoGame: React.FC = () => {
           {myPlayer && (
             <div
               style={{
-                background: 'linear-gradient(135deg, #182234 0%, #0c1220 100%)',
-                borderRadius: '24px',
-                border: '2px solid #3b82f6',
-                padding: '24px',
+                background: 'linear-gradient(135deg, #0e1e38 0%, #081120 50%, #030812 100%)',
+                borderRadius: '28px',
+                border: '2px solid rgba(59, 130, 246, 0.6)',
+                padding: '26px',
                 display: 'flex',
                 flexDirection: 'column',
-                gap: '16px',
-                boxShadow: '0 15px 40px rgba(59, 130, 246, 0.25)',
+                gap: '18px',
+                boxShadow: '0 20px 50px rgba(0,0,0,0.85), 0 0 40px rgba(59, 130, 246, 0.3)',
+                position: 'relative',
+                overflow: 'hidden',
               }}
             >
+              {/* Background watermark */}
+              <div
+                style={{
+                  position: 'absolute',
+                  right: '-15px',
+                  bottom: '-15px',
+                  fontSize: '130px',
+                  opacity: 0.04,
+                  userSelect: 'none',
+                  pointerEvents: 'none',
+                }}
+              >
+                🎱
+              </div>
+
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <h3 style={{ margin: 0, fontSize: '18px', fontWeight: 900, color: '#60a5fa' }}>
-                  Your Official 5x5 Bingo Card
-                </h3>
-                <span style={{ fontSize: '13px', color: '#34d399', fontWeight: 800 }}>
-                  Completed Lines: {myCompletedLines} / 5
-                </span>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                  <div
+                    style={{
+                      width: '36px',
+                      height: '36px',
+                      borderRadius: '10px',
+                      background: 'linear-gradient(135deg, #3b82f6 0%, #10b981 100%)',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      fontSize: '18px',
+                      boxShadow: '0 4px 12px rgba(59, 130, 246, 0.4)',
+                    }}
+                  >
+                    🎱
+                  </div>
+                  <div>
+                    <h3 style={{ margin: 0, fontSize: '19px', fontWeight: 900, color: '#93c5fd', letterSpacing: '-0.3px' }}>
+                      Grand Bingo Card
+                    </h3>
+                    <span style={{ fontSize: '11.5px', color: '#cbd5e1' }}>
+                      Card ID: #BG-{myPlayer.id.substring(0, 6).toUpperCase()} • 75-Ball Standard
+                    </span>
+                  </div>
+                </div>
+
+                <div
+                  style={{
+                    background: myCompletedLines > 0 ? 'rgba(16, 185, 129, 0.2)' : 'rgba(59, 130, 246, 0.15)',
+                    border: myCompletedLines > 0 ? '1px solid #10b981' : '1px solid rgba(59, 130, 246, 0.4)',
+                    padding: '6px 14px',
+                    borderRadius: '20px',
+                    fontSize: '12.5px',
+                    fontWeight: 800,
+                    color: myCompletedLines > 0 ? '#34d399' : '#93c5fd',
+                  }}
+                >
+                  {myCompletedLines > 0 ? `🎉 ${myCompletedLines} Line(s) Connected!` : '🎯 Form 5 in a Row'}
+                </div>
               </div>
 
               {/* B-I-N-G-O Header */}
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '8px', textAlign: 'center' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '10px', textAlign: 'center' }}>
                 {BINGO_LETTERS.map((l) => (
                   <div
                     key={l}
                     style={{
-                      background: 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)',
+                      background: 'linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%)',
                       color: '#ffffff',
-                      padding: '10px',
-                      borderRadius: '12px',
-                      fontSize: '22px',
+                      padding: '12px 0',
+                      borderRadius: '14px',
+                      fontSize: '24px',
                       fontWeight: 900,
-                      boxShadow: '0 4px 12px rgba(59, 130, 246, 0.35)',
+                      boxShadow: '0 6px 16px rgba(37, 99, 235, 0.45)',
+                      letterSpacing: '1px',
                     }}
                   >
                     {l}
@@ -423,11 +474,15 @@ export const BingoGame: React.FC = () => {
                 style={{
                   display: 'grid',
                   gridTemplateRows: 'repeat(5, 1fr)',
-                  gap: '8px',
+                  gap: '10px',
+                  background: 'rgba(5, 10, 25, 0.85)',
+                  padding: '12px',
+                  borderRadius: '20px',
+                  border: '1px solid rgba(255, 255, 255, 0.12)',
                 }}
               >
                 {myPlayer.grid.map((row, rIdx) => (
-                  <div key={rIdx} style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '8px' }}>
+                  <div key={rIdx} style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '10px' }}>
                     {row.map((cell, cIdx) => {
                       const isFree = cell.num === 'FREE';
                       const isDrawn = typeof cell.num === 'number' && calledBalls.some((b) => b.num === cell.num);
@@ -440,29 +495,45 @@ export const BingoGame: React.FC = () => {
                             aspectRatio: '1 / 1',
                             borderRadius: '14px',
                             border: cell.marked
-                              ? '2px solid #10b981'
+                              ? '2px solid #34d399'
                               : isDrawn
-                              ? '2px solid #3b82f6'
-                              : '1px solid rgba(255,255,255,0.1)',
+                              ? '2px solid #60a5fa'
+                              : '1px solid rgba(255,255,255,0.12)',
                             background: cell.marked
-                              ? 'linear-gradient(135deg, #10b981 0%, #047857 100%)'
+                              ? 'radial-gradient(circle, #059669 0%, #064e3b 100%)'
                               : isDrawn
-                              ? 'rgba(59, 130, 246, 0.25)'
-                              : 'rgba(255,255,255,0.04)',
+                              ? 'radial-gradient(circle, rgba(59, 130, 246, 0.35) 0%, rgba(29, 78, 216, 0.15) 100%)'
+                              : isFree
+                              ? 'radial-gradient(circle, #d97706 0%, #78350f 100%)'
+                              : 'linear-gradient(180deg, rgba(255,255,255,0.07) 0%, rgba(255,255,255,0.02) 100%)',
                             color: '#ffffff',
-                            fontSize: isFree ? '14px' : '20px',
+                            fontSize: isFree ? '13px' : '20px',
                             fontWeight: 900,
                             cursor: isFree ? 'default' : 'pointer',
                             display: 'flex',
+                            position: 'relative',
                             flexDirection: 'column',
                             alignItems: 'center',
                             justifyContent: 'center',
-                            boxShadow: cell.marked ? '0 0 16px rgba(16, 185, 129, 0.5)' : 'none',
-                            transition: 'all 0.15s ease',
+                            boxShadow: cell.marked
+                              ? '0 0 18px rgba(52, 211, 153, 0.6), inset 0 0 8px rgba(255,255,255,0.3)'
+                              : isDrawn
+                              ? '0 0 12px rgba(59, 130, 246, 0.45)'
+                              : isFree
+                              ? '0 0 16px rgba(245, 158, 11, 0.5)'
+                              : 'none',
+                            transform: cell.marked ? 'scale(0.98)' : 'scale(1)',
+                            transition: 'all 0.18s cubic-bezier(0.16, 1, 0.3, 1)',
                           }}
                         >
                           {cell.num}
-                          {isFree && <span style={{ fontSize: '10px', color: '#fde68a' }}>★ STAR</span>}
+                          {isFree ? (
+                            <span style={{ fontSize: '10px', color: '#fde68a', fontWeight: 800 }}>★ FREE</span>
+                          ) : cell.marked ? (
+                            <span style={{ position: 'absolute', top: '3px', right: '4px', fontSize: '10px', color: '#a7f3d0' }}>
+                              ✓
+                            </span>
+                          ) : null}
                         </button>
                       );
                     })}

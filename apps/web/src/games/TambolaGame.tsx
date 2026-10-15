@@ -423,26 +423,73 @@ export const TambolaGame: React.FC = () => {
           {myPlayer && (
             <div
               style={{
-                background: 'linear-gradient(135deg, #1f1438 0%, #140b26 100%)',
-                borderRadius: '24px',
-                border: '2px solid #ec4899',
-                padding: '24px',
+                background: 'linear-gradient(135deg, #2a1b4e 0%, #170d30 50%, #0d071c 100%)',
+                borderRadius: '28px',
+                border: '2px solid rgba(245, 158, 11, 0.6)',
+                padding: '26px',
                 display: 'flex',
                 flexDirection: 'column',
-                gap: '16px',
-                boxShadow: '0 15px 40px rgba(236, 72, 153, 0.25)',
+                gap: '18px',
+                boxShadow: '0 20px 50px rgba(0,0,0,0.8), 0 0 40px rgba(245, 158, 11, 0.25)',
+                position: 'relative',
+                overflow: 'hidden',
               }}
             >
+              {/* Background luxury watermark */}
+              <div
+                style={{
+                  position: 'absolute',
+                  right: '-20px',
+                  bottom: '-20px',
+                  fontSize: '120px',
+                  opacity: 0.04,
+                  userSelect: 'none',
+                  pointerEvents: 'none',
+                }}
+              >
+                🎟️
+              </div>
+
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <span style={{ fontSize: '22px' }}>🎟️</span>
-                  <h3 style={{ margin: 0, fontSize: '18px', fontWeight: 900, color: '#f472b6' }}>
-                    Your Official Tambola Ticket
-                  </h3>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                  <div
+                    style={{
+                      width: '36px',
+                      height: '36px',
+                      borderRadius: '10px',
+                      background: 'linear-gradient(135deg, #f59e0b 0%, #ec4899 100%)',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      fontSize: '18px',
+                      boxShadow: '0 4px 12px rgba(245, 158, 11, 0.4)',
+                    }}
+                  >
+                    🎟️
+                  </div>
+                  <div>
+                    <h3 style={{ margin: 0, fontSize: '19px', fontWeight: 900, color: '#fde68a', letterSpacing: '-0.3px' }}>
+                      Royal Tambola Ticket
+                    </h3>
+                    <span style={{ fontSize: '11.5px', color: '#cbd5e1' }}>
+                      Ticket ID: #TB-{myPlayer.id.substring(0, 6).toUpperCase()} • Serialized
+                    </span>
+                  </div>
                 </div>
-                <span style={{ fontSize: '12px', color: '#94a3b8' }}>
-                  Tap number cell to dab/mark
-                </span>
+
+                <div
+                  style={{
+                    background: 'rgba(245, 158, 11, 0.15)',
+                    border: '1px solid rgba(245, 158, 11, 0.4)',
+                    padding: '6px 14px',
+                    borderRadius: '20px',
+                    fontSize: '12px',
+                    fontWeight: 800,
+                    color: '#fde68a',
+                  }}
+                >
+                  ⚡ Tap Cell to Stamp
+                </div>
               </div>
 
               {/* 3 x 9 Grid */}
@@ -450,15 +497,16 @@ export const TambolaGame: React.FC = () => {
                 style={{
                   display: 'grid',
                   gridTemplateRows: 'repeat(3, 1fr)',
-                  gap: '6px',
-                  background: '#090414',
-                  padding: '10px',
-                  borderRadius: '16px',
-                  border: '1px solid rgba(255,255,255,0.1)',
+                  gap: '8px',
+                  background: 'rgba(10, 5, 20, 0.85)',
+                  padding: '12px',
+                  borderRadius: '20px',
+                  border: '1px solid rgba(255, 255, 255, 0.12)',
+                  boxShadow: 'inset 0 2px 10px rgba(0,0,0,0.6)',
                 }}
               >
                 {myPlayer.grid.map((row, rIdx) => (
-                  <div key={rIdx} style={{ display: 'grid', gridTemplateColumns: 'repeat(9, 1fr)', gap: '6px' }}>
+                  <div key={rIdx} style={{ display: 'grid', gridTemplateColumns: 'repeat(9, 1fr)', gap: '8px' }}>
                     {row.map((cell, cIdx) => {
                       const isDrawn = cell.num !== null && calledNumbers.includes(cell.num);
                       return (
@@ -468,31 +516,52 @@ export const TambolaGame: React.FC = () => {
                           disabled={cell.num === null}
                           style={{
                             aspectRatio: '1.2 / 1',
-                            borderRadius: '10px',
+                            borderRadius: '12px',
                             border: cell.marked
-                              ? '2px solid #10b981'
+                              ? '2px solid #34d399'
                               : isDrawn
                               ? '2px solid #f59e0b'
-                              : '1px solid rgba(255,255,255,0.08)',
+                              : cell.num !== null
+                              ? '1px solid rgba(255,255,255,0.14)'
+                              : '1px solid rgba(255,255,255,0.03)',
                             background: cell.marked
-                              ? 'linear-gradient(135deg, #10b981 0%, #047857 100%)'
+                              ? 'radial-gradient(circle, #059669 0%, #064e3b 100%)'
                               : isDrawn
-                              ? 'rgba(245, 158, 11, 0.25)'
+                              ? 'radial-gradient(circle, rgba(245, 158, 11, 0.35) 0%, rgba(180, 83, 9, 0.15) 100%)'
                               : cell.num === null
-                              ? 'rgba(255,255,255,0.02)'
-                              : 'rgba(255,255,255,0.06)',
+                              ? 'rgba(255,255,255,0.01)'
+                              : 'linear-gradient(180deg, rgba(255,255,255,0.08) 0%, rgba(255,255,255,0.02) 100%)',
                             color: cell.marked ? '#ffffff' : isDrawn ? '#fde68a' : cell.num ? '#ffffff' : 'transparent',
-                            fontSize: '18px',
+                            fontSize: '19px',
                             fontWeight: 900,
                             cursor: cell.num ? 'pointer' : 'default',
                             display: 'flex',
+                            position: 'relative',
                             alignItems: 'center',
                             justifyContent: 'center',
-                            boxShadow: cell.marked ? '0 0 14px rgba(16, 185, 129, 0.5)' : 'none',
-                            transition: 'all 0.15s ease',
+                            boxShadow: cell.marked
+                              ? '0 0 18px rgba(52, 211, 153, 0.6), inset 0 0 8px rgba(255,255,255,0.3)'
+                              : isDrawn
+                              ? '0 0 12px rgba(245, 158, 11, 0.4)'
+                              : 'none',
+                            transform: cell.marked ? 'scale(0.98)' : 'scale(1)',
+                            transition: 'all 0.18s cubic-bezier(0.16, 1, 0.3, 1)',
                           }}
                         >
-                          {cell.num ?? '•'}
+                          {cell.num ?? ''}
+                          {cell.marked && (
+                            <span
+                              style={{
+                                position: 'absolute',
+                                fontSize: '11px',
+                                top: '2px',
+                                right: '4px',
+                                color: '#a7f3d0',
+                              }}
+                            >
+                              ✓
+                            </span>
+                          )}
                         </button>
                       );
                     })}
