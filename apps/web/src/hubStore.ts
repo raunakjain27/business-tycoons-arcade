@@ -144,7 +144,7 @@ interface HubStoreState {
 
 export const useHubStore = create<HubStoreState>((set) => ({
   activeGame: 'cornerstone',
-  view: 'game', // default to cornerstone, switchable via header "Games Dashboard"
+  view: 'dashboard', // default to arcade dashboard so user lands on dashboard first
   searchQuery: '',
   selectedCategory: 'All',
 

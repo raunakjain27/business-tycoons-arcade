@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useUserStore } from '../userStore';
 
 interface OnboardingModalProps {
   isOpen: boolean;
@@ -6,23 +7,43 @@ interface OnboardingModalProps {
   onSelectAvatar?: (avatar: string, nickname: string) => void;
 }
 
-const AVATAR_OPTIONS = ['🦊', '🐯', '🐼', '🦁', '🦄', '🐲', '🚀', '⚡', '🔥', '👑', '🕵️', '🎩'];
+const AVATARS = [
+  { icon: '🦊', label: 'Cunning Fox' },
+  { icon: '🦁', label: 'Alpha Lion' },
+  { icon: '👑', label: 'Tycoon King' },
+  { icon: '🕵️', label: 'Secret Agent' },
+  { icon: '⚡', label: 'Electric Spark' },
+  { icon: '🚀', label: 'Cosmic Pilot' },
+  { icon: '💎', label: 'Diamond Hand' },
+  { icon: '🔥', label: 'Inferno' },
+  { icon: '🦄', label: 'Mythic Horn' },
+  { icon: '🐲', label: 'Dragon Master' },
+  { icon: '🎩', label: 'Grand Master' },
+  { icon: '🐼', label: 'Zen Panda' },
+];
 
 export const OnboardingModal: React.FC<OnboardingModalProps> = ({ isOpen, onClose, onSelectAvatar }) => {
+  const { user, updateUsername, updateAvatar } = useUserStore();
   const [step, setStep] = useState(1);
-  const [nickname, setNickname] = useState('Ghost Rider');
-  const [selectedAvatar, setSelectedAvatar] = useState('🦊');
+  const [nickname, setNickname] = useState(user.username || 'Tycoon Rider');
+  const [selectedAvatar, setSelectedAvatar] = useState(user.avatar || '👑');
 
   if (!isOpen) return null;
 
   const handleFinish = () => {
+    const finalName = nickname.trim() || 'Player ' + Math.floor(1000 + Math.random() * 9000);
     try {
       localStorage.setItem('cornerstone_onboarded', 'true');
-      localStorage.setItem('cornerstone_anon_nickname', nickname);
+      localStorage.setItem('cornerstone_anon_nickname', finalName);
       localStorage.setItem('cornerstone_anon_avatar', selectedAvatar);
     } catch (e) {}
+
+    // Synchronize to the user account store so the account is saved immediately
+    updateUsername(finalName);
+    updateAvatar(selectedAvatar);
+
     if (onSelectAvatar) {
-      onSelectAvatar(selectedAvatar, nickname);
+      onSelectAvatar(selectedAvatar, finalName);
     }
     onClose();
   };
@@ -32,25 +53,25 @@ export const OnboardingModal: React.FC<OnboardingModalProps> = ({ isOpen, onClos
       style={{
         position: 'fixed',
         inset: 0,
-        backgroundColor: 'rgba(5, 2, 15, 0.88)',
-        backdropFilter: 'blur(16px)',
+        backgroundColor: 'rgba(5, 3, 16, 0.92)',
+        backdropFilter: 'blur(20px)',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        zIndex: 2000,
+        zIndex: 2500,
         padding: '16px',
-        animation: 'fadeIn 0.25s ease-out',
+        animation: 'fadeIn 0.25s cubic-bezier(0.16, 1, 0.3, 1)',
       }}
     >
       <div
         style={{
           width: '100%',
-          maxWidth: '520px',
-          background: 'radial-gradient(ellipse at top, #241648 0%, #0d071e 100%)',
-          borderRadius: '28px',
-          border: '1px solid rgba(255, 255, 255, 0.15)',
-          padding: '36px 32px',
-          boxShadow: '0 30px 80px rgba(0,0,0,0.9), 0 0 50px rgba(124, 58, 237, 0.25)',
+          maxWidth: '560px',
+          background: 'linear-gradient(180deg, #1f143a 0%, #0d071c 100%)',
+          borderRadius: '32px',
+          border: '1px solid rgba(255, 255, 255, 0.16)',
+          padding: '40px 36px',
+          boxShadow: '0 30px 100px rgba(0,0,0,0.95), 0 0 60px rgba(139, 92, 246, 0.35)',
           display: 'flex',
           flexDirection: 'column',
           gap: '24px',
@@ -58,147 +79,221 @@ export const OnboardingModal: React.FC<OnboardingModalProps> = ({ isOpen, onClos
           position: 'relative',
         }}
       >
-        {/* Step Indicator */}
-        <div style={{ display: 'flex', justifyContent: 'center', gap: '8px' }}>
-          {[1, 2, 3].map((s) => (
-            <div
-              key={s}
-              style={{
-                width: s === step ? '28px' : '8px',
-                height: '8px',
-                borderRadius: '4px',
-                background: s === step ? 'linear-gradient(135deg, #ec4899 0%, #8b5cf6 100%)' : 'rgba(255,255,255,0.15)',
-                transition: 'all 0.3s ease',
-              }}
-            />
-          ))}
+        {/* Step Indicator Header */}
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <span style={{ fontSize: '20px' }}>🎮</span>
+            <span style={{ fontSize: '13px', fontWeight: 800, letterSpacing: '1px', color: '#c084fc', textTransform: 'uppercase' }}>
+              Arcade Player Setup
+            </span>
+          </div>
+
+          <div style={{ display: 'flex', gap: '8px' }}>
+            {[1, 2, 3].map((s) => (
+              <div
+                key={s}
+                style={{
+                  width: s === step ? '28px' : '8px',
+                  height: '8px',
+                  borderRadius: '4px',
+                  background: s === step ? 'linear-gradient(135deg, #ec4899 0%, #8b5cf6 100%)' : 'rgba(255,255,255,0.18)',
+                  transition: 'all 0.3s cubic-bezier(0.16, 1, 0.3, 1)',
+                }}
+              />
+            ))}
+          </div>
         </div>
 
-        {/* Step 1: Welcome & Zero-Data Anonymity */}
+        {/* STEP 1: Welcome & Total Zero-Data Privacy */}
         {step === 1 && (
-          <div style={{ textAlign: 'center', display: 'flex', flexDirection: 'column', gap: '16px' }}>
-            <span style={{ fontSize: '54px' }}>🛡️🎭</span>
-            <h2 style={{ margin: 0, fontSize: '26px', fontWeight: 900, letterSpacing: '-0.5px' }}>
-              Welcome to the Arena
-            </h2>
-            <p style={{ margin: 0, fontSize: '14.5px', color: '#cbd5e1', lineHeight: 1.6 }}>
-              Enjoy real-time multiplayer board games, live voice channels, and 18+ custom social party games — with <strong>100% complete anonymity</strong>. No phone number, real name, or email required.
-            </p>
+          <div style={{ textAlign: 'center', display: 'flex', flexDirection: 'column', gap: '18px' }}>
+            <div
+              style={{
+                width: '84px',
+                height: '84px',
+                borderRadius: '26px',
+                background: 'linear-gradient(135deg, #7c3aed 0%, #ec4899 100%)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                fontSize: '44px',
+                margin: '0 auto',
+                boxShadow: '0 12px 35px rgba(236, 72, 153, 0.45)',
+              }}
+            >
+              👑
+            </div>
 
+            <div>
+              <h2 style={{ margin: 0, fontSize: '28px', fontWeight: 900, letterSpacing: '-0.5px' }}>
+                Welcome to Business Tycoons Arcade
+              </h2>
+              <p style={{ margin: '8px 0 0 0', fontSize: '14.5px', color: '#cbd5e1', lineHeight: 1.6 }}>
+                Play 7 real-time games with friends or smart bots, enjoy live turn-gated voice rooms, and compete in multiplayer tournaments — <strong>with 100% complete anonymity</strong>.
+              </p>
+            </div>
+
+            {/* Privacy & Feature Highlights */}
             <div
               style={{
                 background: 'rgba(255,255,255,0.04)',
                 border: '1px solid rgba(255,255,255,0.08)',
-                borderRadius: '16px',
-                padding: '16px',
+                borderRadius: '20px',
+                padding: '18px',
                 textAlign: 'left',
                 display: 'flex',
                 flexDirection: 'column',
-                gap: '8px',
-                fontSize: '12.5px',
-                color: '#94a3b8',
+                gap: '10px',
+                fontSize: '13px',
               }}
             >
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#4ade80' }}>
-                <span>✓</span> <strong>Zero PII Collected:</strong> Pure pseudonymous burner IDs
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px', color: '#4ade80' }}>
+                <span style={{ fontSize: '18px' }}>🛡️</span>
+                <div>
+                  <strong>Zero-PII Account:</strong> No phone number, real name, or email tracked.
+                </div>
               </div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#38bdf8' }}>
-                <span>✓</span> <strong>Encrypted WebRTC Audio:</strong> End-to-end ephemeral voice mesh
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px', color: '#38bdf8' }}>
+                <span style={{ fontSize: '18px' }}>🎙️</span>
+                <div>
+                  <strong>Live Voice Rooms:</strong> Turn-gated mic discussion in The Traitors and party banter.
+                </div>
               </div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#f472b6' }}>
-                <span>✓</span> <strong>Private Rooms:</strong> Shareable invite codes for you and friends
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px', color: '#f472b6' }}>
+                <span style={{ fontSize: '18px' }}>⚡</span>
+                <div>
+                  <strong>Persistent Identity:</strong> Your coins, custom friend names, and VIP status stay saved.
+                </div>
               </div>
             </div>
 
             <button
               onClick={() => setStep(2)}
               style={{
-                background: 'linear-gradient(135deg, #ec4899 0%, #8b5cf6 100%)',
+                background: 'linear-gradient(135deg, #7c3aed 0%, #ec4899 100%)',
                 color: '#ffffff',
                 border: 'none',
-                padding: '14px',
-                borderRadius: '14px',
-                fontSize: '15px',
-                fontWeight: 800,
+                padding: '16px',
+                borderRadius: '16px',
+                fontSize: '16px',
+                fontWeight: 900,
                 cursor: 'pointer',
-                boxShadow: '0 8px 25px rgba(236,72,153,0.4)',
+                boxShadow: '0 10px 30px rgba(236,72,153,0.4)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '8px',
+                transition: 'transform 0.15s ease',
               }}
             >
-              Choose Anonymous Persona →
+              <span>Set Up Anonymous Profile</span>
+              <span>→</span>
             </button>
           </div>
         )}
 
-        {/* Step 2: Choose Persona */}
+        {/* STEP 2: Persona Customization & Account Handle */}
         {step === 2 && (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '22px' }}>
             <div style={{ textAlign: 'center' }}>
-              <h3 style={{ margin: 0, fontSize: '22px', fontWeight: 900 }}>Create Your Persona</h3>
-              <p style={{ margin: '4px 0 0 0', fontSize: '13px', color: '#94a3b8' }}>
-                How fellow players and friends will see you at the tables
+              <h3 style={{ margin: 0, fontSize: '24px', fontWeight: 900 }}>Create Your Identity</h3>
+              <p style={{ margin: '6px 0 0 0', fontSize: '13.5px', color: '#94a3b8' }}>
+                This is how other players will see you across all game rooms and voice channels.
               </p>
             </div>
 
+            {/* Display Handle Input */}
             <div>
-              <label style={{ fontSize: '13px', fontWeight: 700, color: '#f472b6', display: 'block', marginBottom: '8px' }}>
-                Anonymous Nickname
+              <label style={{ fontSize: '13px', fontWeight: 800, color: '#f472b6', display: 'block', marginBottom: '8px' }}>
+                Your Player Moniker / Display Name
               </label>
-              <input
-                type="text"
-                value={nickname}
-                onChange={(e) => setNickname(e.target.value)}
-                placeholder="Enter handle..."
-                style={{
-                  width: '100%',
-                  padding: '12px 16px',
-                  borderRadius: '12px',
-                  border: '1px solid rgba(255,255,255,0.15)',
-                  background: '#090514',
-                  color: '#fff',
-                  fontSize: '15px',
-                  outline: 'none',
-                  boxSizing: 'border-box',
-                }}
-              />
+              <div style={{ position: 'relative' }}>
+                <input
+                  type="text"
+                  value={nickname}
+                  onChange={(e) => setNickname(e.target.value)}
+                  placeholder="Enter your game name..."
+                  style={{
+                    width: '100%',
+                    padding: '14px 18px',
+                    borderRadius: '14px',
+                    border: '1.5px solid rgba(255,255,255,0.2)',
+                    background: '#090514',
+                    color: '#ffffff',
+                    fontSize: '16px',
+                    fontWeight: 700,
+                    outline: 'none',
+                    boxSizing: 'border-box',
+                  }}
+                />
+                <button
+                  type="button"
+                  onClick={() => setNickname('Tycoon_' + Math.floor(100 + Math.random() * 900))}
+                  style={{
+                    position: 'absolute',
+                    right: '10px',
+                    top: '50%',
+                    transform: 'translateY(-50%)',
+                    background: 'rgba(255,255,255,0.1)',
+                    border: 'none',
+                    color: '#c084fc',
+                    padding: '6px 12px',
+                    borderRadius: '8px',
+                    fontSize: '12px',
+                    fontWeight: 700,
+                    cursor: 'pointer',
+                  }}
+                >
+                  🎲 Randomize
+                </button>
+              </div>
             </div>
 
+            {/* Avatar Grid Picker */}
             <div>
-              <label style={{ fontSize: '13px', fontWeight: 700, color: '#38bdf8', display: 'block', marginBottom: '8px' }}>
-                Choose Your Avatar Icon
+              <label style={{ fontSize: '13px', fontWeight: 800, color: '#38bdf8', display: 'block', marginBottom: '8px' }}>
+                Choose Your Avatar
               </label>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(6, 1fr)', gap: '10px' }}>
-                {AVATAR_OPTIONS.map((av) => (
+                {AVATARS.map((av) => (
                   <button
-                    key={av}
-                    onClick={() => setSelectedAvatar(av)}
+                    key={av.icon}
+                    type="button"
+                    onClick={() => setSelectedAvatar(av.icon)}
+                    title={av.label}
                     style={{
                       aspectRatio: '1/1',
-                      borderRadius: '12px',
-                      background: selectedAvatar === av ? 'rgba(124, 58, 237, 0.4)' : 'rgba(255,255,255,0.05)',
-                      border: selectedAvatar === av ? '2px solid #ec4899' : '1px solid rgba(255,255,255,0.1)',
-                      fontSize: '24px',
+                      borderRadius: '14px',
+                      background: selectedAvatar === av.icon ? 'linear-gradient(135deg, rgba(124, 58, 237, 0.5) 0%, rgba(236, 72, 153, 0.5) 100%)' : 'rgba(255,255,255,0.05)',
+                      border: selectedAvatar === av.icon ? '2px solid #ec4899' : '1px solid rgba(255,255,255,0.1)',
+                      fontSize: '26px',
                       cursor: 'pointer',
-                      transform: selectedAvatar === av ? 'scale(1.1)' : 'none',
+                      transform: selectedAvatar === av.icon ? 'scale(1.1)' : 'none',
                       transition: 'all 0.15s ease',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
                     }}
                   >
-                    {av}
+                    {av.icon}
                   </button>
                 ))}
               </div>
             </div>
 
-            <div style={{ display: 'flex', gap: '12px', marginTop: '10px' }}>
+            {/* Stepper Buttons */}
+            <div style={{ display: 'flex', gap: '12px', marginTop: '8px' }}>
               <button
                 onClick={() => setStep(1)}
                 style={{
                   flex: 1,
-                  padding: '12px',
-                  borderRadius: '12px',
-                  border: '1px solid rgba(255,255,255,0.15)',
+                  padding: '14px',
+                  borderRadius: '14px',
+                  border: '1px solid rgba(255,255,255,0.2)',
                   background: 'none',
                   color: '#94a3b8',
                   fontWeight: 700,
+                  fontSize: '14px',
                   cursor: 'pointer',
                 }}
               >
@@ -211,42 +306,43 @@ export const OnboardingModal: React.FC<OnboardingModalProps> = ({ isOpen, onClos
                   background: 'linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%)',
                   color: '#ffffff',
                   border: 'none',
-                  padding: '12px',
-                  borderRadius: '12px',
-                  fontWeight: 800,
+                  padding: '14px',
+                  borderRadius: '14px',
+                  fontWeight: 900,
                   fontSize: '15px',
                   cursor: 'pointer',
+                  boxShadow: '0 8px 25px rgba(59, 130, 246, 0.4)',
                 }}
               >
-                Next: Quick Tour →
+                Next: Quick Guide →
               </button>
             </div>
           </div>
         )}
 
-        {/* Step 3: Game Guide Tour */}
+        {/* STEP 3: Arcade Overview & Ready */}
         {step === 3 && (
           <div style={{ textAlign: 'center', display: 'flex', flexDirection: 'column', gap: '20px' }}>
-            <span style={{ fontSize: '50px' }}>🎉🚀</span>
+            <span style={{ fontSize: '50px' }}>🎉✨</span>
             <div>
-              <h3 style={{ margin: 0, fontSize: '24px', fontWeight: 900 }}>You are Battle Ready!</h3>
+              <h3 style={{ margin: 0, fontSize: '26px', fontWeight: 900 }}>Your Account is Live!</h3>
               <p style={{ margin: '6px 0 0 0', fontSize: '14px', color: '#94a3b8' }}>
-                Join private friend rooms, toggle between Smart Bots or Humans, and talk live using the mic!
+                Always access your account, edit name/avatar, and check coins from the top right <strong>Account</strong> button.
               </p>
             </div>
 
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '10px', textAlign: 'left', fontSize: '12.5px' }}>
-              <div style={{ background: 'rgba(255,255,255,0.04)', padding: '12px', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.08)' }}>
-                <strong>🗡️ The Traitors:</strong> Highland castle roundtables with 20s turn-gated mics, shields, and daggers.
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '10px', textAlign: 'left', fontSize: '13px' }}>
+              <div style={{ background: 'rgba(255,255,255,0.04)', padding: '14px', borderRadius: '14px', border: '1px solid rgba(255,255,255,0.08)' }}>
+                <strong>🏙️ Business Tycoons:</strong> Full property trading, 18+ boards, and auctions.
               </div>
-              <div style={{ background: 'rgba(255,255,255,0.04)', padding: '12px', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.08)' }}>
-                <strong>🃏 UNO Champions:</strong> 3D cards, draw stacks, and instant Uno yelling.
+              <div style={{ background: 'rgba(255,255,255,0.04)', padding: '14px', borderRadius: '14px', border: '1px solid rgba(255,255,255,0.08)' }}>
+                <strong>🗡️ The Traitors:</strong> Highland castle roundtables with 20s turn-gated mics.
               </div>
-              <div style={{ background: 'rgba(255,255,255,0.04)', padding: '12px', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.08)' }}>
-                <strong>🎲 Ludo Realism:</strong> Full cross tracks, star safezones, token cutting, and dice roll physics.
+              <div style={{ background: 'rgba(255,255,255,0.04)', padding: '14px', borderRadius: '14px', border: '1px solid rgba(255,255,255,0.08)' }}>
+                <strong>🃏 UNO Champions:</strong> 3D cards, draw stack, reverse, and yell UNO!
               </div>
-              <div style={{ background: 'rgba(255,255,255,0.04)', padding: '12px', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.08)' }}>
-                <strong>🐍 3D Snakes & Ladders:</strong> Animated slithers, bouncy pegs, and ladder jumps.
+              <div style={{ background: 'rgba(255,255,255,0.04)', padding: '14px', borderRadius: '14px', border: '1px solid rgba(255,255,255,0.08)' }}>
+                <strong>🎲 Ludo Superstars:</strong> 15x15 cross tracks, safe stars, and home victory.
               </div>
             </div>
 
@@ -257,11 +353,11 @@ export const OnboardingModal: React.FC<OnboardingModalProps> = ({ isOpen, onClos
                 color: '#ffffff',
                 border: 'none',
                 padding: '16px',
-                borderRadius: '14px',
+                borderRadius: '16px',
                 fontSize: '16px',
                 fontWeight: 900,
                 cursor: 'pointer',
-                boxShadow: '0 8px 25px rgba(16,185,129,0.4)',
+                boxShadow: '0 10px 30px rgba(16,185,129,0.45)',
               }}
             >
               Enter Arcade Dashboard 🚀

@@ -192,21 +192,27 @@ export function App() {
           <button
             onClick={() => setShowAccountModal(true)}
             style={{
-              padding: '6px 12px',
-              borderRadius: '6px',
-              border: user.isVip ? '1px solid #f59e0b' : '1px solid rgba(255, 255, 255, 0.2)',
-              backgroundColor: user.isVip ? 'rgba(245, 158, 11, 0.2)' : 'rgba(255, 255, 255, 0.08)',
+              padding: '6px 14px',
+              borderRadius: '20px',
+              border: user.isVip ? '1.5px solid #f59e0b' : '1px solid rgba(255, 255, 255, 0.25)',
+              backgroundColor: user.isVip ? 'rgba(245, 158, 11, 0.2)' : 'rgba(255, 255, 255, 0.1)',
               color: user.isVip ? '#fbbf24' : '#ffffff',
-              fontSize: '12px',
-              fontWeight: 700,
+              fontSize: '13px',
+              fontWeight: 800,
               cursor: 'pointer',
               display: 'flex',
               alignItems: 'center',
-              gap: '6px',
+              gap: '8px',
+              boxShadow: user.isVip ? '0 0 15px rgba(245, 158, 11, 0.3)' : '0 2px 8px rgba(0,0,0,0.2)',
             }}
           >
-            <span>{user.avatar || '👤'}</span>
-            <span>{user.isVip ? 'VIP PASS' : 'Account'}</span>
+            <span style={{ fontSize: '16px' }}>{user.avatar || '👑'}</span>
+            <span>{user.username}</span>
+            {user.isVip && (
+              <span style={{ fontSize: '10px', background: '#f59e0b', color: '#000', padding: '1px 5px', borderRadius: '4px', fontWeight: 900 }}>
+                VIP
+              </span>
+            )}
           </button>
 
           {view === 'game' && activeGame === 'cornerstone' && (

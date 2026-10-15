@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useUserStore } from '../userStore';
 
 export const AccountModal: React.FC = () => {
@@ -6,10 +6,16 @@ export const AccountModal: React.FC = () => {
   const [nameInput, setNameInput] = useState(user.username);
   const [selectedAvatar, setSelectedAvatar] = useState(user.avatar);
   const [upgraded, setUpgraded] = useState(false);
+  const [copiedKey, setCopiedKey] = useState(false);
+
+  useEffect(() => {
+    setNameInput(user.username);
+    setSelectedAvatar(user.avatar);
+  }, [user.username, user.avatar]);
 
   if (!showAccountModal) return null;
 
-  const AVATARS = ['👾', '😎', '🎩', '👑', '🦊', '🐱', '🦁', '🚀', '💎', '🔥'];
+  const AVATARS = ['👑', '🦊', '🦁', '🕵️', '⚡', '🚀', '💎', '🔥', '🦄', '🐲', '🎩', '👾'];
 
   const handleSave = () => {
     if (nameInput.trim()) updateUsername(nameInput.trim());
@@ -23,52 +29,56 @@ export const AccountModal: React.FC = () => {
     setTimeout(() => setUpgraded(false), 3000);
   };
 
+  const copyAccountRecoveryKey = () => {
+    navigator.clipboard.writeText(`TYCOON-KEY-${user.id}`);
+    setCopiedKey(true);
+    setTimeout(() => setCopiedKey(false), 2000);
+  };
+
   return (
     <div
       style={{
         position: 'fixed',
-        top: 0,
-        left: 0,
-        right: 0,
-        bottom: 0,
-        backgroundColor: 'rgba(10, 8, 20, 0.85)',
-        backdropFilter: 'blur(8px)',
+        inset: 0,
+        backgroundColor: 'rgba(7, 3, 18, 0.9)',
+        backdropFilter: 'blur(16px)',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        zIndex: 1200,
+        zIndex: 2200,
         padding: '16px',
+        animation: 'fadeIn 0.2s ease-out',
       }}
       onClick={() => setShowAccountModal(false)}
     >
       <div
         style={{
-          backgroundColor: '#1f1638',
-          borderRadius: '16px',
-          border: '1px solid rgba(255, 255, 255, 0.15)',
-          boxShadow: '0 25px 60px rgba(0, 0, 0, 0.9), 0 0 40px rgba(236, 72, 153, 0.25)',
-          maxWidth: '500px',
+          background: 'linear-gradient(180deg, #1e1338 0%, #0d061c 100%)',
+          borderRadius: '24px',
+          border: '1px solid rgba(255, 255, 255, 0.16)',
+          boxShadow: '0 30px 80px rgba(0, 0, 0, 0.95), 0 0 50px rgba(124, 58, 237, 0.3)',
+          maxWidth: '520px',
           width: '100%',
-          padding: '24px',
+          padding: '28px',
           color: '#f8fafc',
           display: 'flex',
           flexDirection: 'column',
-          gap: '20px',
+          gap: '22px',
         }}
-        onClick={e => e.stopPropagation()}
+        onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid rgba(255,255,255,0.08)', paddingBottom: '12px' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid rgba(255,255,255,0.08)', paddingBottom: '14px' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-            <span style={{ fontSize: '24px' }}>👤</span>
+            <span style={{ fontSize: '26px' }}>👤</span>
             <div>
-              <h3 style={{ margin: 0, fontSize: '18px', fontWeight: 800 }}>Player Account & VIP Club</h3>
-              <span style={{ fontSize: '12px', color: '#94a3b8' }}>Manage profile, badges, and unlock exclusive content</span>
+              <h3 style={{ margin: 0, fontSize: '20px', fontWeight: 900 }}>Player Account & Identity</h3>
+              <span style={{ fontSize: '12px', color: '#94a3b8' }}>Zero-PII profile, game perks & VIP status</span>
             </div>
           </div>
           <button
             onClick={() => setShowAccountModal(false)}
-            style={{ background: 'none', border: 'none', color: '#94a3b8', fontSize: '20px', cursor: 'pointer', fontWeight: 700 }}
+            style={{ background: 'none', border: 'none', color: '#94a3b8', fontSize: '22px', cursor: 'pointer', fontWeight: 700 }}
           >
             ✕
           </button>
@@ -81,22 +91,22 @@ export const AccountModal: React.FC = () => {
             alignItems: 'center',
             gap: '16px',
             backgroundColor: 'rgba(255, 255, 255, 0.04)',
-            padding: '16px',
-            borderRadius: '12px',
+            padding: '18px',
+            borderRadius: '16px',
             border: '1px solid rgba(255, 255, 255, 0.08)',
           }}
         >
           <div
             style={{
-              width: '54px',
-              height: '54px',
-              borderRadius: '50%',
-              backgroundColor: user.isVip ? '#d97706' : '#7c3aed',
+              width: '60px',
+              height: '60px',
+              borderRadius: '20px',
+              background: user.isVip ? 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)' : 'linear-gradient(135deg, #7c3aed 0%, #ec4899 100%)',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              fontSize: '28px',
-              boxShadow: user.isVip ? '0 0 16px rgba(245, 158, 11, 0.6)' : '0 0 16px rgba(124, 58, 237, 0.6)',
+              fontSize: '32px',
+              boxShadow: user.isVip ? '0 0 20px rgba(245, 158, 11, 0.6)' : '0 0 20px rgba(124, 58, 237, 0.6)',
             }}
           >
             {selectedAvatar}
@@ -106,57 +116,59 @@ export const AccountModal: React.FC = () => {
               <input
                 type="text"
                 value={nameInput}
-                onChange={e => setNameInput(e.target.value)}
+                onChange={(e) => setNameInput(e.target.value)}
                 style={{
-                  backgroundColor: 'rgba(0,0,0,0.3)',
-                  border: '1px solid rgba(255,255,255,0.15)',
-                  borderRadius: '6px',
+                  backgroundColor: 'rgba(0,0,0,0.4)',
+                  border: '1px solid rgba(255,255,255,0.2)',
+                  borderRadius: '8px',
                   color: '#ffffff',
-                  fontSize: '15px',
-                  fontWeight: 700,
-                  padding: '4px 8px',
-                  width: '160px',
+                  fontSize: '16px',
+                  fontWeight: 800,
+                  padding: '6px 10px',
+                  width: '180px',
+                  outline: 'none',
                 }}
               />
               {user.isVip ? (
-                <span style={{ backgroundColor: '#f59e0b', color: '#000', fontSize: '11px', fontWeight: 800, padding: '2px 8px', borderRadius: '9999px' }}>
-                  ⭐ VIP PASS
+                <span style={{ backgroundColor: '#f59e0b', color: '#000', fontSize: '11px', fontWeight: 900, padding: '3px 8px', borderRadius: '6px' }}>
+                  ⭐ VIP CLUB
                 </span>
               ) : (
-                <span style={{ backgroundColor: '#64748b', color: '#fff', fontSize: '11px', fontWeight: 700, padding: '2px 8px', borderRadius: '9999px' }}>
-                  FREE
+                <span style={{ backgroundColor: '#475569', color: '#fff', fontSize: '11px', fontWeight: 700, padding: '3px 8px', borderRadius: '6px' }}>
+                  STANDARD
                 </span>
               )}
             </div>
-            <div style={{ fontSize: '12px', color: '#94a3b8', marginTop: '4px' }}>
-              Player ID: <code style={{ color: '#a78bfa' }}>{user.id}</code> • Balance: <strong style={{ color: '#10b981' }}>{user.coins} Coins</strong>
+            <div style={{ fontSize: '12.5px', color: '#94a3b8', marginTop: '6px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <span>ID: <code style={{ color: '#c084fc' }}>{user.id}</code></span>
+              <span>•</span>
+              <span>Coins: <strong style={{ color: '#10b981' }}>{user.coins}</strong></span>
             </div>
           </div>
         </div>
 
         {/* Avatar Picker */}
         <div>
-          <label style={{ fontSize: '12px', fontWeight: 700, color: '#e2e8f0', display: 'block', marginBottom: '8px' }}>
+          <label style={{ fontSize: '12.5px', fontWeight: 800, color: '#e2e8f0', display: 'block', marginBottom: '10px' }}>
             Choose Profile Picture:
           </label>
-          <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-            {AVATARS.map(av => (
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(6, 1fr)', gap: '8px' }}>
+            {AVATARS.map((av) => (
               <button
                 key={av}
                 type="button"
                 onClick={() => setSelectedAvatar(av)}
                 style={{
-                  width: '38px',
-                  height: '38px',
-                  borderRadius: '8px',
-                  border: selectedAvatar === av ? '2px solid #a78bfa' : '1px solid rgba(255,255,255,0.1)',
-                  backgroundColor: selectedAvatar === av ? 'rgba(167, 139, 250, 0.3)' : 'rgba(255,255,255,0.04)',
-                  fontSize: '20px',
+                  aspectRatio: '1/1',
+                  borderRadius: '12px',
+                  border: selectedAvatar === av ? '2px solid #ec4899' : '1px solid rgba(255,255,255,0.1)',
+                  backgroundColor: selectedAvatar === av ? 'rgba(236, 72, 153, 0.25)' : 'rgba(255,255,255,0.04)',
+                  fontSize: '24px',
                   cursor: 'pointer',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  transform: selectedAvatar === av ? 'scale(1.1)' : 'scale(1)',
+                  transform: selectedAvatar === av ? 'scale(1.08)' : 'scale(1)',
                   transition: 'all 0.15s ease',
                 }}
               >
@@ -166,13 +178,48 @@ export const AccountModal: React.FC = () => {
           </div>
         </div>
 
+        {/* Permanent Account Recovery Strip */}
+        <div
+          style={{
+            background: 'rgba(255,255,255,0.03)',
+            borderRadius: '12px',
+            border: '1px solid rgba(255,255,255,0.08)',
+            padding: '12px 14px',
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            fontSize: '12px',
+          }}
+        >
+          <div>
+            <div style={{ fontWeight: 700, color: '#cbd5e1' }}>🔒 Device Account Persistence</div>
+            <div style={{ color: '#64748b', fontSize: '11px' }}>Your profile & coins stay tied to this browser session</div>
+          </div>
+
+          <button
+            onClick={copyAccountRecoveryKey}
+            style={{
+              background: 'rgba(255,255,255,0.08)',
+              border: 'none',
+              borderRadius: '6px',
+              padding: '6px 10px',
+              color: copiedKey ? '#4ade80' : '#c084fc',
+              fontSize: '11px',
+              fontWeight: 700,
+              cursor: 'pointer',
+            }}
+          >
+            {copiedKey ? '✓ Copied ID' : 'Copy ID'}
+          </button>
+        </div>
+
         {/* VIP Pass Section (18+ Board & Ad-Free Unlock) */}
         <div
           style={{
             backgroundColor: user.isVip ? 'rgba(245, 158, 11, 0.1)' : 'rgba(236, 72, 153, 0.12)',
             border: user.isVip ? '1px solid #f59e0b' : '1px solid #ec4899',
-            borderRadius: '12px',
-            padding: '16px',
+            borderRadius: '16px',
+            padding: '16px 18px',
             display: 'flex',
             flexDirection: 'column',
             gap: '10px',
@@ -180,13 +227,13 @@ export const AccountModal: React.FC = () => {
         >
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <div>
-              <div style={{ fontSize: '14px', fontWeight: 800, color: user.isVip ? '#fbbf24' : '#f472b6', display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <div style={{ fontSize: '14.5px', fontWeight: 900, color: user.isVip ? '#fbbf24' : '#f472b6', display: 'flex', alignItems: 'center', gap: '6px' }}>
                 <span>🔥</span>
                 <span>VIP & 18+ After Dark Pass</span>
               </div>
-              <div style={{ fontSize: '12px', color: '#e2e8f0', marginTop: '2px' }}>
+              <div style={{ fontSize: '12px', color: '#e2e8f0', marginTop: '3px' }}>
                 {user.isVip
-                  ? 'All 18+ boards, custom friends board, and VIP animated pegs are unlocked! No ads.'
+                  ? 'Active! All 18+ boards, custom friends board, and VIP animated pegs unlocked. No ads.'
                   : 'Unlock the exclusive 18+ After Dark board, Custom Friends board, VIP animated pegs & remove all ads.'}
               </div>
             </div>
@@ -196,19 +243,19 @@ export const AccountModal: React.FC = () => {
             <button
               onClick={handleBuyVip}
               style={{
-                padding: '10px 16px',
-                borderRadius: '8px',
+                padding: '12px 18px',
+                borderRadius: '12px',
                 border: 'none',
                 background: 'linear-gradient(135deg, #ec4899 0%, #8b5cf6 100%)',
                 color: '#ffffff',
-                fontWeight: 800,
+                fontWeight: 900,
                 fontSize: '13px',
                 cursor: 'pointer',
                 boxShadow: '0 4px 14px rgba(236, 72, 153, 0.4)',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                gap: '6px',
+                gap: '8px',
               }}
             >
               <span>⭐</span>
@@ -223,20 +270,21 @@ export const AccountModal: React.FC = () => {
           )}
         </div>
 
-        {/* Actions */}
-        <div style={{ display: 'flex', gap: '10px', marginTop: '6px' }}>
+        {/* Action Buttons */}
+        <div style={{ display: 'flex', gap: '10px', marginTop: '4px' }}>
           <button
             onClick={handleSave}
             style={{
               flex: 1,
-              padding: '12px',
-              borderRadius: '8px',
+              padding: '14px',
+              borderRadius: '12px',
               border: 'none',
-              backgroundColor: '#7c3aed',
+              background: 'linear-gradient(135deg, #7c3aed 0%, #ec4899 100%)',
               color: '#ffffff',
-              fontWeight: 700,
+              fontWeight: 800,
               fontSize: '14px',
               cursor: 'pointer',
+              boxShadow: '0 4px 15px rgba(124, 58, 237, 0.4)',
             }}
           >
             Save Profile
@@ -244,12 +292,12 @@ export const AccountModal: React.FC = () => {
           <button
             onClick={() => setShowAccountModal(false)}
             style={{
-              padding: '12px 18px',
-              borderRadius: '8px',
+              padding: '14px 20px',
+              borderRadius: '12px',
               border: '1px solid rgba(255,255,255,0.15)',
               backgroundColor: 'transparent',
               color: '#94a3b8',
-              fontWeight: 600,
+              fontWeight: 700,
               fontSize: '13px',
               cursor: 'pointer',
             }}
