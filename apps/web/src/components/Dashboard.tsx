@@ -118,7 +118,7 @@ export const Dashboard: React.FC = () => {
           </h1>
 
           <p style={{ fontSize: '16px', color: '#cbd5e1', lineHeight: 1.6, margin: '0 0 28px 0', maxWidth: '680px' }}>
-            Select from 7 tournament-grade games: property trading on custom 18+ boards in <strong>Business Tycoons</strong>, turn-gated mic trials in <strong>The Traitors</strong>, rapid-fire card warfare in <strong>UNO</strong>, or classic <strong>Ludo</strong>.
+            Select from 9 tournament-grade games: authentic Indian <strong>Tambola (Housie)</strong>, classic <strong>Bingo 75</strong>, property trading in <strong>Business Tycoons</strong>, turn-gated mic trials in <strong>The Traitors</strong>, rapid-fire card warfare in <strong>UNO</strong>, or classic <strong>Ludo</strong>.
           </p>
 
           {/* Hero Action Buttons */}

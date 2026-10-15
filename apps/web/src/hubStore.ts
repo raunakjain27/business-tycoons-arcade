@@ -8,7 +8,9 @@ export type GameId =
   | 'imposter'
   | 'ludo'
   | 'snakes'
-  | 'wordgame';
+  | 'wordgame'
+  | 'tambola'
+  | 'bingo';
 
 export interface GameMetadata {
   id: GameId;
@@ -37,6 +39,32 @@ export const GAME_CATALOG: GameMetadata[] = [
     bannerGradient: 'linear-gradient(135deg, #7c3aed 0%, #ec4899 100%)',
     rating: 4.9,
     plays: '124K',
+  },
+  {
+    id: 'tambola',
+    title: 'Tambola (Housie)',
+    category: 'Party',
+    icon: '🎟️',
+    badge: 'Hot Party',
+    minPlayers: 2,
+    maxPlayers: 12,
+    description: 'Authentic 3x9 Indian Housie ticket game. Call numbers 1-90, dab tiles, and claim Early 5, Lines, & Full House!',
+    bannerGradient: 'linear-gradient(135deg, #f59e0b 0%, #ec4899 100%)',
+    rating: 4.9,
+    plays: '185K',
+  },
+  {
+    id: 'bingo',
+    title: 'Bingo 75 Champions',
+    category: 'Classic',
+    icon: '🎱',
+    badge: 'Classic 5x5',
+    minPlayers: 2,
+    maxPlayers: 12,
+    description: 'Classic 5x5 B-I-N-G-O grid with center FREE space. Form horizontal, vertical, diagonal lines, and 4 corners!',
+    bannerGradient: 'linear-gradient(135deg, #3b82f6 0%, #10b981 100%)',
+    rating: 4.8,
+    plays: '142K',
   },
   {
     id: 'uno',

@@ -22,6 +22,8 @@ import { ImposterGame } from './games/ImposterGame';
 import { TraitorsGame } from './games/TraitorsGame';
 import { SequenceGame } from './games/SequenceGame';
 import { WordGame } from './games/WordGame';
+import { TambolaGame } from './games/TambolaGame';
+import { BingoGame } from './games/BingoGame';
 
 export function App() {
   const [showSettings, setShowSettings] = React.useState(false);
@@ -349,6 +351,10 @@ export function App() {
           <SequenceGame />
         ) : activeGame === 'wordgame' ? (
           <WordGame />
+        ) : activeGame === 'tambola' ? (
+          <TambolaGame />
+        ) : activeGame === 'bingo' ? (
+          <BingoGame />
         ) : (
           /* Cornerstone Game */
           <div style={{ display: 'flex', flexDirection: 'column', gap: '20px', width: '100%' }}>
