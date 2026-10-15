@@ -126,9 +126,9 @@ export const StoreModal: React.FC = () => {
   ];
 
   const COIN_PACKS = [
-    { id: 'coins_500', coins: 500, price: 0.99, icon: '🪙', label: 'Handful of Coins', bonus: '' },
-    { id: 'coins_2500', coins: 2500, price: 3.99, icon: '💰', label: 'Bag of Gold', bonus: '+25% Extra', popular: true },
-    { id: 'coins_7500', coins: 7500, price: 9.99, icon: '💎', label: 'Tycoon Vault', bonus: '+50% Extra', badge: 'Best Value' },
+    { id: 'coins_500', coins: 500, priceUsd: 0.99, priceInr: 89, icon: '🪙', label: 'Handful of Coins', bonus: '' },
+    { id: 'coins_2500', coins: 2500, priceUsd: 3.99, priceInr: 349, icon: '💰', label: 'Bag of Gold', bonus: '+25% Extra', popular: true },
+    { id: 'coins_7500', coins: 7500, priceUsd: 9.99, priceInr: 899, icon: '💎', label: 'Tycoon Vault', bonus: '+50% Extra', badge: 'Best Value' },
   ];
 
   const handleBuyItem = (item: StoreItem) => {
@@ -572,9 +572,14 @@ export const StoreModal: React.FC = () => {
                       fontSize: '13px',
                       cursor: 'pointer',
                       marginTop: '8px',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      alignItems: 'center',
+                      gap: '2px',
                     }}
                   >
-                    ${pack.price} USD
+                    <span>₹{pack.priceInr} / ${pack.priceUsd}</span>
+                    <span style={{ fontSize: '10.5px', opacity: 0.85, fontWeight: 700 }}>UPI, Cards & NetBanking</span>
                   </button>
                 </div>
               ))}
@@ -609,8 +614,8 @@ export const StoreModal: React.FC = () => {
                 </div>
 
                 <div style={{ textAlign: 'right' }}>
-                  <div style={{ fontSize: '26px', fontWeight: 900, color: '#ffffff' }}>$4.99</div>
-                  <span style={{ fontSize: '11px', color: '#94a3b8' }}>One-time payment</span>
+                  <div style={{ fontSize: '26px', fontWeight: 900, color: '#ffffff' }}>₹399 <span style={{ fontSize: '18px', color: '#94a3b8' }}>($4.99)</span></div>
+                  <span style={{ fontSize: '11px', color: '#94a3b8' }}>One-time payment • Lifetime</span>
                 </div>
               </div>
 
@@ -662,7 +667,7 @@ export const StoreModal: React.FC = () => {
                   boxShadow: '0 8px 25px rgba(245, 158, 11, 0.4)',
                 }}
               >
-                {user.isVip ? '✓ You Are Already A VIP Member' : '⭐ Get VIP Lifetime Pass ($4.99)'}
+                {user.isVip ? '✓ You Are Already A VIP Member' : '⭐ Get VIP Lifetime Pass — ₹399 / $4.99'}
               </button>
             </div>
           )}

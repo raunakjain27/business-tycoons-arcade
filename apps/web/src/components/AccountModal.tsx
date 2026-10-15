@@ -261,7 +261,7 @@ export const AccountModal: React.FC = () => {
               }}
             >
               <span>⭐</span>
-              <span>Unlock 18+ VIP Pass ($4.99 / One-time)</span>
+              <span>Unlock 18+ VIP Pass — ₹399 / $4.99 (One-Time)</span>
             </button>
           )}
 
