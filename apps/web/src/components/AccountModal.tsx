@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useUserStore } from '../userStore';
+import { soundFx } from '../soundEffects';
 
 export const AccountModal: React.FC = () => {
   const { user, showAccountModal, setShowAccountModal, updateUsername, updateAvatar, upgradeToVip } = useUserStore();
@@ -24,6 +25,7 @@ export const AccountModal: React.FC = () => {
   };
 
   const handleBuyVip = () => {
+    soundFx.playCashRegister();
     upgradeToVip();
     setUpgraded(true);
     setTimeout(() => setUpgraded(false), 3000);

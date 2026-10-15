@@ -4,6 +4,7 @@ import { useGameRoomStore } from '../gameRoomStore';
 import { useVoiceStore } from '../voiceStore';
 import { GameRoomLobby } from '../components/GameRoomLobby';
 import { VoiceRoomBar } from '../components/VoiceRoomBar';
+import { soundFx } from '../soundEffects';
 
 type CardColor = 'red' | 'blue' | 'green' | 'yellow' | 'wild';
 type CardValue = '0' | '1' | '2' | '3' | '4' | '5' | '6' | '7' | '8' | '9' | 'skip' | 'reverse' | 'draw2' | 'wild' | 'draw4';
@@ -228,18 +229,27 @@ export const UnoGame: React.FC = () => {
     setLastPlayedAnim(card.id);
     setTimeout(() => setLastPlayedAnim(null), 600);
 
+    // Audio effects
+    if (['wild', 'draw4', 'skip', 'reverse', 'draw2'].includes(card.value)) {
+      soundFx.playCardSpecial();
+    } else {
+      soundFx.playCardFlip();
+    }
+
     const newColor = chosenColor || (card.color === 'wild' ? 'red' : card.color);
     setActiveColor(newColor);
 
     logMessage(`${player.name} played ${card.color.toUpperCase()} ${card.value}${chosenColor ? ` (picked ${chosenColor})` : ''}`);
 
     if (remainingCards.length === 0) {
+      soundFx.playVictory();
       setWinner(player);
       logMessage(`🎉 ${player.name} has played all cards and WON the match!`);
       return;
     }
 
     if (remainingCards.length === 1) {
+      soundFx.playCardSpecial();
       logMessage(`⚠️ ${player.name} calls UNO! Only 1 card left!`);
     }
 

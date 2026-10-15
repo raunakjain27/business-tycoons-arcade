@@ -4,6 +4,7 @@ import { useGameRoomStore } from '../gameRoomStore';
 import { useVoiceStore } from '../voiceStore';
 import { GameRoomLobby } from '../components/GameRoomLobby';
 import { VoiceRoomBar } from '../components/VoiceRoomBar';
+import { soundFx } from '../soundEffects';
 
 interface TraitorPlayer {
   id: string;
@@ -199,6 +200,7 @@ export const TraitorsGame: React.FC = () => {
 
     const victim = players.find((p) => p.id === banishedId)!;
     setBanishedPlayer(victim);
+    soundFx.playTraitorGong();
 
     setPlayers((prev) =>
       prev.map((p) => (p.id === banishedId ? { ...p, isAlive: false, votes: voteMap[p.id] || 0 } : { ...p, votes: voteMap[p.id] || 0 }))
@@ -235,9 +237,11 @@ export const TraitorsGame: React.FC = () => {
 
     // SHIELD CHECK!
     if (victim.hasShield) {
+      soundFx.playLadderClimb();
       addCastleLog(`🛡️ MIRACLE! The Traitors struck in the night, but ${victim.name}'s SHIELD deflected the murder! NO ONE DIED!`);
       setMurderedPlayer(null);
     } else {
+      soundFx.playTraitorGong();
       setMurderedPlayer(victim);
       setPlayers((prev) =>
         prev.map((p) => (p.id === victimId ? { ...p, isAlive: false } : p))

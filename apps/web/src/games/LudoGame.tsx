@@ -4,6 +4,7 @@ import { useGameRoomStore } from '../gameRoomStore';
 import { useVoiceStore } from '../voiceStore';
 import { GameRoomLobby } from '../components/GameRoomLobby';
 import { VoiceRoomBar } from '../components/VoiceRoomBar';
+import { soundFx } from '../soundEffects';
 
 type PlayerColor = 'red' | 'green' | 'yellow' | 'blue';
 
@@ -107,6 +108,7 @@ export const LudoGame: React.FC = () => {
     setIsRolling(true);
 
     let rolls = 0;
+    soundFx.playDiceRoll();
     const interval = setInterval(() => {
       setDiceVal(Math.floor(Math.random() * 6) + 1);
       rolls++;
@@ -173,15 +175,18 @@ export const LudoGame: React.FC = () => {
     let newStep = token.step;
     if (token.step === -1 && roll === 6) {
       newStep = 0;
+      soundFx.playLadderClimb();
       logMessage(`🚀 ${curPlayer.name} released a token onto the track!`);
     } else {
       newStep = token.step + roll;
+      soundFx.playCardFlip();
       logMessage(`${curPlayer.name} advanced a token ${roll} steps.`);
     }
 
     let reachedHome = false;
     if (newStep === 57) {
       reachedHome = true;
+      soundFx.playLadderClimb();
       logMessage(`🎯 ${curPlayer.name}'s token reached the HOME TRIANGLE!`);
     }
 
@@ -203,6 +208,7 @@ export const LudoGame: React.FC = () => {
                   const oppGlobalPos = (PLAYER_THEMES[oppToken.color].startPos + oppToken.step) % 52;
                   if (oppGlobalPos === myGlobalPos) {
                     cutOpponent = true;
+                    soundFx.playTokenCut();
                     logMessage(`⚔️ ${curPlayer.name} CUT ${p.name}'s token back to base!`);
                     return { ...oppToken, step: -1 };
                   }

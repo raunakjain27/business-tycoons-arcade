@@ -3,6 +3,7 @@ import type { GameState, TileId, Tier } from '../../../../packages/engine/types'
 import { BOARD_DATA, getTileDef, getDistrictDef, PLAYER_ROLES, RoleId, formatCurrency } from '../boardData';
 import { useGameStore } from '../store';
 import { ownsFullDistrict } from '../computeRent';
+import { soundFx } from '../soundEffects';
 
 interface ActionPanelProps {
   gameState: GameState | null;
@@ -385,7 +386,10 @@ export const ActionPanel: React.FC<ActionPanelProps> = ({ gameState }) => {
                     Roll the dice to move across the Business Tycoons board.
                   </p>
                   <button
-                    onClick={() => dispatchAction({ type: 'ROLL' })}
+                    onClick={() => {
+                      soundFx.playDiceRoll();
+                      dispatchAction({ type: 'ROLL' });
+                    }}
                     style={{
                       ...primaryButtonStyle,
                       padding: '16px 36px',
@@ -482,7 +486,10 @@ export const ActionPanel: React.FC<ActionPanelProps> = ({ gameState }) => {
                 {isMyTurn ? (
                   <div style={{ display: 'flex', gap: '10px', marginTop: '6px' }}>
                     <button
-                      onClick={() => dispatchAction({ type: 'BUY' })}
+                      onClick={() => {
+                        soundFx.playCashRegister();
+                        dispatchAction({ type: 'BUY' });
+                      }}
                       disabled={!canAfford}
                       style={{
                         ...primaryButtonStyle,

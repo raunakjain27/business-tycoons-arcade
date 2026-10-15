@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import { webRTCVoiceManager } from './webrtcVoice';
 
 export interface VoiceUser {
   id: string;
@@ -38,7 +39,8 @@ export const useVoiceStore = create<VoiceStoreState>((set, get) => ({
   toggleMic: () => {
     set((state) => {
       const newMuted = !state.isMicMuted;
-      // also update user's own status
+      webRTCVoiceManager.setMute(newMuted);
+
       const updatedUsers = { ...state.voiceUsers };
       if (updatedUsers['player-1']) {
         updatedUsers['player-1'].isMuted = newMuted;
@@ -48,6 +50,18 @@ export const useVoiceStore = create<VoiceStoreState>((set, get) => ({
   },
 
   connectVoice: (initialUsers) => {
+    // Attempt real microphone stream initialization
+    webRTCVoiceManager.initMicrophone((level) => {
+      set((state) => {
+        const users = { ...state.voiceUsers };
+        if (users['player-1']) {
+          users['player-1'].audioLevel = level;
+          users['player-1'].isSpeaking = level > 15;
+        }
+        return { voiceUsers: users, activeSpeakerId: level > 15 ? 'player-1' : null };
+      });
+    });
+
     const usersMap: Record<string, VoiceUser> = {};
     initialUsers.forEach((u) => {
       usersMap[u.id] = {

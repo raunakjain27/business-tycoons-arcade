@@ -4,6 +4,7 @@ import { useGameRoomStore } from '../gameRoomStore';
 import { useVoiceStore } from '../voiceStore';
 import { GameRoomLobby } from '../components/GameRoomLobby';
 import { VoiceRoomBar } from '../components/VoiceRoomBar';
+import { soundFx } from '../soundEffects';
 
 interface Player {
   id: string;
@@ -89,6 +90,7 @@ export const SnakesLaddersGame: React.FC = () => {
   const rollDice = () => {
     if (isRolling || winner) return;
     setIsRolling(true);
+    soundFx.playDiceRoll();
 
     let rollCount = 0;
     const interval = setInterval(() => {
@@ -118,17 +120,19 @@ export const SnakesLaddersGame: React.FC = () => {
     if (LADDERS[nextPos]) {
       const up = LADDERS[nextPos];
       setLastActionAnimation(`ladder-${nextPos}`);
+      soundFx.playLadderClimb();
       setTimeout(() => setLastActionAnimation(null), 1200);
       addLog(`🪜 LUCKY JUMP! ${curPlayer.name} rocketed up a ladder from ${nextPos} to ${up}!`);
       nextPos = up;
-    }
-
-    if (SNAKES[nextPos]) {
+    } else if (SNAKES[nextPos]) {
       const down = SNAKES[nextPos];
       setLastActionAnimation(`snake-${nextPos}`);
+      soundFx.playSnakeHiss();
       setTimeout(() => setLastActionAnimation(null), 1200);
       addLog(`🐍 VENOM STRIKE! Snake bit ${curPlayer.name} sliding down from ${nextPos} to ${down}!`);
       nextPos = down;
+    } else {
+      soundFx.playCardFlip();
     }
 
     setPlayers((prev) =>
@@ -136,6 +140,7 @@ export const SnakesLaddersGame: React.FC = () => {
     );
 
     if (nextPos === 100) {
+      soundFx.playVictory();
       setWinner(curPlayer);
       addLog(`🏆 ${curPlayer.name} reached TILE 100 and WON!`);
       return;
