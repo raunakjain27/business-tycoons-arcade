@@ -643,182 +643,166 @@ export const TambolaGame: React.FC = () => {
             </div>
           </div>
 
-          {/* MY TICKETS SELECTOR & RENDERER */}
+          {/* ALL MY TICKETS RENDERED SIMULTANEOUSLY ON SAME SCREEN */}
           {myPlayer && (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-              
-              {/* Ticket Switcher Tabs (If multiple tickets) */}
-              {myPlayer.grids.length > 1 && (
-                <div style={{ display: 'flex', gap: '10px', alignItems: 'center', overflowX: 'auto', paddingBottom: '4px' }}>
-                  <span style={{ fontSize: '13px', fontWeight: 800, color: '#fde68a' }}>
-                    Your Tickets:
-                  </span>
-                  {myPlayer.grids.map((_, tIdx) => {
-                    const isSelected = activeTicketIdx === tIdx;
-                    return (
-                      <button
-                        key={tIdx}
-                        onClick={() => setActiveTicketIdx(tIdx)}
-                        style={{
-                          padding: '8px 18px',
-                          borderRadius: '12px',
-                          border: isSelected ? '1.5px solid #ec4899' : '1px solid rgba(255,255,255,0.12)',
-                          background: isSelected ? 'linear-gradient(135deg, #ec4899 0%, #7c3aed 100%)' : 'rgba(255,255,255,0.05)',
-                          color: '#ffffff',
-                          fontWeight: 800,
-                          fontSize: '13px',
-                          cursor: 'pointer',
-                          boxShadow: isSelected ? '0 4px 14px rgba(236,72,153,0.35)' : 'none',
-                        }}
-                      >
-                        🎟️ Ticket #{tIdx + 1}
-                      </button>
-                    );
-                  })}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '10px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <span style={{ fontSize: '18px' }}>🎟️</span>
+                  <h3 style={{ margin: 0, fontSize: '18px', fontWeight: 900, color: '#fde68a' }}>
+                    Your Active Tickets ({myPlayer.grids.length} In Play)
+                  </h3>
                 </div>
-              )}
+                <span style={{ fontSize: '12px', color: '#94a3b8' }}>
+                  All tickets live on one screen — tap numbers on any ticket to cut!
+                </span>
+              </div>
 
-              {/* ACTIVE TICKET DISPLAY */}
-              {(() => {
-                const activeGrid = myPlayer.grids[activeTicketIdx] || myPlayer.grids[0];
-                if (!activeGrid) return null;
+              {/* Stacked list of all tickets */}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '22px' }}>
+                {myPlayer.grids.map((grid, tIdx) => {
+                  const flat = grid.flat().filter((c) => c.num !== null);
+                  const marked = flat.filter((c) => c.marked && calledNumbers.includes(c.num!)).length;
 
-                return (
-                  <div
-                    style={{
-                      background: 'linear-gradient(135deg, #2a1b4e 0%, #170d30 50%, #0d071c 100%)',
-                      borderRadius: '28px',
-                      border: '2px solid rgba(245, 158, 11, 0.6)',
-                      padding: '26px',
-                      display: 'flex',
-                      flexDirection: 'column',
-                      gap: '18px',
-                      boxShadow: '0 20px 50px rgba(0,0,0,0.8), 0 0 40px rgba(245, 158, 11, 0.25)',
-                      position: 'relative',
-                      overflow: 'hidden',
-                    }}
-                  >
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                        <div
-                          style={{
-                            width: '38px',
-                            height: '38px',
-                            borderRadius: '10px',
-                            background: 'linear-gradient(135deg, #f59e0b 0%, #ec4899 100%)',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            fontSize: '20px',
-                            boxShadow: '0 4px 12px rgba(245, 158, 11, 0.4)',
-                          }}
-                        >
-                          🎟️
-                        </div>
-                        <div>
-                          <h3 style={{ margin: 0, fontSize: '20px', fontWeight: 900, color: '#fde68a', letterSpacing: '-0.3px' }}>
-                            Royal Tambola Ticket #{activeTicketIdx + 1}
-                          </h3>
-                          <span style={{ fontSize: '11.5px', color: '#cbd5e1' }}>
-                            Serial: #TB-{myPlayer.id.substring(0, 4).toUpperCase()}-{activeTicketIdx + 1} • Certified
-                          </span>
-                        </div>
-                      </div>
-
-                      <div
-                        style={{
-                          background: 'rgba(245, 158, 11, 0.15)',
-                          border: '1px solid rgba(245, 158, 11, 0.4)',
-                          padding: '6px 14px',
-                          borderRadius: '20px',
-                          fontSize: '12px',
-                          fontWeight: 800,
-                          color: '#fde68a',
-                        }}
-                      >
-                        ⚡ Tap to Stamp Numbers
-                      </div>
-                    </div>
-
-                    {/* 3 x 9 Grid */}
+                  return (
                     <div
+                      key={tIdx}
                       style={{
-                        display: 'grid',
-                        gridTemplateRows: 'repeat(3, 1fr)',
-                        gap: '8px',
-                        background: 'rgba(10, 5, 20, 0.85)',
-                        padding: '12px',
-                        borderRadius: '20px',
-                        border: '1px solid rgba(255, 255, 255, 0.12)',
-                        boxShadow: 'inset 0 2px 10px rgba(0,0,0,0.6)',
+                        background: 'linear-gradient(135deg, #261647 0%, #150b2b 50%, #0d061c 100%)',
+                        borderRadius: '24px',
+                        border: '2px solid rgba(245, 158, 11, 0.45)',
+                        padding: '22px',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        gap: '14px',
+                        boxShadow: '0 16px 40px rgba(0,0,0,0.7), 0 0 30px rgba(245, 158, 11, 0.15)',
+                        position: 'relative',
+                        overflow: 'hidden',
                       }}
                     >
-                      {activeGrid.map((row, rIdx) => (
-                        <div key={rIdx} style={{ display: 'grid', gridTemplateColumns: 'repeat(9, 1fr)', gap: '8px' }}>
-                          {row.map((cell, cIdx) => {
-                            const isDrawn = cell.num !== null && calledNumbers.includes(cell.num);
-                            return (
-                              <button
-                                key={cIdx}
-                                onClick={() => toggleMarkCell(activeTicketIdx, rIdx, cIdx)}
-                                disabled={cell.num === null}
-                                style={{
-                                  aspectRatio: '1.2 / 1',
-                                  borderRadius: '12px',
-                                  border: cell.marked
-                                    ? '2px solid #34d399'
-                                    : isDrawn
-                                    ? '2px solid #f59e0b'
-                                    : cell.num !== null
-                                    ? '1px solid rgba(255,255,255,0.14)'
-                                    : '1px solid rgba(255,255,255,0.03)',
-                                  background: cell.marked
-                                    ? 'radial-gradient(circle, #059669 0%, #064e3b 100%)'
-                                    : isDrawn
-                                    ? 'radial-gradient(circle, rgba(245, 158, 11, 0.35) 0%, rgba(180, 83, 9, 0.15) 100%)'
-                                    : cell.num === null
-                                    ? 'rgba(255,255,255,0.01)'
-                                    : 'linear-gradient(180deg, rgba(255,255,255,0.08) 0%, rgba(255,255,255,0.02) 100%)',
-                                  color: cell.marked ? '#ffffff' : isDrawn ? '#fde68a' : cell.num ? '#ffffff' : 'transparent',
-                                  fontSize: '20px',
-                                  fontWeight: 900,
-                                  cursor: cell.num ? 'pointer' : 'default',
-                                  display: 'flex',
-                                  position: 'relative',
-                                  alignItems: 'center',
-                                  justifyContent: 'center',
-                                  boxShadow: cell.marked
-                                    ? '0 0 18px rgba(52, 211, 153, 0.6), inset 0 0 8px rgba(255,255,255,0.3)'
-                                    : isDrawn
-                                    ? '0 0 12px rgba(245, 158, 11, 0.4)'
-                                    : 'none',
-                                  transform: cell.marked ? 'scale(0.98)' : 'scale(1)',
-                                  transition: 'all 0.18s cubic-bezier(0.16, 1, 0.3, 1)',
-                                }}
-                              >
-                                {cell.num ?? ''}
-                                {cell.marked && (
-                                  <span
-                                    style={{
-                                      position: 'absolute',
-                                      fontSize: '11px',
-                                      top: '2px',
-                                      right: '4px',
-                                      color: '#a7f3d0',
-                                    }}
-                                  >
-                                    ✓
-                                  </span>
-                                )}
-                              </button>
-                            );
-                          })}
+                      {/* Ticket Header Strip */}
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                          <div
+                            style={{
+                              width: '34px',
+                              height: '34px',
+                              borderRadius: '10px',
+                              background: 'linear-gradient(135deg, #f59e0b 0%, #ec4899 100%)',
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              fontSize: '18px',
+                              boxShadow: '0 4px 10px rgba(245, 158, 11, 0.4)',
+                            }}
+                          >
+                            🎟️
+                          </div>
+                          <div>
+                            <h4 style={{ margin: 0, fontSize: '17px', fontWeight: 900, color: '#fde68a' }}>
+                              Ticket #{tIdx + 1}
+                            </h4>
+                            <span style={{ fontSize: '11px', color: '#94a3b8' }}>
+                              Serial: #TB-{myPlayer.id.substring(0, 4).toUpperCase()}-{tIdx + 1} • {marked}/15 Marked
+                            </span>
+                          </div>
                         </div>
-                      ))}
+
+                        <div
+                          style={{
+                            background: marked >= 5 ? 'rgba(16, 185, 129, 0.2)' : 'rgba(255, 255, 255, 0.08)',
+                            border: marked >= 5 ? '1px solid #10b981' : '1px solid rgba(255,255,255,0.15)',
+                            padding: '4px 12px',
+                            borderRadius: '16px',
+                            fontSize: '11.5px',
+                            fontWeight: 800,
+                            color: marked >= 5 ? '#34d399' : '#cbd5e1',
+                          }}
+                        >
+                          {marked === 15 ? '⭐ FULL HOUSE!' : `${marked} / 15 Cut`}
+                        </div>
+                      </div>
+
+                      {/* 3 x 9 Ticket Grid */}
+                      <div
+                        style={{
+                          display: 'grid',
+                          gridTemplateRows: 'repeat(3, 1fr)',
+                          gap: '6px',
+                          background: 'rgba(10, 5, 20, 0.85)',
+                          padding: '10px',
+                          borderRadius: '18px',
+                          border: '1px solid rgba(255, 255, 255, 0.1)',
+                          boxShadow: 'inset 0 2px 10px rgba(0,0,0,0.6)',
+                        }}
+                      >
+                        {grid.map((row, rIdx) => (
+                          <div key={rIdx} style={{ display: 'grid', gridTemplateColumns: 'repeat(9, 1fr)', gap: '6px' }}>
+                            {row.map((cell, cIdx) => {
+                              const isDrawn = cell.num !== null && calledNumbers.includes(cell.num);
+                              return (
+                                <button
+                                  key={cIdx}
+                                  onClick={() => toggleMarkCell(tIdx, rIdx, cIdx)}
+                                  disabled={cell.num === null}
+                                  style={{
+                                    aspectRatio: '1.25 / 1',
+                                    borderRadius: '10px',
+                                    border: cell.marked
+                                      ? '2px solid #34d399'
+                                      : isDrawn
+                                      ? '2px solid #f59e0b'
+                                      : cell.num !== null
+                                      ? '1px solid rgba(255,255,255,0.14)'
+                                      : '1px solid rgba(255,255,255,0.03)',
+                                    background: cell.marked
+                                      ? 'radial-gradient(circle, #059669 0%, #064e3b 100%)'
+                                      : isDrawn
+                                      ? 'radial-gradient(circle, rgba(245, 158, 11, 0.35) 0%, rgba(180, 83, 9, 0.15) 100%)'
+                                      : cell.num === null
+                                      ? 'rgba(255,255,255,0.01)'
+                                      : 'linear-gradient(180deg, rgba(255,255,255,0.08) 0%, rgba(255,255,255,0.02) 100%)',
+                                    color: cell.marked ? '#ffffff' : isDrawn ? '#fde68a' : cell.num ? '#ffffff' : 'transparent',
+                                    fontSize: '18px',
+                                    fontWeight: 900,
+                                    cursor: cell.num ? 'pointer' : 'default',
+                                    display: 'flex',
+                                    position: 'relative',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    boxShadow: cell.marked
+                                      ? '0 0 14px rgba(52, 211, 153, 0.6), inset 0 0 6px rgba(255,255,255,0.3)'
+                                      : isDrawn
+                                      ? '0 0 10px rgba(245, 158, 11, 0.4)'
+                                      : 'none',
+                                    transform: cell.marked ? 'scale(0.98)' : 'scale(1)',
+                                    transition: 'all 0.15s cubic-bezier(0.16, 1, 0.3, 1)',
+                                  }}
+                                >
+                                  {cell.num ?? ''}
+                                  {cell.marked && (
+                                    <span
+                                      style={{
+                                        position: 'absolute',
+                                        fontSize: '10px',
+                                        top: '2px',
+                                        right: '3px',
+                                        color: '#a7f3d0',
+                                      }}
+                                    >
+                                      ✓
+                                    </span>
+                                  )}
+                                </button>
+                              );
+                            })}
+                          </div>
+                        ))}
+                      </div>
                     </div>
-                  </div>
-                );
-              })()}
+                  );
+                })}
+              </div>
             </div>
           )}
 
