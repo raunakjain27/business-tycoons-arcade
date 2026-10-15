@@ -151,7 +151,7 @@ export const BingoGame: React.FC = () => {
     return () => clearInterval(timer);
   }, [isAutoCalling, inLobby, winner, calledBalls]);
 
-  // Dab player card cell
+  // Dab player card cell & Check Automatic Win immediately
   const toggleMarkCell = (rowIdx: number, colIdx: number) => {
     const myPlayer = players[0];
     if (!myPlayer || winner) return;
@@ -164,7 +164,19 @@ export const BingoGame: React.FC = () => {
       r.map((c, cI) => (rI === rowIdx && cI === colIdx ? { ...c, marked: !c.marked } : c))
     );
 
-    setPlayers((prev) => prev.map((p, idx) => (idx === 0 ? { ...p, grid: newGrid } : p)));
+    // Calculate lines immediately
+    const lines = countBingoLines(newGrid);
+
+    setPlayers((prev) => prev.map((p, idx) => (idx === 0 ? { ...p, grid: newGrid, completedLines: lines } : p)));
+
+    // AUTOMATIC WIN DETECTION: Trigger instant win as requested
+    if (lines >= 1 && !winner) {
+      soundFx.playVictory();
+      soundFx.playCashRegister();
+      setWinner(myPlayer);
+      setIsAutoCalling(false);
+      addLog(`🏆 AUTOMATIC BINGO VICTORY! ${myPlayer.name} completed a line and WON the game!`);
+    }
   };
 
   // Check lines count (Horizontal, Vertical, 2 Diagonals)
@@ -184,7 +196,7 @@ export const BingoGame: React.FC = () => {
     return lines;
   };
 
-  // Claim BINGO! Button
+  // Optional manual claim fallback
   const handleClaimBingo = () => {
     const myPlayer = players[0];
     if (!myPlayer || winner) return;
