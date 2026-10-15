@@ -50,8 +50,26 @@ export function App() {
     setBoardKey,
   } = useGameStore();
 
-  // Initialize a default local game on first load if no game is active
+  // Initialize default game or parse incoming friend invite link (#room=CODE&game=ID)
   useEffect(() => {
+    if (typeof window !== 'undefined' && window.location.hash) {
+      try {
+        const hash = window.location.hash.replace(/^#/, '');
+        const params = new URLSearchParams(hash);
+        const inviteRoom = params.get('room');
+        const inviteGame = params.get('game') as any;
+
+        if (inviteRoom && inviteGame) {
+          // Switch to invited game & room
+          useHubStore.getState().setActiveGame(inviteGame);
+          const roomState = useGameRoomStore.getState().getOrCreateRoom(inviteGame, 'Host');
+          roomState.roomCode = inviteRoom;
+          // Add joining user to player list
+          useGameRoomStore.getState().addPlayer(inviteGame, user.username || 'Friend', false);
+        }
+      } catch (e) {}
+    }
+
     if (!gameState) {
       initLocalGame(3, 'Player 1', 'Tycoon');
     }

@@ -40,8 +40,22 @@ export const Dashboard: React.FC = () => {
       return;
     }
     setJoinError('');
-    // Route into active game room
-    setActiveGame('uno');
+
+    // Check if any room matches this code
+    const rooms = useGameRoomStore.getState().rooms;
+    let foundGame: GameId = 'tambola';
+    for (const [gid, r] of Object.entries(rooms)) {
+      if (r.roomCode === trimmed) {
+        foundGame = gid as GameId;
+        break;
+      }
+    }
+
+    // Join room
+    const targetRoom = useGameRoomStore.getState().getOrCreateRoom(foundGame, 'Host');
+    targetRoom.roomCode = trimmed;
+    useGameRoomStore.getState().addPlayer(foundGame, user.username || 'Friend', false);
+    setActiveGame(foundGame);
   };
 
   return (
