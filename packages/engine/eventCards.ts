@@ -14,7 +14,8 @@ import eventsData from '../content/events.json' with { type: 'json' };import eve
 const eventsDataLocal = eventsData as { cards: EventCardDef[] };
 
 export const BOARD: BoardDef = getBoard('default');
-const ALL_EVENT_CARDS: EventCardDef[] = eventsData.cards;
+const eventsDataLocal = eventsData as { cards: EventCardDef[] };
+const ALL_EVENT_CARDS: EventCardDef[] = eventsDataLocal.cards;
 
 export function getBoardForState(state?: GameState): BoardDef {
   const key = (state as any)?.boardKey ?? 'default';

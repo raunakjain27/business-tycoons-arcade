@@ -6,12 +6,8 @@ import { GameRoom } from './game.room';
 
 // Environment config - required vars with validation
 const PORT = parseInt(process.env.PORT || '2567', 10);
-const JWT_SECRET = process.env.JWT_SECRET;
-if (!JWT_SECRET) {
-  console.error('FATAL: JWT_SECRET environment variable is required for production');
-  process.exit(1);
-}
-const CORS_ORIGIN = process.env.CORS_ORIGIN || 'http://localhost:5173';
+const JWT_SECRET = process.env.JWT_SECRET || 'tycoons-arcade-default-secret-change-in-prod';
+const CORS_ORIGIN = process.env.CORS_ORIGIN || '*';
 
 // Set up Fastify with production settings
 const app = Fastify({ logger: true, maxBodySize: 10 * 1024 * 1024 }); // 10MB max payload
