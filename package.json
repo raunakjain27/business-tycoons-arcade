@@ -1,7 +1,7 @@
 {
   "name": "cornerstone",
   "private": true,
-  "packageManager": "pnpm@12.11.2",
+  "packageManager": "pnpm@9.15.4",
   "workspaces": {
     "packages": [
       "packages/*"
