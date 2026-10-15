@@ -249,33 +249,15 @@ export const TambolaGame: React.FC = () => {
 
   if (inLobby) {
     return (
-      <div style={{ maxWidth: '1100px', margin: '0 auto', display: 'flex', flexDirection: 'column', gap: '20px' }}>
-        <GameRoomLobby
-          gameTitle="Tambola (Housie)"
-          roomCode={room.roomCode}
-          isHost={room.players.find((p) => p.isHost)?.name === room.players[0]?.name}
-          players={room.players}
-          allowBots={room.allowBots}
-          onToggleBots={() => {
-            room.allowBots = !room.allowBots;
-            setInLobby((prev) => !prev);
-            setInLobby(true);
-          }}
-          onAddFriend={(name) => {
-            room.players.push({
-              id: `friend-${Date.now()}`,
-              name,
-              isBot: false,
-              avatar: '🎟️',
-              isHost: false,
-              color: '#ec4899',
-            });
-            setInLobby((prev) => !prev);
-            setInLobby(true);
-          }}
-          onStartGame={startMatchFromRoom}
-        />
-      </div>
+      <GameRoomLobby
+        gameId="tambola"
+        gameTitle="Tambola (Housie) Live"
+        gameIcon="🎟️"
+        minPlayers={2}
+        maxPlayers={12}
+        bannerGradient="linear-gradient(135deg, #f59e0b 0%, #ec4899 100%)"
+        onStart={startMatchFromRoom}
+      />
     );
   }
 

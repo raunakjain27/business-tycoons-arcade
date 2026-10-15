@@ -204,33 +204,15 @@ export const BingoGame: React.FC = () => {
 
   if (inLobby) {
     return (
-      <div style={{ maxWidth: '1100px', margin: '0 auto', display: 'flex', flexDirection: 'column', gap: '20px' }}>
-        <GameRoomLobby
-          gameTitle="Bingo 75 Champions"
-          roomCode={room.roomCode}
-          isHost={room.players.find((p) => p.isHost)?.name === room.players[0]?.name}
-          players={room.players}
-          allowBots={room.allowBots}
-          onToggleBots={() => {
-            room.allowBots = !room.allowBots;
-            setInLobby((prev) => !prev);
-            setInLobby(true);
-          }}
-          onAddFriend={(name) => {
-            room.players.push({
-              id: `friend-${Date.now()}`,
-              name,
-              isBot: false,
-              avatar: '🎱',
-              isHost: false,
-              color: '#3b82f6',
-            });
-            setInLobby((prev) => !prev);
-            setInLobby(true);
-          }}
-          onStartGame={startMatchFromRoom}
-        />
-      </div>
+      <GameRoomLobby
+        gameId="bingo"
+        gameTitle="Bingo 75 Champions"
+        gameIcon="🎱"
+        minPlayers={2}
+        maxPlayers={12}
+        bannerGradient="linear-gradient(135deg, #3b82f6 0%, #10b981 100%)"
+        onStart={startMatchFromRoom}
+      />
     );
   }
 
