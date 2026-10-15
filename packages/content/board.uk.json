@@ -1,0 +1,421 @@
+{
+  "tiles": [
+    {
+      "id": 0,
+      "name": "Piccadilly Circus - Pay Day",
+      "type": "start",
+      "districtId": null,
+      "price": null,
+      "taxAmount": 200,
+      "flag": "🇬🇧"
+    },
+    {
+      "id": 1,
+      "name": "Whitechapel",
+      "type": "property",
+      "districtId": "East London",
+      "price": 60,
+      "flag": "🇬🇧",
+      "landmark": "🔔"
+    },
+    {
+      "id": 2,
+      "name": "Surprise!",
+      "type": "event",
+      "districtId": null,
+      "price": null,
+      "flag": "🇬🇧"
+    },
+    {
+      "id": 3,
+      "name": "Old Kent",
+      "type": "property",
+      "districtId": "East London",
+      "price": 60,
+      "flag": "🇬🇧",
+      "landmark": "🛣️"
+    },
+    {
+      "id": 4,
+      "name": "Council Tax",
+      "type": "tax",
+      "districtId": null,
+      "price": null,
+      "taxAmount": 200,
+      "flag": "🇬🇧"
+    },
+    {
+      "id": 5,
+      "name": "Liverpool Street Hub",
+      "type": "hub",
+      "districtId": null,
+      "price": 200,
+      "flag": "🇬🇧"
+    },
+    {
+      "id": 6,
+      "name": "Euston",
+      "type": "property",
+      "districtId": "Scotland",
+      "price": 100,
+      "flag": "🇬🇧",
+      "landmark": "🚉"
+    },
+    {
+      "id": 7,
+      "name": "Surprise!",
+      "type": "event",
+      "districtId": null,
+      "price": null,
+      "flag": "🇬🇧"
+    },
+    {
+      "id": 8,
+      "name": "Pentonville",
+      "type": "property",
+      "districtId": "Scotland",
+      "price": 100,
+      "flag": "🇬🇧",
+      "landmark": "🏘️"
+    },
+    {
+      "id": 9,
+      "name": "Islington",
+      "type": "property",
+      "districtId": "Scotland",
+      "price": 120,
+      "flag": "🇬🇧",
+      "landmark": "🌳"
+    },
+    {
+      "id": 10,
+      "name": "HMP Pentonville",
+      "type": "jail",
+      "districtId": null,
+      "price": null,
+      "flag": "🇬🇧"
+    },
+    {
+      "id": 11,
+      "name": "Pall Mall",
+      "type": "property",
+      "districtId": "North London",
+      "price": 140,
+      "flag": "🇬🇧",
+      "landmark": "🏛️"
+    },
+    {
+      "id": 12,
+      "name": "Thames Water",
+      "type": "utility",
+      "districtId": null,
+      "price": 150,
+      "flag": "🇬🇧"
+    },
+    {
+      "id": 13,
+      "name": "Whitehall",
+      "type": "property",
+      "districtId": "North London",
+      "price": 140,
+      "flag": "🇬🇧",
+      "landmark": "💂"
+    },
+    {
+      "id": 14,
+      "name": "Northumberl'd",
+      "type": "property",
+      "districtId": "North London",
+      "price": 160,
+      "flag": "🇬🇧",
+      "landmark": "🦁"
+    },
+    {
+      "id": 15,
+      "name": "King's Cross Hub",
+      "type": "hub",
+      "districtId": null,
+      "price": 200,
+      "flag": "🇬🇧"
+    },
+    {
+      "id": 16,
+      "name": "Bow Street",
+      "type": "property",
+      "districtId": "Wales",
+      "price": 180,
+      "flag": "🇬🇧",
+      "landmark": "⚖️"
+    },
+    {
+      "id": 17,
+      "name": "British Summit",
+      "type": "influence",
+      "districtId": null,
+      "price": null,
+      "flag": "🇬🇧"
+    },
+    {
+      "id": 18,
+      "name": "Marlborough",
+      "type": "property",
+      "districtId": "Wales",
+      "price": 180,
+      "flag": "🇬🇧",
+      "landmark": "🛍️"
+    },
+    {
+      "id": 19,
+      "name": "Vine Street",
+      "type": "property",
+      "districtId": "Wales",
+      "price": 200,
+      "flag": "🇬🇧",
+      "landmark": "👮"
+    },
+    {
+      "id": 20,
+      "name": "Hyde Park",
+      "type": "communityFund",
+      "districtId": null,
+      "price": null,
+      "flag": "🇬🇧"
+    },
+    {
+      "id": 21,
+      "name": "Strand",
+      "type": "property",
+      "districtId": "Midlands",
+      "price": 220,
+      "flag": "🇬🇧",
+      "landmark": "🎭"
+    },
+    {
+      "id": 22,
+      "name": "Surprise!",
+      "type": "event",
+      "districtId": null,
+      "price": null,
+      "flag": "🇬🇧"
+    },
+    {
+      "id": 23,
+      "name": "Fleet Street",
+      "type": "property",
+      "districtId": "Midlands",
+      "price": 220,
+      "flag": "🇬🇧",
+      "landmark": "📰"
+    },
+    {
+      "id": 24,
+      "name": "Trafalgar",
+      "type": "property",
+      "districtId": "Midlands",
+      "price": 240,
+      "flag": "🇬🇧",
+      "landmark": "🏛️"
+    },
+    {
+      "id": 25,
+      "name": "Birmingham New Street Hub",
+      "type": "hub",
+      "districtId": null,
+      "price": 200,
+      "flag": "🇬🇧"
+    },
+    {
+      "id": 26,
+      "name": "Leicester",
+      "type": "property",
+      "districtId": "South Coast",
+      "price": 260,
+      "flag": "🇬🇧",
+      "landmark": "🎬"
+    },
+    {
+      "id": 27,
+      "name": "Coventry",
+      "type": "property",
+      "districtId": "South Coast",
+      "price": 260,
+      "flag": "🇬🇧",
+      "landmark": "🚗"
+    },
+    {
+      "id": 28,
+      "name": "Southern Water",
+      "type": "utility",
+      "districtId": null,
+      "price": 150,
+      "flag": "🇬🇧"
+    },
+    {
+      "id": 29,
+      "name": "Piccadilly",
+      "type": "property",
+      "districtId": "South Coast",
+      "price": 280,
+      "flag": "🇬🇧",
+      "landmark": "🎪"
+    },
+    {
+      "id": 30,
+      "name": "Go to Pentonville",
+      "type": "goToJail",
+      "districtId": null,
+      "price": null,
+      "flag": "🇬🇧"
+    },
+    {
+      "id": 31,
+      "name": "Regent Street",
+      "type": "property",
+      "districtId": "North England",
+      "price": 300,
+      "flag": "🇬🇧",
+      "landmark": "🛍️"
+    },
+    {
+      "id": 32,
+      "name": "Oxford Street",
+      "type": "property",
+      "districtId": "North England",
+      "price": 300,
+      "flag": "🇬🇧",
+      "landmark": "🚌"
+    },
+    {
+      "id": 33,
+      "name": "Parliament Summit",
+      "type": "influence",
+      "districtId": null,
+      "price": null,
+      "flag": "🇬🇧"
+    },
+    {
+      "id": 34,
+      "name": "Bond Street",
+      "type": "property",
+      "districtId": "North England",
+      "price": 320,
+      "flag": "🇬🇧",
+      "landmark": "💎"
+    },
+    {
+      "id": 35,
+      "name": "Manchester Piccadilly Hub",
+      "type": "hub",
+      "districtId": null,
+      "price": 200,
+      "flag": "🇬🇧"
+    },
+    {
+      "id": 36,
+      "name": "Surprise!",
+      "type": "event",
+      "districtId": null,
+      "price": null,
+      "flag": "🇬🇧"
+    },
+    {
+      "id": 37,
+      "name": "Park Lane",
+      "type": "property",
+      "districtId": "West London Elite",
+      "price": 350,
+      "flag": "🇬🇧",
+      "landmark": "👑"
+    },
+    {
+      "id": 38,
+      "name": "Stamp Duty",
+      "type": "tax",
+      "districtId": null,
+      "price": null,
+      "taxAmount": 100,
+      "flag": "🇬🇧"
+    },
+    {
+      "id": 39,
+      "name": "Mayfair",
+      "type": "property",
+      "districtId": "West London Elite",
+      "price": 400,
+      "flag": "🇬🇧",
+      "landmark": "🏰"
+    }
+  ],
+  "districts": {
+    "East London": {
+      "color": "#C49A82",
+      "tileIds": [
+        1,
+        3
+      ],
+      "buildCost": 50
+    },
+    "Scotland": {
+      "color": "#A0D2EB",
+      "tileIds": [
+        6,
+        8,
+        9
+      ],
+      "buildCost": 50
+    },
+    "North London": {
+      "color": "#F1A7C4",
+      "tileIds": [
+        11,
+        13,
+        14
+      ],
+      "buildCost": 100
+    },
+    "Wales": {
+      "color": "#FCD581",
+      "tileIds": [
+        16,
+        18,
+        19
+      ],
+      "buildCost": 100
+    },
+    "Midlands": {
+      "color": "#A8E6CF",
+      "tileIds": [
+        21,
+        23,
+        24
+      ],
+      "buildCost": 150
+    },
+    "South Coast": {
+      "color": "#D8B4E2",
+      "tileIds": [
+        26,
+        27,
+        29
+      ],
+      "buildCost": 150
+    },
+    "North England": {
+      "color": "#FFB3B3",
+      "tileIds": [
+        31,
+        32,
+        34
+      ],
+      "buildCost": 200
+    },
+    "West London Elite": {
+      "color": "#B4C5E4",
+      "tileIds": [
+        37,
+        39
+      ],
+      "buildCost": 200
+    }
+  }
+}

@@ -1,0 +1,443 @@
+{
+  "tiles": [
+    {
+      "id": 0,
+      "name": "VIP CLUB",
+      "type": "start",
+      "districtId": null,
+      "price": null,
+      "taxAmount": 200,
+      "flag": "🥂"
+    },
+    {
+      "id": 1,
+      "name": "Neon Alley",
+      "type": "property",
+      "districtId": "Red Light",
+      "price": 60,
+      "flag": "💋",
+      "landmark": "💄",
+      "landmarkName": "Lipstick Lounge"
+    },
+    {
+      "id": 2,
+      "name": "Wild Truth",
+      "type": "event",
+      "districtId": null,
+      "price": null,
+      "flag": null
+    },
+    {
+      "id": 3,
+      "name": "Velvet Rope",
+      "type": "property",
+      "districtId": "Red Light",
+      "price": 60,
+      "flag": "💋",
+      "landmark": "👠",
+      "landmarkName": "High Heels Club"
+    },
+    {
+      "id": 4,
+      "name": "Cover Charge",
+      "type": "tax",
+      "districtId": null,
+      "price": null,
+      "taxAmount": 200,
+      "flag": null
+    },
+    {
+      "id": 5,
+      "name": "Midnight Express",
+      "type": "hub",
+      "districtId": null,
+      "price": 200,
+      "flag": null
+    },
+    {
+      "id": 6,
+      "name": "The Alchemist",
+      "type": "property",
+      "districtId": "Speakeasy",
+      "price": 100,
+      "flag": "🍸",
+      "landmark": "🍷",
+      "landmarkName": "Vintage Cellar"
+    },
+    {
+      "id": 7,
+      "name": "Dirty Dare",
+      "type": "event",
+      "districtId": null,
+      "price": null,
+      "flag": null
+    },
+    {
+      "id": 8,
+      "name": "Bourbon & Cigar",
+      "type": "property",
+      "districtId": "Speakeasy",
+      "price": 100,
+      "flag": "🍸",
+      "landmark": "🥃",
+      "landmarkName": "Oak Barrel"
+    },
+    {
+      "id": 9,
+      "name": "Secret Chamber",
+      "type": "property",
+      "districtId": "Speakeasy",
+      "price": 120,
+      "flag": "🍸",
+      "landmark": "🗝️",
+      "landmarkName": "Hidden Vault"
+    },
+    {
+      "id": 10,
+      "name": "Drunk Tank",
+      "type": "jail",
+      "districtId": null,
+      "price": null,
+      "flag": null
+    },
+    {
+      "id": 11,
+      "name": "Roulette Palace",
+      "type": "property",
+      "districtId": "Sin City",
+      "price": 140,
+      "flag": "🎲",
+      "landmark": "🎰",
+      "landmarkName": "Jackpot Suite"
+    },
+    {
+      "id": 12,
+      "name": "Neon Power",
+      "type": "utility",
+      "districtId": null,
+      "price": 150,
+      "flag": null
+    },
+    {
+      "id": 13,
+      "name": "High Roller Pit",
+      "type": "property",
+      "districtId": "Sin City",
+      "price": 140,
+      "flag": "🎲",
+      "landmark": "♠️",
+      "landmarkName": "Ace Lounge"
+    },
+    {
+      "id": 14,
+      "name": "Golden Oasis",
+      "type": "property",
+      "districtId": "Sin City",
+      "price": 160,
+      "flag": "🎲",
+      "landmark": "🪙",
+      "landmarkName": "Gold Stacks"
+    },
+    {
+      "id": 15,
+      "name": "Private Jet Hub",
+      "type": "hub",
+      "districtId": null,
+      "price": 200,
+      "flag": null
+    },
+    {
+      "id": 16,
+      "name": "Ibiza Haven",
+      "type": "property",
+      "districtId": "Bikini Strip",
+      "price": 180,
+      "flag": "👙",
+      "landmark": "🪩",
+      "landmarkName": "Disco Dome"
+    },
+    {
+      "id": 17,
+      "name": "Wild Truth",
+      "type": "event",
+      "districtId": null,
+      "price": null,
+      "flag": null
+    },
+    {
+      "id": 18,
+      "name": "Mykonos Bay",
+      "type": "property",
+      "districtId": "Bikini Strip",
+      "price": 180,
+      "flag": "👙",
+      "landmark": "🍹",
+      "landmarkName": "Sunset Cabana"
+    },
+    {
+      "id": 19,
+      "name": "Miami Rooftop",
+      "type": "property",
+      "districtId": "Bikini Strip",
+      "price": 200,
+      "flag": "👙",
+      "landmark": "🌴",
+      "landmarkName": "Ocean Villa"
+    },
+    {
+      "id": 20,
+      "name": "Hangover Suite",
+      "type": "communityFund",
+      "districtId": null,
+      "price": null,
+      "flag": null
+    },
+    {
+      "id": 21,
+      "name": "Basement 44",
+      "type": "property",
+      "districtId": "Rave Quarter",
+      "price": 220,
+      "flag": "⚡",
+      "landmark": "🔊",
+      "landmarkName": "Subwoofer Bass"
+    },
+    {
+      "id": 22,
+      "name": "Dirty Dare",
+      "type": "event",
+      "districtId": null,
+      "price": null,
+      "flag": null
+    },
+    {
+      "id": 23,
+      "name": "The Boiler",
+      "type": "property",
+      "districtId": "Rave Quarter",
+      "price": 220,
+      "flag": "⚡",
+      "landmark": "🔥",
+      "landmarkName": "Fire Floor"
+    },
+    {
+      "id": 24,
+      "name": "Warehouse X",
+      "type": "property",
+      "districtId": "Rave Quarter",
+      "price": 240,
+      "flag": "⚡",
+      "landmark": "🎛️",
+      "landmarkName": "DJ Deck"
+    },
+    {
+      "id": 25,
+      "name": "Yacht Marina Hub",
+      "type": "hub",
+      "districtId": null,
+      "price": 200,
+      "flag": null
+    },
+    {
+      "id": 26,
+      "name": "Skyline Manor",
+      "type": "property",
+      "districtId": "Penthouses",
+      "price": 260,
+      "flag": "🥂",
+      "landmark": "🛁",
+      "landmarkName": "Infinity Jacuzzi"
+    },
+    {
+      "id": 27,
+      "name": "Champagne Deck",
+      "type": "property",
+      "districtId": "Penthouses",
+      "price": 260,
+      "flag": "🥂",
+      "landmark": "🍾",
+      "landmarkName": "Dom Pérignon"
+    },
+    {
+      "id": 28,
+      "name": "Vodka Pipeline",
+      "type": "utility",
+      "districtId": null,
+      "price": 150,
+      "flag": null
+    },
+    {
+      "id": 29,
+      "name": "Millionaire Suite",
+      "type": "property",
+      "districtId": "Penthouses",
+      "price": 280,
+      "flag": "🥂",
+      "landmark": "💎",
+      "landmarkName": "Diamond Penthouse"
+    },
+    {
+      "id": 30,
+      "name": "Busted by Security",
+      "type": "goToJail",
+      "districtId": null,
+      "price": null,
+      "flag": null
+    },
+    {
+      "id": 31,
+      "name": "Secret Society",
+      "type": "property",
+      "districtId": "Scandal Row",
+      "price": 300,
+      "flag": "🎭",
+      "landmark": "🕯️",
+      "landmarkName": "Midnight Candle"
+    },
+    {
+      "id": 32,
+      "name": "Masquerade Hall",
+      "type": "property",
+      "districtId": "Scandal Row",
+      "price": 300,
+      "flag": "🎭",
+      "landmark": "🎭",
+      "landmarkName": "Venetian Mask"
+    },
+    {
+      "id": 33,
+      "name": "Wild Truth",
+      "type": "event",
+      "districtId": null,
+      "price": null,
+      "flag": null
+    },
+    {
+      "id": 34,
+      "name": "Forbidden Garden",
+      "type": "property",
+      "districtId": "Scandal Row",
+      "price": 320,
+      "flag": "🎭",
+      "landmark": "🌹",
+      "landmarkName": "Black Rose"
+    },
+    {
+      "id": 35,
+      "name": "Helipad Strip",
+      "type": "hub",
+      "districtId": null,
+      "price": 200,
+      "flag": null
+    },
+    {
+      "id": 36,
+      "name": "Dirty Dare",
+      "type": "event",
+      "districtId": null,
+      "price": null,
+      "flag": null
+    },
+    {
+      "id": 37,
+      "name": "Monaco Casino",
+      "type": "property",
+      "districtId": "Elite Sins",
+      "price": 350,
+      "flag": "👑",
+      "landmark": "🛥️",
+      "landmarkName": "Mega Yacht Deck"
+    },
+    {
+      "id": 38,
+      "name": "VIP Tab",
+      "type": "tax",
+      "districtId": null,
+      "price": null,
+      "taxAmount": 100,
+      "flag": null
+    },
+    {
+      "id": 39,
+      "name": "Private Island",
+      "type": "property",
+      "districtId": "Elite Sins",
+      "price": 400,
+      "flag": "👑",
+      "landmark": "🏝️",
+      "landmarkName": "Helipad Island"
+    }
+  ],
+  "districts": {
+    "Red Light": {
+      "color": "#FF758F",
+      "tileIds": [
+        1,
+        3
+      ],
+      "buildCost": 50
+    },
+    "Speakeasy": {
+      "color": "#F39C12",
+      "tileIds": [
+        6,
+        8,
+        9
+      ],
+      "buildCost": 50
+    },
+    "Sin City": {
+      "color": "#9B59B6",
+      "tileIds": [
+        11,
+        13,
+        14
+      ],
+      "buildCost": 100
+    },
+    "Bikini Strip": {
+      "color": "#3498DB",
+      "tileIds": [
+        16,
+        18,
+        19
+      ],
+      "buildCost": 100
+    },
+    "Rave Quarter": {
+      "color": "#E74C3C",
+      "tileIds": [
+        21,
+        23,
+        24
+      ],
+      "buildCost": 150
+    },
+    "Penthouses": {
+      "color": "#1ABC9C",
+      "tileIds": [
+        26,
+        27,
+        29
+      ],
+      "buildCost": 150
+    },
+    "Scandal Row": {
+      "color": "#E91E63",
+      "tileIds": [
+        31,
+        32,
+        34
+      ],
+      "buildCost": 200
+    },
+    "Elite Sins": {
+      "color": "#F1C40F",
+      "tileIds": [
+        37,
+        39
+      ],
+      "buildCost": 200
+    }
+  }
+}

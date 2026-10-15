@@ -1,0 +1,25 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "strict": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "resolveJsonModule": true,
+    "allowJs": true,
+    "noEmit": true,
+    "declaration": true,
+    "declarationMap": true,
+    "sourceMap": true,
+    "composite": true,
+    "paths": {
+      "@cornerstone/engine": ["./packages/engine"],
+      "@cornerstone/protocol": ["./packages/protocol"],
+      "@cornerstone/bots": ["./packages/bots"],
+      "@cornerstone/server": ["./packages/server"],
+      "@cornerstone/content": ["./packages/content"]
+    }
+  }
+}

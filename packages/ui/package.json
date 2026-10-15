@@ -1,0 +1,6 @@
+{
+  "name": "cornerstone-ui",
+  "version": "1.0.0",
+  "description": "Cornerstone shared UI components",
+  "type": "module"
+}

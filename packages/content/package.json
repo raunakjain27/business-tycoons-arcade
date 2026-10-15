@@ -1,0 +1,7 @@
+{
+  "name": "cornerstone-content",
+  "version": "1.0.0",
+  "description": "Cornerstone game content — board layout, event cards, and static data",
+  "type": "module",
+  "main": "board.json"
+}

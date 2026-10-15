@@ -1,0 +1,443 @@
+{
+  "tiles": [
+    {
+      "id": 0,
+      "name": "START",
+      "type": "start",
+      "districtId": null,
+      "price": null,
+      "taxAmount": 200,
+      "flag": "🏁"
+    },
+    {
+      "id": 1,
+      "name": "Mumbai",
+      "type": "property",
+      "districtId": "Maharashtra",
+      "price": 60,
+      "flag": "🇮🇳",
+      "landmark": "🌊",
+      "landmarkName": "Marine Drive"
+    },
+    {
+      "id": 2,
+      "name": "Treasure",
+      "type": "event",
+      "districtId": null,
+      "price": null,
+      "flag": null
+    },
+    {
+      "id": 3,
+      "name": "Pune",
+      "type": "property",
+      "districtId": "Maharashtra",
+      "price": 60,
+      "flag": "🇮🇳",
+      "landmark": "🏰",
+      "landmarkName": "Shaniwar Wada"
+    },
+    {
+      "id": 4,
+      "name": "GST Tax",
+      "type": "tax",
+      "districtId": null,
+      "price": null,
+      "taxAmount": 200,
+      "flag": null
+    },
+    {
+      "id": 5,
+      "name": "CST Terminal",
+      "type": "hub",
+      "districtId": null,
+      "price": 200,
+      "flag": null
+    },
+    {
+      "id": 6,
+      "name": "Ahmedabad",
+      "type": "property",
+      "districtId": "Gujarat",
+      "price": 100,
+      "flag": "🇮🇳",
+      "landmark": "🦁",
+      "landmarkName": "Sabarmati"
+    },
+    {
+      "id": 7,
+      "name": "Surprise",
+      "type": "event",
+      "districtId": null,
+      "price": null,
+      "flag": null
+    },
+    {
+      "id": 8,
+      "name": "Surat",
+      "type": "property",
+      "districtId": "Gujarat",
+      "price": 100,
+      "flag": "🇮🇳",
+      "landmark": "💎",
+      "landmarkName": "Diamond City"
+    },
+    {
+      "id": 9,
+      "name": "Vadodara",
+      "type": "property",
+      "districtId": "Gujarat",
+      "price": 120,
+      "flag": "🇮🇳",
+      "landmark": "🧵",
+      "landmarkName": "Charkha"
+    },
+    {
+      "id": 10,
+      "name": "In Prison",
+      "type": "jail",
+      "districtId": null,
+      "price": null,
+      "flag": null
+    },
+    {
+      "id": 11,
+      "name": "Jaipur",
+      "type": "property",
+      "districtId": "Rajasthan",
+      "price": 140,
+      "flag": "🇮🇳",
+      "landmark": "🏰",
+      "landmarkName": "Hawa Mahal"
+    },
+    {
+      "id": 12,
+      "name": "Solar Grid",
+      "type": "utility",
+      "districtId": null,
+      "price": 150,
+      "flag": null
+    },
+    {
+      "id": 13,
+      "name": "Udaipur",
+      "type": "property",
+      "districtId": "Rajasthan",
+      "price": 140,
+      "flag": "🇮🇳",
+      "landmark": "⛵",
+      "landmarkName": "Lake Palace"
+    },
+    {
+      "id": 14,
+      "name": "Jodhpur",
+      "type": "property",
+      "districtId": "Rajasthan",
+      "price": 160,
+      "flag": "🇮🇳",
+      "landmark": "🏜️",
+      "landmarkName": "Blue City"
+    },
+    {
+      "id": 15,
+      "name": "Delhi IGI Airport",
+      "type": "hub",
+      "districtId": null,
+      "price": 200,
+      "flag": null
+    },
+    {
+      "id": 16,
+      "name": "Amritsar",
+      "type": "property",
+      "districtId": "Punjab",
+      "price": 180,
+      "flag": "🇮🇳",
+      "landmark": "🛕",
+      "landmarkName": "Golden Temple"
+    },
+    {
+      "id": 17,
+      "name": "Treasure",
+      "type": "event",
+      "districtId": null,
+      "price": null,
+      "flag": null
+    },
+    {
+      "id": 18,
+      "name": "Ludhiana",
+      "type": "property",
+      "districtId": "Punjab",
+      "price": 180,
+      "flag": "🇮🇳",
+      "landmark": "🏭",
+      "landmarkName": "Industrial Capital"
+    },
+    {
+      "id": 19,
+      "name": "Chandigarh",
+      "type": "property",
+      "districtId": "Punjab",
+      "price": 200,
+      "flag": "🇮🇳",
+      "landmark": "🏛️",
+      "landmarkName": "Rock Garden"
+    },
+    {
+      "id": 20,
+      "name": "Vacation",
+      "type": "communityFund",
+      "districtId": null,
+      "price": null,
+      "flag": null
+    },
+    {
+      "id": 21,
+      "name": "Bengaluru",
+      "type": "property",
+      "districtId": "Karnataka",
+      "price": 220,
+      "flag": "🇮🇳",
+      "landmark": "💻",
+      "landmarkName": "Silicon Valley"
+    },
+    {
+      "id": 22,
+      "name": "Surprise",
+      "type": "event",
+      "districtId": null,
+      "price": null,
+      "flag": null
+    },
+    {
+      "id": 23,
+      "name": "Mysuru",
+      "type": "property",
+      "districtId": "Karnataka",
+      "price": 220,
+      "flag": "🇮🇳",
+      "landmark": "👑",
+      "landmarkName": "Mysore Palace"
+    },
+    {
+      "id": 24,
+      "name": "Mangaluru",
+      "type": "property",
+      "districtId": "Karnataka",
+      "price": 240,
+      "flag": "🇮🇳",
+      "landmark": "🏖️",
+      "landmarkName": "Coastal Port"
+    },
+    {
+      "id": 25,
+      "name": "Bengaluru Hub",
+      "type": "hub",
+      "districtId": null,
+      "price": 200,
+      "flag": null
+    },
+    {
+      "id": 26,
+      "name": "Hyderabad",
+      "type": "property",
+      "districtId": "Telangana",
+      "price": 260,
+      "flag": "🇮🇳",
+      "landmark": "🕌",
+      "landmarkName": "Charminar"
+    },
+    {
+      "id": 27,
+      "name": "Warangal",
+      "type": "property",
+      "districtId": "Telangana",
+      "price": 260,
+      "flag": "🇮🇳",
+      "landmark": "🏛️",
+      "landmarkName": "Kakatiya Gate"
+    },
+    {
+      "id": 28,
+      "name": "Hydro Grid",
+      "type": "utility",
+      "districtId": null,
+      "price": 150,
+      "flag": null
+    },
+    {
+      "id": 29,
+      "name": "Nizamabad",
+      "type": "property",
+      "districtId": "Telangana",
+      "price": 280,
+      "flag": "🇮🇳",
+      "landmark": "🌾",
+      "landmarkName": "Fort City"
+    },
+    {
+      "id": 30,
+      "name": "Go to prison",
+      "type": "goToJail",
+      "districtId": null,
+      "price": null,
+      "flag": null
+    },
+    {
+      "id": 31,
+      "name": "Chennai",
+      "type": "property",
+      "districtId": "Tamil Nadu",
+      "price": 300,
+      "flag": "🇮🇳",
+      "landmark": "🛕",
+      "landmarkName": "Marina Beach"
+    },
+    {
+      "id": 32,
+      "name": "Coimbatore",
+      "type": "property",
+      "districtId": "Tamil Nadu",
+      "price": 300,
+      "flag": "🇮🇳",
+      "landmark": "⚙️",
+      "landmarkName": "Manchester of South"
+    },
+    {
+      "id": 33,
+      "name": "Treasure",
+      "type": "event",
+      "districtId": null,
+      "price": null,
+      "flag": null
+    },
+    {
+      "id": 34,
+      "name": "Madurai",
+      "type": "property",
+      "districtId": "Tamil Nadu",
+      "price": 320,
+      "flag": "🇮🇳",
+      "landmark": "🛕",
+      "landmarkName": "Meenakshi Temple"
+    },
+    {
+      "id": 35,
+      "name": "Chennai Hub",
+      "type": "hub",
+      "districtId": null,
+      "price": 200,
+      "flag": null
+    },
+    {
+      "id": 36,
+      "name": "Surprise",
+      "type": "event",
+      "districtId": null,
+      "price": null,
+      "flag": null
+    },
+    {
+      "id": 37,
+      "name": "New Delhi",
+      "type": "property",
+      "districtId": "Delhi NCR",
+      "price": 350,
+      "flag": "🇮🇳",
+      "landmark": "🇮🇳",
+      "landmarkName": "India Gate"
+    },
+    {
+      "id": 38,
+      "name": "Luxury Tax",
+      "type": "tax",
+      "districtId": null,
+      "price": null,
+      "taxAmount": 100,
+      "flag": null
+    },
+    {
+      "id": 39,
+      "name": "Gurugram",
+      "type": "property",
+      "districtId": "Delhi NCR",
+      "price": 400,
+      "flag": "🇮🇳",
+      "landmark": "🏙️",
+      "landmarkName": "Cyber City"
+    }
+  ],
+  "districts": {
+    "Maharashtra": {
+      "color": "#C49A82",
+      "tileIds": [
+        1,
+        3
+      ],
+      "buildCost": 50
+    },
+    "Gujarat": {
+      "color": "#A0D2EB",
+      "tileIds": [
+        6,
+        8,
+        9
+      ],
+      "buildCost": 50
+    },
+    "Rajasthan": {
+      "color": "#F1A7C4",
+      "tileIds": [
+        11,
+        13,
+        14
+      ],
+      "buildCost": 100
+    },
+    "Punjab": {
+      "color": "#FCD581",
+      "tileIds": [
+        16,
+        18,
+        19
+      ],
+      "buildCost": 100
+    },
+    "Karnataka": {
+      "color": "#A8E6CF",
+      "tileIds": [
+        21,
+        23,
+        24
+      ],
+      "buildCost": 150
+    },
+    "Telangana": {
+      "color": "#D8B4E2",
+      "tileIds": [
+        26,
+        27,
+        29
+      ],
+      "buildCost": 150
+    },
+    "Tamil Nadu": {
+      "color": "#FFB3B3",
+      "tileIds": [
+        31,
+        32,
+        34
+      ],
+      "buildCost": 200
+    },
+    "Delhi NCR": {
+      "color": "#B4C5E4",
+      "tileIds": [
+        37,
+        39
+      ],
+      "buildCost": 200
+    }
+  }
+}

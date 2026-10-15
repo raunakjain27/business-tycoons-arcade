@@ -1,0 +1,444 @@
+{
+  "tiles": [
+    {
+      "id": 0,
+      "name": "START",
+      "type": "start",
+      "districtId": null,
+      "price": null,
+      "taxAmount": 200,
+      "flag": "🏁"
+    },
+    {
+      "id": 1,
+      "name": "Salvador",
+      "type": "property",
+      "districtId": "Brazil",
+      "price": 60,
+      "flag": "🇧🇷",
+      "landmark": "🏖️",
+      "landmarkName": "Pelourinho"
+    },
+    {
+      "id": 2,
+      "name": "Treasure",
+      "type": "event",
+      "districtId": null,
+      "price": null,
+      "flag": null
+    },
+    {
+      "id": 3,
+      "name": "Rio",
+      "type": "property",
+      "districtId": "Brazil",
+      "price": 60,
+      "flag": "🇧🇷",
+      "landmark": "⛰️",
+      "landmarkName": "Christ Redeemer"
+    },
+    {
+      "id": 4,
+      "name": "Earnings Tax",
+      "type": "tax",
+      "districtId": null,
+      "price": null,
+      "taxAmount": 200,
+      "taxRate": 10,
+      "flag": null
+    },
+    {
+      "id": 5,
+      "name": "TLV Airport",
+      "type": "hub",
+      "districtId": null,
+      "price": 200,
+      "flag": null
+    },
+    {
+      "id": 6,
+      "name": "Tel Aviv",
+      "type": "property",
+      "districtId": "Israel",
+      "price": 100,
+      "flag": "🇮🇱",
+      "landmark": "🏖️",
+      "landmarkName": "White City"
+    },
+    {
+      "id": 7,
+      "name": "Surprise",
+      "type": "event",
+      "districtId": null,
+      "price": null,
+      "flag": null
+    },
+    {
+      "id": 8,
+      "name": "Haifa",
+      "type": "property",
+      "districtId": "Israel",
+      "price": 110,
+      "flag": "🇮🇱",
+      "landmark": "🌺",
+      "landmarkName": "Bahai Gardens"
+    },
+    {
+      "id": 9,
+      "name": "Jerusalem",
+      "type": "property",
+      "districtId": "Israel",
+      "price": 120,
+      "flag": "🇮🇱",
+      "landmark": "🕍",
+      "landmarkName": "Western Wall"
+    },
+    {
+      "id": 10,
+      "name": "In Prison",
+      "type": "jail",
+      "districtId": null,
+      "price": null,
+      "flag": null
+    },
+    {
+      "id": 11,
+      "name": "Venice",
+      "type": "property",
+      "districtId": "Italy",
+      "price": 130,
+      "flag": "🇮🇹",
+      "landmark": "🛶",
+      "landmarkName": "Gondola Canal"
+    },
+    {
+      "id": 12,
+      "name": "Power Company",
+      "type": "utility",
+      "districtId": null,
+      "price": 150,
+      "flag": null
+    },
+    {
+      "id": 13,
+      "name": "Milan",
+      "type": "property",
+      "districtId": "Italy",
+      "price": 140,
+      "flag": "🇮🇹",
+      "landmark": "👗",
+      "landmarkName": "Duomo Fashion"
+    },
+    {
+      "id": 14,
+      "name": "Rome",
+      "type": "property",
+      "districtId": "Italy",
+      "price": 160,
+      "flag": "🇮🇹",
+      "landmark": "🏛️",
+      "landmarkName": "Colosseum"
+    },
+    {
+      "id": 15,
+      "name": "MUC Airport",
+      "type": "hub",
+      "districtId": null,
+      "price": 200,
+      "flag": null
+    },
+    {
+      "id": 16,
+      "name": "Frankfurt",
+      "type": "property",
+      "districtId": "Germany",
+      "price": 180,
+      "flag": "🇩🇪",
+      "landmark": "🏦",
+      "landmarkName": "Römer Square"
+    },
+    {
+      "id": 17,
+      "name": "Treasure",
+      "type": "event",
+      "districtId": null,
+      "price": null,
+      "flag": null
+    },
+    {
+      "id": 18,
+      "name": "Munich",
+      "type": "property",
+      "districtId": "Germany",
+      "price": 190,
+      "flag": "🇩🇪",
+      "landmark": "🍺",
+      "landmarkName": "Marienplatz"
+    },
+    {
+      "id": 19,
+      "name": "Berlin",
+      "type": "property",
+      "districtId": "Germany",
+      "price": 200,
+      "flag": "🇩🇪",
+      "landmark": "🏛️",
+      "landmarkName": "Brandenburg Gate"
+    },
+    {
+      "id": 20,
+      "name": "Vacation",
+      "type": "communityFund",
+      "districtId": null,
+      "price": null,
+      "flag": null
+    },
+    {
+      "id": 21,
+      "name": "Shenzhen",
+      "type": "property",
+      "districtId": "China",
+      "price": 210,
+      "flag": "🇨🇳",
+      "landmark": "⚡",
+      "landmarkName": "Ping An Tower"
+    },
+    {
+      "id": 22,
+      "name": "Surprise",
+      "type": "event",
+      "districtId": null,
+      "price": null,
+      "flag": null
+    },
+    {
+      "id": 23,
+      "name": "Beijing",
+      "type": "property",
+      "districtId": "China",
+      "price": 220,
+      "flag": "🇨🇳",
+      "landmark": "🏯",
+      "landmarkName": "Forbidden City"
+    },
+    {
+      "id": 24,
+      "name": "Shanghai",
+      "type": "property",
+      "districtId": "China",
+      "price": 240,
+      "flag": "🇨🇳",
+      "landmark": "🗼",
+      "landmarkName": "Oriental Pearl"
+    },
+    {
+      "id": 25,
+      "name": "CDG Airport",
+      "type": "hub",
+      "districtId": null,
+      "price": 200,
+      "flag": null
+    },
+    {
+      "id": 26,
+      "name": "Lyon",
+      "type": "property",
+      "districtId": "France",
+      "price": 260,
+      "flag": "🇫🇷",
+      "landmark": "🦁",
+      "landmarkName": "Vieux Lyon"
+    },
+    {
+      "id": 27,
+      "name": "Toulouse",
+      "type": "property",
+      "districtId": "France",
+      "price": 270,
+      "flag": "🇫🇷",
+      "landmark": "🚀",
+      "landmarkName": "Airbus Cité"
+    },
+    {
+      "id": 28,
+      "name": "Water Company",
+      "type": "utility",
+      "districtId": null,
+      "price": 150,
+      "flag": null
+    },
+    {
+      "id": 29,
+      "name": "Paris",
+      "type": "property",
+      "districtId": "France",
+      "price": 280,
+      "flag": "🇫🇷",
+      "landmark": "🗼",
+      "landmarkName": "Eiffel Tower"
+    },
+    {
+      "id": 30,
+      "name": "Go to prison",
+      "type": "goToJail",
+      "districtId": null,
+      "price": null,
+      "flag": null
+    },
+    {
+      "id": 31,
+      "name": "Liverpool",
+      "type": "property",
+      "districtId": "United Kingdom",
+      "price": 290,
+      "flag": "🇬🇧",
+      "landmark": "🎸",
+      "landmarkName": "Beatles Albert Dock"
+    },
+    {
+      "id": 32,
+      "name": "Manchester",
+      "type": "property",
+      "districtId": "United Kingdom",
+      "price": 300,
+      "flag": "🇬🇧",
+      "landmark": "⚽",
+      "landmarkName": "Old Trafford"
+    },
+    {
+      "id": 33,
+      "name": "Treasure",
+      "type": "event",
+      "districtId": null,
+      "price": null,
+      "flag": null
+    },
+    {
+      "id": 34,
+      "name": "London",
+      "type": "property",
+      "districtId": "United Kingdom",
+      "price": 320,
+      "flag": "🇬🇧",
+      "landmark": "🕰️",
+      "landmarkName": "Big Ben"
+    },
+    {
+      "id": 35,
+      "name": "JFK Airport",
+      "type": "hub",
+      "districtId": null,
+      "price": 200,
+      "flag": null
+    },
+    {
+      "id": 36,
+      "name": "Surprise",
+      "type": "event",
+      "districtId": null,
+      "price": null,
+      "flag": null
+    },
+    {
+      "id": 37,
+      "name": "San Francisco",
+      "type": "property",
+      "districtId": "United States",
+      "price": 360,
+      "flag": "🇺🇸",
+      "landmark": "🌉",
+      "landmarkName": "Golden Gate"
+    },
+    {
+      "id": 38,
+      "name": "Premium Tax",
+      "type": "tax",
+      "districtId": null,
+      "price": null,
+      "taxAmount": 75,
+      "flag": null
+    },
+    {
+      "id": 39,
+      "name": "New York",
+      "type": "property",
+      "districtId": "United States",
+      "price": 400,
+      "flag": "🇺🇸",
+      "landmark": "🗽",
+      "landmarkName": "Statue of Liberty"
+    }
+  ],
+  "districts": {
+    "Brazil": {
+      "color": "#A77050",
+      "tileIds": [
+        1,
+        3
+      ],
+      "buildCost": 50
+    },
+    "Israel": {
+      "color": "#63A4D0",
+      "tileIds": [
+        6,
+        8,
+        9
+      ],
+      "buildCost": 50
+    },
+    "Italy": {
+      "color": "#D35D8A",
+      "tileIds": [
+        11,
+        13,
+        14
+      ],
+      "buildCost": 100
+    },
+    "Germany": {
+      "color": "#F39C38",
+      "tileIds": [
+        16,
+        18,
+        19
+      ],
+      "buildCost": 100
+    },
+    "China": {
+      "color": "#E64958",
+      "tileIds": [
+        21,
+        23,
+        24
+      ],
+      "buildCost": 150
+    },
+    "France": {
+      "color": "#4382C4",
+      "tileIds": [
+        26,
+        27,
+        29
+      ],
+      "buildCost": 150
+    },
+    "United Kingdom": {
+      "color": "#7E57C2",
+      "tileIds": [
+        31,
+        32,
+        34
+      ],
+      "buildCost": 200
+    },
+    "United States": {
+      "color": "#2A52BE",
+      "tileIds": [
+        37,
+        39
+      ],
+      "buildCost": 200
+    }
+  }
+}

@@ -1,0 +1,10 @@
+{
+  "name": "cornerstone-protocol",
+  "version": "1.0.0",
+  "description": "Cornerstone shared protocol — Zod schemas for actions, state, and messages",
+  "type": "module",
+  "main": "schemas.ts",
+  "dependencies": {
+    "zod": "^3.20.0"
+  }
+}

@@ -1,0 +1,883 @@
+import React, { useState } from 'react';
+import type { GameState, TileId, PlayerState } from '../../../../packages/engine/types';
+import { BOARD_DATA, getTileDef, getDistrictDef, PLAYER_COLORS, AVAILABLE_PEGS, formatCurrency, updateTileName } from '../boardData';
+import { useGameStore } from '../store';
+import { DiceVisualizer } from './DiceVisualizer';
+
+interface BoardProps {
+  gameState: GameState;
+}
+
+// Maps 40 tile IDs to 11x11 CSS Grid coordinates (1-indexed)
+function getGridPosition(tileId: TileId): { row: number; col: number; isCorner: boolean; stripePos: 'top' | 'bottom' | 'left' | 'right' } {
+  // Bottom row: tiles 0-10 (right to left)
+  if (tileId === 0) return { row: 11, col: 11, isCorner: true, stripePos: 'top' };
+  if (tileId >= 1 && tileId <= 9) return { row: 11, col: 11 - tileId, isCorner: false, stripePos: 'top' };
+  if (tileId === 10) return { row: 11, col: 1, isCorner: true, stripePos: 'top' };
+
+  // Left column: tiles 11-19 (bottom to top)
+  if (tileId >= 11 && tileId <= 19) return { row: 11 - (tileId - 10), col: 1, isCorner: false, stripePos: 'right' };
+
+  // Top row: tiles 20-30 (left to right)
+  if (tileId === 20) return { row: 1, col: 1, isCorner: true, stripePos: 'bottom' };
+  if (tileId >= 21 && tileId <= 29) return { row: 1, col: tileId - 19, isCorner: false, stripePos: 'bottom' };
+  if (tileId === 30) return { row: 1, col: 11, isCorner: true, stripePos: 'bottom' };
+
+  // Right column: tiles 31-39 (top to bottom)
+  return { row: tileId - 29, col: 11, isCorner: false, stripePos: 'left' };
+}
+
+export const Board: React.FC<BoardProps> = ({ gameState }) => {
+  const { selectedTile, setSelectedTile, myPlayerId, dispatchAction } = useGameStore();
+  const [showDeed, setShowDeed] = useState<TileId | null>(null);
+  const [editingTileId, setEditingTileId] = useState<TileId | null>(null);
+  const [editNameInput, setEditNameInput] = useState('');
+
+  // Find which players are on which tile
+  const playersByTile: Record<TileId, string[]> = {};
+  for (const [pId, pState] of Object.entries(gameState.players) as [string, PlayerState][]) {
+    if (pState.status === 'active') {
+      const pos = pState.position;
+      if (!playersByTile[pos]) playersByTile[pos] = [];
+      playersByTile[pos].push(pId);
+    }
+  }
+
+  // Get color for player ID
+  const getPlayerColor = (pId: string): string => {
+    const idx = gameState.turnOrder.indexOf(pId);
+    return PLAYER_COLORS[idx >= 0 ? idx % PLAYER_COLORS.length : 0] ?? '#3b82f6';
+  };
+
+  // Get peg icon for player
+  const getPlayerPeg = (pId: string): { icon: string; animation: string } => {
+    const p = gameState.players[pId];
+    const peg = AVAILABLE_PEGS.find(item => item.id === p?.tokenId) || AVAILABLE_PEGS[0];
+    return { icon: peg.icon, animation: peg.animation };
+  };
+
+  return (
+    <>
+      <style>{`
+        @keyframes floatPeg {
+          0%, 100% { transform: translateY(0px) scale(1); }
+          50% { transform: translateY(-3px) scale(1.08); }
+        }
+        @keyframes bouncePeg {
+          0%, 100% { transform: translateY(0) scale(1); }
+          40% { transform: translateY(-4px) scale(1.1); }
+        }
+        @keyframes landmarkGlow {
+          0%, 100% { filter: drop-shadow(0 0 2px rgba(255,255,255,0.4)); transform: scale(1); }
+          50% { filter: drop-shadow(0 0 5px rgba(167,139,250,0.8)); transform: scale(1.08); }
+        }
+        .animated-landmark {
+          display: inline-block;
+          animation: landmarkGlow 2.5s infinite ease-in-out;
+        }
+        @media (max-width: 640px) {
+          .board-responsive-container {
+            padding: 4px !important;
+            gap: 1px !important;
+            grid-template-columns: minmax(42px, 1.4fr) repeat(9, minmax(24px, 1fr)) minmax(42px, 1.4fr) !important;
+            grid-template-rows: minmax(42px, 1.4fr) repeat(9, minmax(24px, 1fr)) minmax(42px, 1.4fr) !important;
+          }
+          .board-responsive-container .animated-landmark {
+            font-size: 11px !important;
+          }
+        }
+      `}</style>
+
+      <div
+        className="board-responsive-container"
+        style={{
+          display: 'grid',
+          gridTemplateColumns: 'minmax(84px, 1.4fr) repeat(9, minmax(56px, 1fr)) minmax(84px, 1.4fr)',
+          gridTemplateRows: 'minmax(84px, 1.4fr) repeat(9, minmax(56px, 1fr)) minmax(84px, 1.4fr)',
+          gap: '2px',
+          backgroundColor: '#151026',
+          padding: '12px',
+          borderRadius: '16px',
+          border: '1px solid rgba(255, 255, 255, 0.12)',
+          boxShadow: '0 25px 60px rgba(0, 0, 0, 0.85), 0 0 50px rgba(124, 58, 237, 0.18)',
+          width: '100%',
+          maxWidth: '860px',
+          aspectRatio: '1 / 1',
+          userSelect: 'none',
+          margin: '0 auto',
+          fontFamily: 'system-ui, -apple-system, sans-serif',
+          boxSizing: 'border-box',
+        }}
+      >
+        {/* 40 Tiles */}
+        {BOARD_DATA.tiles.map(tile => {
+          const { row, col, isCorner, stripePos } = getGridPosition(tile.id);
+          const tState = gameState.tiles[tile.id];
+          const district = getDistrictDef(tile.districtId);
+          const stripeColor = district?.color ?? null;
+          const ownerColor = tState?.ownerId ? getPlayerColor(tState.ownerId) : null;
+          const playersHere = playersByTile[tile.id] ?? [];
+          const isSelected = selectedTile === tile.id;
+
+          const tier = tState?.tier ?? 0;
+          const isMortgaged = tState?.mortgaged ?? false;
+
+          return (
+            <div
+              key={tile.id}
+              onClick={() => { setSelectedTile(tile.id); if (tile.type === 'property') { setShowDeed(tile.id); } }}
+              style={{
+                gridRow: row,
+                gridColumn: col,
+                backgroundColor: isSelected ? '#332356' : '#1e1837',
+                border: isSelected ? '2px solid #a78bfa' : '1px solid rgba(255, 255, 255, 0.08)',
+                borderRadius: isCorner ? '6px' : '4px',
+                display: 'flex',
+                flexDirection: stripePos === 'top' ? 'column' : stripePos === 'bottom' ? 'column-reverse' : stripePos === 'left' ? 'row' : 'row-reverse',
+                position: 'relative',
+                overflow: 'visible',
+                cursor: 'pointer',
+                transition: 'all 0.12s ease',
+                padding: '0px',
+              }}
+              title={`${tile.name}${tile.price ? ` - ${formatCurrency(tile.price, gameState.boardKey)}` : ''}`}
+            >
+              {/* Richup-style District Color Bar */}
+              {stripeColor && (
+                <div
+                  style={{
+                    height: stripePos === 'top' || stripePos === 'bottom' ? '7px' : '100%',
+                    width: stripePos === 'left' || stripePos === 'right' ? '7px' : '100%',
+                    backgroundColor: stripeColor,
+                    flexShrink: 0,
+                  }}
+                />
+              )}
+
+              {/* Tile Body */}
+              <div
+                style={{
+                  display: 'flex',
+                  flexDirection: 'column',
+                  justifyContent: 'space-between',
+                  alignItems: 'center',
+                  flexGrow: 1,
+                  padding: isCorner ? '3px' : '2px 1px',
+                  textAlign: 'center',
+                  width: '100%',
+                  height: '100%',
+                  boxSizing: 'border-box',
+                  overflow: 'visible',
+                }}
+              >
+                {/* Corner Tiles */}
+                {isCorner ? (
+                  <div
+                    style={{
+                      display: 'flex',
+                      flexDirection: 'column',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      height: '100%',
+                      width: '100%',
+                      position: 'relative',
+                    }}
+                  >
+                    {/* START */}
+                    {tile.id === 0 && (
+                      <>
+                        <span style={{ fontSize: '14px', fontWeight: 900, color: '#a3e635', letterSpacing: '0.8px' }}>
+                          START
+                        </span>
+                        <div
+                          style={{
+                            width: '26px',
+                            height: '26px',
+                            borderRadius: '50%',
+                            backgroundColor: '#8b5cf6',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            fontSize: '14px',
+                            marginTop: '2px',
+                            boxShadow: '0 0 10px rgba(139, 92, 246, 0.6)',
+                          }}
+                        >
+                          👾
+                        </div>
+                        <span style={{ fontSize: '8px', color: '#10b981', fontWeight: 700, marginTop: '2px' }}>
+                          +{formatCurrency(200, gameState.boardKey)}
+                        </span>
+                      </>
+                    )}
+
+                    {/* IN PRISON (Corner 10) with Prison Cell Bars & Pass Through Alley */}
+                    {tile.id === 10 && (
+                      <div style={{ display: 'flex', width: '100%', height: '100%', position: 'relative' }}>
+                        <div
+                          style={{
+                            flex: 1,
+                            display: 'flex',
+                            flexDirection: 'column',
+                            justifyContent: 'center',
+                            alignItems: 'center',
+                            padding: '1px',
+                            borderRight: '1px dashed rgba(255,255,255,0.2)',
+                          }}
+                        >
+                          <span style={{ fontSize: '7.5px', color: '#94a3b8', fontWeight: 700, textTransform: 'uppercase' }}>
+                            Pass
+                          </span>
+                          <span style={{ fontSize: '7px', color: '#64748b' }}>Through</span>
+                        </div>
+
+                        <div
+                          style={{
+                            flex: 1.2,
+                            backgroundColor: '#271f3b',
+                            borderRadius: '4px',
+                            border: '1px solid #4a3b69',
+                            display: 'flex',
+                            flexDirection: 'column',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            padding: '1px',
+                            position: 'relative',
+                            overflow: 'hidden',
+                          }}
+                        >
+                          <div
+                            style={{
+                              position: 'absolute',
+                              top: 0,
+                              left: 0,
+                              right: 0,
+                              bottom: 0,
+                              backgroundImage: 'repeating-linear-gradient(90deg, transparent, transparent 4px, rgba(148, 163, 184, 0.45) 4px, rgba(148, 163, 184, 0.45) 6px)',
+                              pointerEvents: 'none',
+                            }}
+                          />
+                          <span style={{ fontSize: '13px', zIndex: 1 }}>⚖️</span>
+                          <span style={{ fontSize: '7.5px', color: '#f87171', fontWeight: 800, zIndex: 1, textTransform: 'uppercase' }}>
+                            In Jail
+                          </span>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* VACATION (Corner 20) with Vacation Cash on spot */}
+                    {tile.id === 20 && (
+                      <>
+                        <div style={{ fontSize: '18px' }}>🌴</div>
+                        <span style={{ fontSize: '10px', fontWeight: 800, color: '#f8fafc' }}>Vacation</span>
+                        <div
+                          style={{
+                            marginTop: '2px',
+                            backgroundColor: 'rgba(16, 185, 129, 0.2)',
+                            border: '1px solid #10b981',
+                            borderRadius: '4px',
+                            padding: '1px 4px',
+                            fontSize: '8px',
+                            fontWeight: 800,
+                            color: '#34d399',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '2px',
+                          }}
+                        >
+                          <span>💵</span>
+                          <span>{formatCurrency(gameState.communityFund, gameState.boardKey)}</span>
+                        </div>
+                      </>
+                    )}
+
+                    {/* GO TO PRISON (Corner 30) */}
+                    {tile.id === 30 && (
+                      <>
+                        <div style={{ fontSize: '18px' }}>☠️</div>
+                        <span style={{ fontSize: '8.5px', fontWeight: 800, color: '#f87171', lineHeight: 1.1, textTransform: 'uppercase' }}>
+                          Go To
+                        </span>
+                        <span style={{ fontSize: '9.5px', fontWeight: 900, color: '#ffffff' }}>
+                          Prison
+                        </span>
+                      </>
+                    )}
+                  </div>
+                ) : (
+                  <>
+                    {/* Top: Price Pill or Tax Header */}
+                    <div style={{ width: '100%', display: 'flex', justifyContent: 'center' }}>
+                      {tile.price ? (
+                        <span
+                          style={{
+                            fontSize: '8.5px',
+                            fontWeight: 700,
+                            color: '#e2e8f0',
+                            backgroundColor: 'rgba(255, 255, 255, 0.1)',
+                            padding: '1px 4px',
+                            borderRadius: '3px',
+                            whiteSpace: 'nowrap',
+                          }}
+                        >
+                          {formatCurrency(tile.price, gameState.boardKey)}
+                        </span>
+                      ) : tile.type === 'tax' ? (
+                        <span style={{ fontSize: '7.5px', color: '#94a3b8', fontWeight: 700, whiteSpace: 'nowrap' }}>
+                          {tile.name}
+                        </span>
+                      ) : (
+                        <span style={{ fontSize: '8px', fontWeight: 700, color: '#c084fc', whiteSpace: 'nowrap' }}>
+                          {tile.name}
+                        </span>
+                      )}
+                    </div>
+
+                    {/* Middle: Distinct Landmark + Country Flag & City Name */}
+                    <div
+                      style={{
+                        display: 'flex',
+                        flexDirection: 'column',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        gap: '1px',
+                        width: '100%',
+                      }}
+                    >
+                      {/* Airports */}
+                      {tile.type === 'hub' && (
+                        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                          <span style={{ fontSize: '16px' }}>✈️</span>
+                          <span style={{ fontSize: '8px', fontWeight: 700, color: '#94a3b8', textAlign: 'center', whiteSpace: 'normal', lineHeight: 1.1 }}>
+                            {tile.name}
+                          </span>
+                        </div>
+                      )}
+
+                      {/* Utilities */}
+                      {tile.type === 'utility' && (
+                        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                          <span style={{ fontSize: '16px' }}>
+                            {tile.name.includes('Water') ? '💧' : '⚡'}
+                          </span>
+                          <span style={{ fontSize: '7.5px', fontWeight: 700, color: '#94a3b8', textAlign: 'center', whiteSpace: 'normal', lineHeight: 1.1 }}>
+                            {tile.name}
+                          </span>
+                        </div>
+                      )}
+
+                      {/* Treasure */}
+                      {tile.name === 'Treasure' && (
+                        <div
+                          style={{
+                            width: '26px',
+                            height: '22px',
+                            backgroundColor: '#b45309',
+                            borderRadius: '4px',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            fontSize: '14px',
+                            boxShadow: '0 2px 4px rgba(0,0,0,0.5)',
+                          }}
+                        >
+                          📦
+                        </div>
+                      )}
+
+                      {/* Surprise */}
+                      {tile.name.includes('Surprise') && (
+                        <div
+                          style={{
+                            fontSize: '22px',
+                            fontWeight: 900,
+                            color: '#f43f5e',
+                            textShadow: '0 0 10px rgba(244, 63, 94, 0.6)',
+                            lineHeight: 1,
+                          }}
+                        >
+                          ?
+                        </div>
+                      )}
+
+                      {/* Taxes */}
+                      {tile.type === 'tax' && (
+                        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                          <span style={{ fontSize: '15px' }}>💵</span>
+                          <span style={{ fontSize: '8px', color: '#38bdf8', fontWeight: 700 }}>
+                            {tile.taxAmount ? formatCurrency(tile.taxAmount, gameState.boardKey) : '10%'}
+                          </span>
+                        </div>
+                      )}
+
+                      {/* Standard Property with Landmark + Flag */}
+                      {tile.type === 'property' && (
+                        <>
+                          {/* Distinct Animated Landmark Badge */}
+                          {tile.landmark && (
+                            <span
+                              className="animated-landmark"
+                              style={{ fontSize: '14px', lineHeight: 1 }}
+                              title={tile.landmarkName ?? tile.name}
+                            >
+                              {tile.landmark}
+                            </span>
+                          )}
+
+                          {/* City Name - 2 lines wrapped cleanly so it never clips */}
+                          <span
+                            style={{
+                              fontSize: tile.name.length > 11 ? '8px' : '8.5px',
+                              fontWeight: 700,
+                              color: '#f8fafc',
+                              lineHeight: 1.1,
+                              maxWidth: '100%',
+                              textAlign: 'center',
+                              wordBreak: 'break-word',
+                              hyphens: 'auto',
+                              display: '-webkit-box',
+                              WebkitLineClamp: 2,
+                              WebkitBoxOrient: 'vertical',
+                              overflow: 'hidden',
+                              padding: '0 1px',
+                            }}
+                          >
+                            {tile.name}
+                          </span>
+
+                          {/* Country Flag or 18+ Custom Edit Button */}
+                          {gameState.boardKey === 'customfriends' ? (
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setEditingTileId(tile.id);
+                                setEditNameInput(tile.name);
+                              }}
+                              style={{
+                                background: 'rgba(236, 72, 153, 0.25)',
+                                border: '1px solid #ec4899',
+                                borderRadius: '4px',
+                                color: '#f472b6',
+                                fontSize: '8px',
+                                padding: '1px 3px',
+                                cursor: 'pointer',
+                                lineHeight: 1,
+                              }}
+                              title="Click to edit friend's name"
+                            >
+                              ✏️ Edit
+                            </button>
+                          ) : tile.flag ? (
+                            <span style={{ fontSize: '12px', lineHeight: 1, filter: 'drop-shadow(0 1px 2px rgba(0,0,0,0.5))' }}>
+                              {tile.flag}
+                            </span>
+                          ) : null}
+                        </>
+                      )}
+                    </div>
+
+                    {/* Bottom: Owner Dot & Buildings */}
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '2px' }}>
+                      {ownerColor && (
+                        <div
+                          style={{
+                            width: '6px',
+                            height: '6px',
+                            borderRadius: '50%',
+                            backgroundColor: ownerColor,
+                            boxShadow: `0 0 6px ${ownerColor}`,
+                          }}
+                          title={`Owned by ${tState?.ownerId}`}
+                        />
+                      )}
+                      {tier > 0 && (
+                        <div style={{ display: 'flex', gap: '1px' }}>
+                          {Array.from({ length: tier }).map((_, i) => (
+                            <div
+                              key={i}
+                              style={{
+                                width: '4px',
+                                height: '4px',
+                                borderRadius: '1px',
+                                backgroundColor: tier === 4 ? '#eab308' : '#22c55e',
+                              }}
+                            />
+                          ))}
+                        </div>
+                      )}
+                      {isMortgaged && (
+                        <span style={{ fontSize: '7px', color: '#ef4444', fontWeight: 800 }}>M</span>
+                      )}
+                    </div>
+                  </>
+                )}
+              </div>
+
+              {/* Entertaining Animated Player Pegs */}
+              {playersHere.length > 0 && (
+                <div
+                  style={{
+                    position: 'absolute',
+                    bottom: '2px',
+                    right: '2px',
+                    display: 'flex',
+                    gap: '2px',
+                    flexWrap: 'wrap',
+                    zIndex: 2,
+                  }}
+                >
+                  {playersHere.map(pId => {
+                    const pColor = getPlayerColor(pId);
+                    const peg = getPlayerPeg(pId);
+                    const isCurrent = gameState.turnPlayerId === pId;
+                    const isMe = pId === myPlayerId;
+                    return (
+                      <div
+                        key={pId}
+                        style={{
+                          width: '17px',
+                          height: '17px',
+                          borderRadius: '50%',
+                          backgroundColor: pColor,
+                          border: isMe ? '2px solid #ffffff' : '1px solid #0f172a',
+                          boxShadow: isCurrent ? `0 0 10px ${pColor}, 0 0 14px #ffffff` : `0 0 4px ${pColor}`,
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          fontSize: '10px',
+                          lineHeight: 1,
+                          animation: isCurrent ? 'bouncePeg 1.2s infinite ease-in-out' : 'floatPeg 3s infinite ease-in-out',
+                        }}
+                        title={`${gameState.players[pId]?.name}${isCurrent ? ' (Active Turn)' : ''}`}
+                      >
+                        {peg.icon}
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          );
+        })}
+
+        {/* Board Center Console: Dice shifted up, Roll button, Event Log integrated below */}
+        <div
+          style={{
+            gridRow: '2 / 11',
+            gridColumn: '2 / 11',
+            backgroundColor: '#161127',
+            borderRadius: '12px',
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            justifyContent: 'flex-start',
+            padding: '12px',
+            textAlign: 'center',
+            position: 'relative',
+            overflow: 'hidden',
+          }}
+        >
+          {/* Top of Center: Dice Visualizer moved up */}
+          <div style={{ marginTop: '2px', marginBottom: '6px' }}>
+            <DiceVisualizer dice={gameState.lastDice} />
+          </div>
+
+          {/* Roll Action Button in Center */}
+          {gameState.phase === 'awaitRoll' && gameState.turnPlayerId === myPlayerId && (
+            <button
+              onClick={() => dispatchAction({ type: 'ROLL' })}
+              style={{
+                padding: '9px 22px',
+                borderRadius: '8px',
+                border: 'none',
+                backgroundColor: '#7c3aed',
+                color: '#ffffff',
+                fontSize: '13px',
+                fontWeight: 700,
+                cursor: 'pointer',
+                boxShadow: '0 4px 16px rgba(124, 58, 237, 0.5)',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px',
+                transition: 'all 0.15s ease',
+                marginBottom: '8px',
+              }}
+            >
+              <span>▶</span>
+              <span>Roll Dice</span>
+            </button>
+          )}
+
+          {/* Embedded Game Event Log Directly On The Board (Below Dice) */}
+          <div
+            style={{
+              width: '100%',
+              flex: 1,
+              minHeight: '130px',
+              maxHeight: '210px',
+              backgroundColor: 'rgba(0, 0, 0, 0.45)',
+              borderRadius: '8px',
+              border: '1px solid rgba(255, 255, 255, 0.08)',
+              padding: '8px 10px',
+              display: 'flex',
+              flexDirection: 'column',
+              textAlign: 'left',
+              marginTop: '2px',
+            }}
+          >
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
+              <span style={{ fontSize: '10.5px', fontWeight: 800, color: '#c084fc', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                📜 Board Event Log
+              </span>
+              <span style={{ fontSize: '9.5px', color: '#64748b' }}>
+                Room: {gameState.id.toLowerCase().replace('local-', '')}
+              </span>
+            </div>
+
+            <div
+              style={{
+                flex: 1,
+                overflowY: 'auto',
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '3px',
+                paddingRight: '4px',
+              }}
+            >
+              {gameState.log.slice(-15).reverse().map((e, idx) => (
+                <div
+                  key={idx}
+                  style={{
+                    fontSize: '10.5px',
+                    color: idx === 0 ? '#f8fafc' : '#94a3b8',
+                    fontWeight: idx === 0 ? 600 : 400,
+                    lineHeight: 1.25,
+                    borderBottom: '1px solid rgba(255,255,255,0.03)',
+                    paddingBottom: '2px',
+                  }}
+                >
+                  <span style={{ marginRight: '4px' }}>
+                    {e.type.includes('DICE') ? '🎲' : e.type.includes('RENT') ? '💵' : e.type.includes('JAIL') ? '⚖️' : '🔹'}
+                  </span>
+                  <span>{e.reason || e.type}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* Title Deed Card Modal */}
+        {showDeed !== null && (() => {
+          const tileDef = BOARD_DATA.tiles[showDeed];
+          const tState = gameState.tiles[showDeed];
+          const district = tileDef?.districtId ? getDistrictDef(tileDef.districtId) : null;
+          if (!tileDef || tileDef.type !== 'property') return null;
+          const buildCost = district?.buildCost ?? 50;
+
+          return (
+            <div
+              onClick={() => setShowDeed(null)}
+              style={{
+                position: 'fixed',
+                top: 0,
+                left: 0,
+                right: 0,
+                bottom: 0,
+                backgroundColor: 'rgba(0, 0, 0, 0.75)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                zIndex: 1000,
+              }}
+            >
+              <div
+                onClick={e => e.stopPropagation()}
+                style={{
+                  width: '280px',
+                  backgroundColor: '#1f1938',
+                  borderRadius: '12px',
+                  border: '1px solid rgba(255, 255, 255, 0.15)',
+                  boxShadow: '0 20px 40px rgba(0,0,0,0.8)',
+                  overflow: 'hidden',
+                  color: '#f8fafc',
+                }}
+              >
+                {/* Deed Header */}
+                <div
+                  style={{
+                    backgroundColor: district?.color ?? '#475569',
+                    padding: '16px 12px',
+                    textAlign: 'center',
+                    color: '#ffffff',
+                  }}
+                >
+                  <div style={{ fontSize: '10px', textTransform: 'uppercase', letterSpacing: '1px', opacity: 0.9 }}>
+                    TITLE DEED
+                  </div>
+                  <div style={{ fontSize: '18px', fontWeight: 800, marginTop: '2px' }}>
+                    {tileDef.name}
+                  </div>
+                  {tileDef.landmark && (
+                    <div style={{ fontSize: '20px', marginTop: '4px' }}>
+                      {tileDef.landmark} {tileDef.flag}
+                    </div>
+                  )}
+                </div>
+
+                {/* Rent Breakdown */}
+                <div style={{ padding: '16px', fontSize: '12px', display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                    <span>Base Rent</span>
+                    <strong>{formatCurrency(Math.round((tileDef.price ?? 60) / 8), gameState.boardKey)}</strong>
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                    <span>With Full District (x2)</span>
+                    <strong>{formatCurrency(Math.round((tileDef.price ?? 60) / 4), gameState.boardKey)}</strong>
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                    <span>With 1 House</span>
+                    <strong>{formatCurrency(Math.round(((tileDef.price ?? 60) / 8) * 5), gameState.boardKey)}</strong>
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                    <span>With 2 Houses</span>
+                    <strong>{formatCurrency(Math.round(((tileDef.price ?? 60) / 8) * 15), gameState.boardKey)}</strong>
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                    <span>With Hotel</span>
+                    <strong>{formatCurrency(Math.round(((tileDef.price ?? 60) / 8) * 40), gameState.boardKey)}</strong>
+                  </div>
+
+                  <div style={{ borderTop: '1px solid rgba(255,255,255,0.1)', marginTop: '8px', paddingTop: '8px' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                      <span>Building Cost</span>
+                      <span>{formatCurrency(buildCost, gameState.boardKey)} each</span>
+                    </div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                      <span>Mortgage Value</span>
+                      <span>{formatCurrency(Math.round((tileDef.price ?? 60) / 2), gameState.boardKey)}</span>
+                    </div>
+                  </div>
+
+                  <button
+                    onClick={() => setShowDeed(null)}
+                    style={{
+                      marginTop: '12px',
+                      padding: '8px',
+                      borderRadius: '6px',
+                      border: 'none',
+                      backgroundColor: '#7c3aed',
+                      color: '#ffffff',
+                      fontWeight: 700,
+                      cursor: 'pointer',
+                    }}
+                  >
+                    Close
+                  </button>
+                </div>
+              </div>
+            </div>
+          );
+        })()}
+
+        {/* Live On-Board Tile Renaming Modal */}
+        {editingTileId !== null && (
+          <div
+            onClick={() => setEditingTileId(null)}
+            style={{
+              position: 'fixed',
+              inset: 0,
+              backgroundColor: 'rgba(0, 0, 0, 0.8)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              zIndex: 1100,
+            }}
+          >
+            <div
+              onClick={(e) => e.stopPropagation()}
+              style={{
+                width: '320px',
+                backgroundColor: '#1f1938',
+                borderRadius: '16px',
+                border: '1px solid #ec4899',
+                padding: '24px',
+                boxShadow: '0 20px 50px rgba(0,0,0,0.9), 0 0 30px rgba(236,72,153,0.3)',
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '16px',
+              }}
+            >
+              <div style={{ textAlign: 'center' }}>
+                <span style={{ fontSize: '28px' }}>✏️👥</span>
+                <h3 style={{ margin: '8px 0 4px 0', fontSize: '18px', color: '#f8fafc' }}>
+                  Rename Board Tile
+                </h3>
+                <span style={{ fontSize: '12px', color: '#ec4899', fontWeight: 600 }}>
+                  Tile #{editingTileId} (18+ Custom Friends)
+                </span>
+              </div>
+
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                <label style={{ fontSize: '12px', color: '#cbd5e1' }}>Friend or Custom Name:</label>
+                <input
+                  type="text"
+                  value={editNameInput}
+                  onChange={(e) => setEditNameInput(e.target.value)}
+                  placeholder="Enter name (e.g. Rachel Green)"
+                  autoFocus
+                  style={{
+                    padding: '10px 14px',
+                    borderRadius: '8px',
+                    border: '1px solid rgba(255, 255, 255, 0.2)',
+                    backgroundColor: '#0f172a',
+                    color: '#ffffff',
+                    fontSize: '14px',
+                    outline: 'none',
+                  }}
+                />
+              </div>
+
+              <div style={{ display: 'flex', gap: '10px' }}>
+                <button
+                  onClick={() => setEditingTileId(null)}
+                  style={{
+                    flex: 1,
+                    padding: '10px',
+                    borderRadius: '8px',
+                    border: '1px solid rgba(255, 255, 255, 0.15)',
+                    backgroundColor: 'rgba(255, 255, 255, 0.05)',
+                    color: '#94a3b8',
+                    fontWeight: 600,
+                    cursor: 'pointer',
+                  }}
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={() => {
+                    if (editNameInput.trim()) {
+                      updateTileName(editingTileId, editNameInput.trim());
+                      setEditingTileId(null);
+                    }
+                  }}
+                  style={{
+                    flex: 1,
+                    padding: '10px',
+                    borderRadius: '8px',
+                    border: 'none',
+                    backgroundColor: '#ec4899',
+                    color: '#ffffff',
+                    fontWeight: 700,
+                    cursor: 'pointer',
+                  }}
+                >
+                  Save Name
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+    </>
+  );
+};

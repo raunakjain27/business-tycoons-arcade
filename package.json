@@ -1,0 +1,33 @@
+{
+  "name": "cornerstone",
+  "private": true,
+  "packageManager": "pnpm@12.11.2",
+  "workspaces": {
+    "packages": [
+      "packages/*"
+    ],
+    "apps": [
+      "apps/*"
+    ]
+  },
+  "devDependencies": {
+    "tsx": "^4.23.15",
+    "turbo": "^2.0.0"
+  },
+  "scripts": {
+    "build": "turbo build",
+    "test": "turbo test",
+    "lint": "turbo lint",
+    "typecheck": "tsc --noEmit",
+    "dev": "turbo dev",
+    "dev:web": "pnpm --filter cornerstone-web dev",
+    "dev:server": "pnpm --filter cornerstone-server dev",
+    "start": "turbo start",
+    "start:web": "pnpm --filter cornerstone-web start",
+    "start:server": "pnpm --filter cornerstone-server start"
+  },
+  "dependencies": {
+    "immer": "^11.1.21",
+    "typescript": "^7.0.2"
+  }
+}

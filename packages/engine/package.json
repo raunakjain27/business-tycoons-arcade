@@ -1,0 +1,18 @@
+{
+  "name": "cornerstone-engine",
+  "version": "1.0.0",
+  "description": "Cornerstone game engine — pure, deterministic game logic",
+  "type": "module",
+  "main": "index.ts",
+  "scripts": {
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
+  "dependencies": {
+    "zod": "^3.20.0"
+  },
+  "devDependencies": {
+    "vitest": "^3.0.0",
+    "typescript": "^5.0.0"
+  }
+}

@@ -1,0 +1,391 @@
+{
+  "cards": [
+    {
+      "id": 1,
+      "text": "Tax Refund: Receive $200 from the community fund",
+      "type": "income",
+      "amount": 200
+    },
+    {
+      "id": 2,
+      "text": "Speeding Fine: Pay $15",
+      "type": "tax",
+      "amount": 15
+    },
+    {
+      "id": 3,
+      "text": "Advance to Payday HQ: Collect $200",
+      "type": "move",
+      "targetTile": 0
+    },
+    {
+      "id": 4,
+      "text": "Bank Error in Your Favor: Receive $75",
+      "type": "income",
+      "amount": 75
+    },
+    {
+      "id": 5,
+      "text": "School Fees: Pay $150",
+      "type": "tax",
+      "amount": 150
+    },
+    {
+      "id": 6,
+      "text": "Celebration: Receive $100 from each player",
+      "type": "collectFromAll",
+      "amount": 100
+    },
+    {
+      "id": 7,
+      "text": "Grand Opera Night: Pay $35",
+      "type": "tax",
+      "amount": 35
+    },
+    {
+      "id": 8,
+      "text": "Community Bonus: Receive $100",
+      "type": "income",
+      "amount": 100
+    },
+    {
+      "id": 9,
+      "text": "Holiday Fund Matures: Receive $50",
+      "type": "income",
+      "amount": 50
+    },
+    {
+      "id": 10,
+      "text": "City Assessment: Pay $15 per tile you own",
+      "type": "taxPerTile",
+      "amount": 15
+    },
+    {
+      "id": 11,
+      "text": "Get Out of Audit Free Card",
+      "type": "card",
+      "effect": "jail_card"
+    },
+    {
+      "id": 12,
+      "text": "Advance to nearest Utility. If unowned, buy it. If owned, pay 10× dice.",
+      "type": "moveNearest",
+      "effect": "utility"
+    },
+    {
+      "id": 13,
+      "text": "Advance to nearest Hub. Pay double the usual fare.",
+      "type": "moveNearest",
+      "effect": "hub"
+    },
+    {
+      "id": 14,
+      "text": "General Repairs: Pay $40 per House, $115 per Tower",
+      "type": "repairCost",
+      "perHouse": 40,
+      "perTower": 115
+    },
+    {
+      "id": 15,
+      "text": "Elected Chairman of the Board: Pay each player $50",
+      "type": "payToAll",
+      "amount": 50
+    },
+    {
+      "id": 16,
+      "text": "Life Insurance Matures: Receive $150",
+      "type": "income",
+      "amount": 150
+    },
+    {
+      "id": 17,
+      "text": "Hospital Bill: Pay $100",
+      "type": "tax",
+      "amount": 100
+    },
+    {
+      "id": 18,
+      "text": "Consulting Fee: Receive $50",
+      "type": "income",
+      "amount": 50
+    },
+    {
+      "id": 19,
+      "text": "Property Dividend: Receive $25 per House you own",
+      "type": "incomePerHouse",
+      "amount": 25
+    },
+    {
+      "id": 20,
+      "text": "School Tax: Pay $150",
+      "type": "tax",
+      "amount": 150
+    },
+    {
+      "id": 21,
+      "text": "Street Repair: Pay $40 per House, $115 per Tower",
+      "type": "repairCost",
+      "perHouse": 40,
+      "perTower": 115
+    },
+    {
+      "id": 22,
+      "text": "Targeted Tax: Pay $50",
+      "type": "tax",
+      "amount": 50
+    },
+    {
+      "id": 23,
+      "text": "Loan Repayment Due: Pay $110",
+      "type": "tax",
+      "amount": 110
+    },
+    {
+      "id": 24,
+      "text": "Tunnel Toll: Pay $25",
+      "type": "tax",
+      "amount": 25
+    },
+    {
+      "id": 25,
+      "text": "Jackpot Winner: Receive $50 from each player",
+      "type": "collectFromAll",
+      "amount": 50
+    },
+    {
+      "id": 26,
+      "text": "Advance to Sovereign Square",
+      "type": "move",
+      "targetTile": 39
+    },
+    {
+      "id": 27,
+      "text": "Advance to Eastern Hub",
+      "type": "move",
+      "targetTile": 25
+    },
+    {
+      "id": 28,
+      "text": "Take a walk: Advance to nearest property",
+      "type": "moveNearest",
+      "effect": "property"
+    },
+    {
+      "id": 29,
+      "text": "Get Out of Audit Free Card",
+      "type": "card",
+      "effect": "jail_card"
+    },
+    {
+      "id": 30,
+      "text": "Minor Repairs: Pay $50",
+      "type": "tax",
+      "amount": 50
+    },
+    {
+      "id": 31,
+      "text": "Beauty Contest Winner: Receive $10",
+      "type": "income",
+      "amount": 10
+    },
+    {
+      "id": 32,
+      "text": "Street Assessment: Pay $40 per House, $115 per Tower",
+      "type": "repairCost",
+      "perHouse": 40,
+      "perTower": 115
+    },
+    {
+      "id": 33,
+      "text": "Get Out of Audit Free Card",
+      "type": "card",
+      "effect": "jail_card"
+    },
+    {
+      "id": 34,
+      "text": "Bank Dividend: Receive $50",
+      "type": "income",
+      "amount": 50
+    },
+    {
+      "id": 35,
+      "text": "Poor Relief: Receive $10 from each player",
+      "type": "collectFromAll",
+      "amount": 10
+    },
+    {
+      "id": 36,
+      "text": "Inheritance: Receive $50",
+      "type": "income",
+      "amount": 50
+    },
+    {
+      "id": 37,
+      "text": "Market Boom: All rents in one district increase 50% for 2 rounds",
+      "type": "marketEvent",
+      "effect": "boom"
+    },
+    {
+      "id": 38,
+      "text": "Market Crash: All rents in one district decrease 25% for 2 rounds",
+      "type": "marketEvent",
+      "effect": "crash"
+    },
+    {
+      "id": 39,
+      "text": "Influence Rally: Gain 2 Influence",
+      "type": "influence",
+      "amount": 2
+    },
+    {
+      "id": 40,
+      "text": "Scandal: Lose 1 Influence",
+      "type": "influenceLoss",
+      "amount": 1
+    },
+    {
+      "id": 41,
+      "text": "Tech Breakthrough: Gain 1 Influence",
+      "type": "influence",
+      "amount": 1
+    },
+    {
+      "id": 42,
+      "text": "Viral Marketing: All your properties get +1 rent bonus this cycle",
+      "type": "income",
+      "amount": 0
+    },
+    {
+      "id": 43,
+      "text": "Crypto Windfall: Receive $300",
+      "type": "income",
+      "amount": 300
+    },
+    {
+      "id": 44,
+      "text": "Corporate Espionage: Steal 1 Influence from another player",
+      "type": "influenceLoss",
+      "amount": -1
+    },
+    {
+      "id": 45,
+      "text": "Infrastructure Upgrade: All your Houses get renovated - receive $100 per house",
+      "type": "incomePerHouse",
+      "amount": 100
+    },
+    {
+      "id": 46,
+      "text": "Black Swan Event: Pay $200 to community fund",
+      "type": "tax",
+      "amount": 200
+    },
+    {
+      "id": 47,
+      "text": "Angel Investor: Receive $150",
+      "type": "income",
+      "amount": 150
+    },
+    {
+      "id": 48,
+      "text": "Regulatory Fines: Pay $30 per tile you own",
+      "type": "taxPerTile",
+      "amount": 30
+    },
+    {
+      "id": 49,
+      "text": "IPO Success: Every player pays you $100",
+      "type": "collectFromAll",
+      "amount": 100
+    },
+    {
+      "id": 50,
+      "text": "Hostile Takeover Wave: Market Crash hits a random district hard",
+      "type": "marketEvent",
+      "effect": "crash"
+    },
+    {
+      "id": 51,
+      "text": "Economic Boom: Market Boom in a thriving district",
+      "type": "marketEvent",
+      "effect": "boom"
+    },
+    {
+      "id": 52,
+      "text": "Time Warp: Advance to any hub of your choice (nearest hub effect)",
+      "type": "moveNearest",
+      "effect": "hub"
+    },
+    {
+      "id": 101,
+      "text": "🎁 Surprise: City Treasury Dividend! Receive $150 from the Community Fund.",
+      "type": "income",
+      "amount": 150
+    },
+    {
+      "id": 102,
+      "text": "🎁 Surprise: Angel Investor! A tech fund awards you $250.",
+      "type": "income",
+      "amount": 250
+    },
+    {
+      "id": 103,
+      "text": "🎁 Surprise: Gala Banquet! Collect $50 from every player.",
+      "type": "collectFromAll",
+      "amount": 50
+    },
+    {
+      "id": 104,
+      "text": "🎁 Surprise: Royalties Payout! Collect $75 from every player.",
+      "type": "collectFromAll",
+      "amount": 75
+    },
+    {
+      "id": 105,
+      "text": "🎁 Surprise: Philanthropy Pledge! Pay $50 to each player.",
+      "type": "payToAll",
+      "amount": 50
+    },
+    {
+      "id": 106,
+      "text": "🎁 Surprise: Municipal Beautification! Pay $100 into the Community Fund.",
+      "type": "tax",
+      "amount": 100
+    },
+    {
+      "id": 107,
+      "text": "🎁 Surprise: Express Flight! Advance directly to the nearest Transit Hub.",
+      "type": "moveNearest",
+      "effect": "hub"
+    },
+    {
+      "id": 108,
+      "text": "🎁 Surprise: Tail Wind! Move 3 spaces forward.",
+      "type": "moveRelative",
+      "steps": 3
+    },
+    {
+      "id": 109,
+      "text": "🎁 Surprise: Construction Detour! Step 2 spaces backward.",
+      "type": "moveRelative",
+      "steps": -2
+    },
+    {
+      "id": 110,
+      "text": "🎁 Surprise: Traffic Congestion! Step 3 spaces backward.",
+      "type": "moveRelative",
+      "steps": -3
+    },
+    {
+      "id": 111,
+      "text": "🎁 Surprise: VIP Escort! Advance directly to Payday HQ and collect your stipend.",
+      "type": "move",
+      "targetTile": 0
+    },
+    {
+      "id": 112,
+      "text": "🎁 Surprise: Public Acclaim! Gain +3 Influence stars.",
+      "type": "influence",
+      "amount": 3
+    }
+  ]
+}
