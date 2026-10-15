@@ -271,6 +271,69 @@ class SoundEffectsEngine {
       osc.stop(ctx.currentTime + t + d + 0.02);
     });
   }
+
+  /**
+   * 📳 Mobile Haptic Vibration
+   */
+  public vibrate(pattern: number | number[] = 40) {
+    if (typeof window !== 'undefined' && 'navigator' in window && window.navigator.vibrate) {
+      try {
+        window.navigator.vibrate(pattern);
+      } catch (e) {}
+    }
+  }
+
+  /**
+   * 📢 Authentic Tambola Speech Synthesis Caller (Hindi & Indian English)
+   */
+  public announceTambolaNumber(num: number, slangText?: string, language: 'en' | 'hi' = 'en') {
+    if (this.isMuted) return;
+    if (typeof window === 'undefined' || !('speechSynthesis' in window)) return;
+
+    try {
+      window.speechSynthesis.cancel(); // Stop prior speeches
+
+      const HINDI_NUMBERS: Record<number, string> = {
+        1: 'Ek', 2: 'Do', 3: 'Teen', 4: 'Chaar', 5: 'Paanch', 6: 'Chhe', 7: 'Saat', 8: 'Aath', 9: 'Nau', 10: 'Dus',
+        11: 'Gyarah', 12: 'Barah', 13: 'Terah', 14: 'Chaudah', 15: 'Pandrah', 16: 'Solah', 17: 'Satrah', 18: 'Atharah', 19: 'Unnees', 20: 'Bees',
+        21: 'Ikkis', 22: 'Baais', 23: 'Teis', 24: 'Chaubees', 25: 'Pachchees', 26: 'Chhabbees', 27: 'Sattaais', 28: 'Atthaais', 29: 'Untees', 30: 'Tees',
+        31: 'Iktees', 32: 'Battees', 33: 'Taintees', 34: 'Chautees', 35: 'Pentees', 36: 'Chhattees', 37: 'Saintees', 38: 'Adhtees', 39: 'Untalees', 40: 'Chalees',
+        41: 'Iktalees', 42: 'Bayalees', 43: 'Taintalees', 44: 'Chawalees', 45: 'Paintalees', 46: 'Chhiyalees', 47: 'Saintalees', 48: 'Adhtalees', 49: 'Unchaas', 50: 'Pachaas',
+        51: 'Ikyawan', 52: 'Baawan', 53: 'Tirpan', 54: 'Chauwan', 55: 'Pachpan', 56: 'Chhappan', 57: 'Sattawan', 58: 'Atthawan', 59: 'Unsath', 60: 'Saath',
+        61: 'Iksath', 62: 'Baasath', 63: 'Tirsath', 64: 'Chausath', 65: 'Painsath', 66: 'Chhiyasath', 67: 'Sadsath', 68: 'Arsath', 69: 'Unhattar', 70: 'Sattar',
+        71: 'Ikhattar', 72: 'Bahattar', 73: 'Tihattar', 74: 'Chauhattar', 75: 'Pachhattar', 76: 'Chhihattar', 77: 'Satattar', 78: 'Athhattar', 79: 'Unasi', 80: 'Assi',
+        81: 'Ikyasi', 82: 'Bayasi', 83: 'Tirasi', 84: 'Chaurasi', 85: 'Pachasi', 86: 'Chhiyasi', 87: 'Satasi', 88: 'Atthasi', 89: 'Nauasi', 90: 'Nabbee'
+      };
+
+      let phrase = '';
+      if (language === 'hi') {
+        const hindiWord = HINDI_NUMBERS[num] || num.toString();
+        phrase = `${hindiWord}! Number ${num}.`;
+        if (slangText) phrase = `${slangText}. ${phrase}`;
+      } else {
+        if (num < 10) {
+          phrase = `Single number ${num}.`;
+        } else {
+          const d1 = Math.floor(num / 10);
+          const d2 = num % 10;
+          phrase = `${d1} and ${d2}, number ${num}.`;
+        }
+        if (slangText) phrase = `${slangText}! ${phrase}`;
+      }
+
+      const utterance = new SpeechSynthesisUtterance(phrase);
+      utterance.rate = 1.05;
+      utterance.pitch = 1.0;
+
+      // Select matching voice
+      const voices = window.speechSynthesis.getVoices();
+      const hindiVoice = voices.find(v => v.lang.includes('hi') || v.lang.includes('IN'));
+      if (language === 'hi' && hindiVoice) {
+        utterance.voice = hindiVoice;
+      }
+      window.speechSynthesis.speak(utterance);
+    } catch (e) {}
+  }
 }
 
 export const soundFx = new SoundEffectsEngine();

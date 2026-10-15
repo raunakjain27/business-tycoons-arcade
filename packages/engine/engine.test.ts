@@ -52,7 +52,7 @@ describe('ownsFullDistrict', () => {
       players: {},
       rules: { startingCash: 1500, paydayAmount: 200, auctionOnDecline: true, evenBuild: true, marketCycle: false, roles: false, influence: false, eventDeck: true, turnTimerSec: null, suddenGrowthRound: null, bankruptcyGraceSec: 60, maxPlayers: 8, teamMode: false },
     };
-    // Player 1 owns all 3 Old Town tiles (6, 8, 9)
+    // Player 1 owns all 3 Israel tiles (6, 8, 9)
     state.tiles = {
       6: { ownerId: 'p1', tier: 0, mortgaged: false },
       8: { ownerId: 'p1', tier: 0, mortgaged: false },

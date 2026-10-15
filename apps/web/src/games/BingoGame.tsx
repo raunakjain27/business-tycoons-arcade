@@ -169,13 +169,18 @@ export const BingoGame: React.FC = () => {
 
     setPlayers((prev) => prev.map((p, idx) => (idx === 0 ? { ...p, grid: newGrid, completedLines: lines } : p)));
 
-    // AUTOMATIC WIN DETECTION: Trigger instant win as requested
-    if (lines >= 1 && !winner) {
+    // AUTOMATIC WIN DETECTION: Trigger instant win as requested (Line, 4 Corners, or Full Blackout)
+    const isCorners = [0, 4].every((r) => [0, 4].every((c) => newGrid[r][c].marked));
+    const isBlackout = newGrid.every((row) => row.every((c) => c.marked));
+
+    if ((lines >= 1 || isCorners || isBlackout) && !winner) {
       soundFx.playVictory();
       soundFx.playCashRegister();
+      soundFx.vibrate([100, 50, 100, 50, 200]);
       setWinner(myPlayer);
       setIsAutoCalling(false);
-      addLog(`🏆 AUTOMATIC BINGO VICTORY! ${myPlayer.name} completed a line and WON the game!`);
+      const patternName = isBlackout ? 'FULL CARD BLACKOUT JACKPOT' : isCorners ? 'FOUR CORNERS' : 'LINE BINGO';
+      addLog(`🏆 AUTOMATIC BINGO VICTORY! ${myPlayer.name} completed [ ${patternName} ] and WON the game!`);
     }
   };
 

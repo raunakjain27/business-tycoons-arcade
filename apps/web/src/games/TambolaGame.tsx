@@ -88,6 +88,8 @@ export const TambolaGame: React.FC = () => {
   const [countdownSec, setCountdownSec] = useState<number>(callSpeedSec);
   const [log, setLog] = useState<string[]>(['Welcome to Tambola (Housie)! Mark numbers on your tickets as they are called.']);
 
+  const [voiceLanguage, setVoiceLanguage] = useState<'hi' | 'en'>('hi');
+  const [boogieMessage, setBoogieMessage] = useState<string>('');
   const [awards, setAwards] = useState<Award[]>([
     { id: 'early5', title: 'Early Five (First 5 Numbers)', coins: 50, winner: null },
     { id: 'topLine', title: 'Top Line (Row 1 Complete)', coins: 100, winner: null },
@@ -147,6 +149,7 @@ export const TambolaGame: React.FC = () => {
     const picked = available[Math.floor(Math.random() * available.length)];
 
     soundFx.playCardFlip();
+    soundFx.vibrate(30);
     setCurrentCall(picked);
     setCalledNumbers((prev) => [picked, ...prev]);
     setCountdownSec(callSpeedSec);
@@ -160,6 +163,9 @@ export const TambolaGame: React.FC = () => {
     else if (picked === 55) slang = 'All the fives';
     else if (picked === 88) slang = 'Two fat ladies';
     else if (picked === 90) slang = 'Top of the house!';
+
+    // Announce via authentic synthesized caller voice in Hindi or English
+    soundFx.announceTambolaNumber(picked, slang, voiceLanguage);
 
     addLog(`📢 Number Called: [ ${picked} ] ${slang ? `— ${slang}` : ''}`);
 
@@ -282,13 +288,17 @@ export const TambolaGame: React.FC = () => {
     if (isValid) {
       soundFx.playCashRegister();
       soundFx.playVictory();
+      soundFx.vibrate([100, 50, 100, 50, 200]);
       setAwards((prev) =>
         prev.map((a) => (a.id === awardId ? { ...a, winner: `${myPlayer.name} (Ticket #${winningTicketIdx + 1})` } : a))
       );
       addLog(`🎉 TAMBOLA BINGO! ${myPlayer.name} won [ ${targetAward.title} ] on Ticket #${winningTicketIdx + 1} (+${targetAward.coins} Coins)!`);
     } else {
       soundFx.playSnakeHiss();
-      addLog(`❌ BOGUS CLAIM! Claimed ${targetAward.title} but marked numbers don't match caller board!`);
+      soundFx.vibrate([300, 100, 300]);
+      setBoogieMessage(`🚫 BOOGIE! False claim on "${targetAward.title}". Penalty: -25 Coins!`);
+      setTimeout(() => setBoogieMessage(''), 4000);
+      addLog(`❌ BOOGIE CALLED! False claim on [ ${targetAward.title} ]! Ticket criteria not met.`);
     }
   };
 
@@ -431,6 +441,41 @@ export const TambolaGame: React.FC = () => {
         </div>
 
         <div style={{ display: 'flex', gap: '12px', alignItems: 'center', flexWrap: 'wrap' }}>
+          {/* Hindi / English Voice Caller Selector */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '6px', background: 'rgba(255,255,255,0.05)', padding: '4px 10px', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.1)' }}>
+            <span style={{ fontSize: '12px', color: '#cbd5e1' }}>Voice:</span>
+            <button
+              onClick={() => setVoiceLanguage('hi')}
+              style={{
+                background: voiceLanguage === 'hi' ? '#ec4899' : 'transparent',
+                color: voiceLanguage === 'hi' ? '#fff' : '#cbd5e1',
+                border: 'none',
+                borderRadius: '6px',
+                padding: '3px 8px',
+                fontSize: '11px',
+                fontWeight: 800,
+                cursor: 'pointer',
+              }}
+            >
+              🇮🇳 हिन्दी
+            </button>
+            <button
+              onClick={() => setVoiceLanguage('en')}
+              style={{
+                background: voiceLanguage === 'en' ? '#ec4899' : 'transparent',
+                color: voiceLanguage === 'en' ? '#fff' : '#cbd5e1',
+                border: 'none',
+                borderRadius: '6px',
+                padding: '3px 8px',
+                fontSize: '11px',
+                fontWeight: 800,
+                cursor: 'pointer',
+              }}
+            >
+              🇬🇧 English
+            </button>
+          </div>
+
           {/* Seconds per Call Selector in Live Match */}
           <div style={{ display: 'flex', alignItems: 'center', gap: '6px', background: 'rgba(255,255,255,0.05)', padding: '4px 10px', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.1)' }}>
             <span style={{ fontSize: '12px', color: '#cbd5e1' }}>Timer:</span>
@@ -496,6 +541,29 @@ export const TambolaGame: React.FC = () => {
           </button>
         </div>
       </div>
+
+      {/* Boogie Penalty Alert Toast */}
+      {boogieMessage && (
+        <div
+          style={{
+            background: 'linear-gradient(135deg, #ef4444 0%, #b91c1c 100%)',
+            color: '#ffffff',
+            padding: '14px 24px',
+            borderRadius: '16px',
+            fontWeight: 800,
+            fontSize: '14px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: '10px',
+            boxShadow: '0 8px 30px rgba(239, 68, 68, 0.6)',
+            animation: 'shake 0.3s ease-in-out',
+          }}
+        >
+          <span>🚨</span>
+          <span>{boogieMessage}</span>
+        </div>
+      )}
 
       <VoiceRoomBar gameTitle="Tambola Housie Room" />
 

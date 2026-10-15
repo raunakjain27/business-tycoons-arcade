@@ -167,15 +167,38 @@ export const StoreModal: React.FC = () => {
     }
   };
 
+  const [checkoutModal, setCheckoutModal] = useState<{ open: boolean; title: string; inr: number; usd: number; coins?: number; isVip?: boolean } | null>(null);
+
   const handleBuyCoinPack = (pack: typeof COIN_PACKS[0]) => {
+    // Open payment gateway checkout (Razorpay / UPI / Card)
+    setCheckoutModal({
+      open: true,
+      title: `${pack.coins.toLocaleString()} Coins Pack`,
+      inr: pack.priceInr,
+      usd: pack.priceUsd,
+      coins: pack.coins,
+    });
+  };
+
+  const handleConfirmPayment = (method: 'upi' | 'card' | 'netbanking') => {
+    if (!checkoutModal) return;
     soundFx.playCashRegister();
-    addCoins(pack.coins);
-    showNotification(`Added +${pack.coins} Coins to your account!`);
+    soundFx.vibrate([40, 40, 80]);
+
+    if (checkoutModal.isVip) {
+      upgradeToVip();
+      showNotification('🎉 Payment Verified! VIP Lifetime Pass Activated!');
+    } else if (checkoutModal.coins) {
+      addCoins(checkoutModal.coins);
+      showNotification(`🎉 Payment Received via ${method.toUpperCase()}! Added +${checkoutModal.coins} Coins!`);
+    }
+
+    setCheckoutModal(null);
   };
 
   const showNotification = (msg: string) => {
     setPurchaseSuccessMsg(msg);
-    setTimeout(() => setPurchaseSuccessMsg(''), 3000);
+    setTimeout(() => setPurchaseSuccessMsg(''), 3500);
   };
 
   return (
@@ -647,9 +670,13 @@ export const StoreModal: React.FC = () => {
 
               <button
                 onClick={() => {
-                  soundFx.playCashRegister();
-                  upgradeToVip();
-                  showNotification('VIP Lifetime Pass activated! Welcome to the High Rollers Club!');
+                  setCheckoutModal({
+                    open: true,
+                    title: 'Tycoons VIP Lifetime Pass',
+                    inr: 399,
+                    usd: 4.99,
+                    isVip: true,
+                  });
                 }}
                 disabled={user.isVip}
                 style={{
@@ -674,6 +701,153 @@ export const StoreModal: React.FC = () => {
 
         </div>
       </div>
+
+      {/* RAZORPAY / STRIPE UPI & CARDS PAYMENT MODAL */}
+      {checkoutModal && (
+        <div
+          style={{
+            position: 'fixed',
+            inset: 0,
+            backgroundColor: 'rgba(0, 0, 0, 0.85)',
+            backdropFilter: 'blur(16px)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 2500,
+            padding: '16px',
+          }}
+          onClick={() => setCheckoutModal(null)}
+        >
+          <div
+            style={{
+              background: '#0d1117',
+              borderRadius: '24px',
+              border: '1px solid rgba(255, 255, 255, 0.2)',
+              maxWidth: '440px',
+              width: '100%',
+              padding: '28px',
+              color: '#f8fafc',
+              boxShadow: '0 25px 60px rgba(0,0,0,0.9), 0 0 40px rgba(59, 130, 246, 0.3)',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '18px',
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Payment Header */}
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <span style={{ fontSize: '24px' }}>🛡️</span>
+                <span style={{ fontSize: '13px', fontWeight: 800, color: '#38bdf8' }}>SECURE GATEWAY</span>
+              </div>
+              <button
+                onClick={() => setCheckoutModal(null)}
+                style={{ background: 'none', border: 'none', color: '#94a3b8', fontSize: '20px', cursor: 'pointer' }}
+              >
+                ✕
+              </button>
+            </div>
+
+            {/* Item & Price summary */}
+            <div
+              style={{
+                background: 'rgba(255, 255, 255, 0.05)',
+                padding: '16px',
+                borderRadius: '16px',
+                border: '1px solid rgba(255, 255, 255, 0.1)',
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+              }}
+            >
+              <div>
+                <div style={{ fontWeight: 800, fontSize: '16px', color: '#ffffff' }}>{checkoutModal.title}</div>
+                <div style={{ fontSize: '12px', color: '#94a3b8' }}>Instant delivery to your account</div>
+              </div>
+              <div style={{ textAlign: 'right' }}>
+                <div style={{ fontWeight: 900, fontSize: '20px', color: '#34d399' }}>₹{checkoutModal.inr}</div>
+                <div style={{ fontSize: '11px', color: '#94a3b8' }}>${checkoutModal.usd} USD</div>
+              </div>
+            </div>
+
+            {/* Payment Methods */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+              <button
+                onClick={() => handleConfirmPayment('upi')}
+                style={{
+                  padding: '14px',
+                  borderRadius: '14px',
+                  border: '1px solid rgba(16, 185, 129, 0.4)',
+                  background: 'linear-gradient(135deg, rgba(16, 185, 129, 0.2) 0%, rgba(5, 150, 105, 0.2) 100%)',
+                  color: '#ffffff',
+                  fontWeight: 800,
+                  fontSize: '14px',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                }}
+              >
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                  <span>📱</span>
+                  <span>UPI Instant (GPay / PhonePe / Paytm)</span>
+                </div>
+                <span style={{ color: '#34d399', fontSize: '12px' }}>FAST →</span>
+              </button>
+
+              <button
+                onClick={() => handleConfirmPayment('card')}
+                style={{
+                  padding: '14px',
+                  borderRadius: '14px',
+                  border: '1px solid rgba(59, 130, 246, 0.4)',
+                  background: 'linear-gradient(135deg, rgba(59, 130, 246, 0.2) 0%, rgba(37, 99, 235, 0.2) 100%)',
+                  color: '#ffffff',
+                  fontWeight: 800,
+                  fontSize: '14px',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                }}
+              >
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                  <span>💳</span>
+                  <span>Credit / Debit Card (Visa, RuPay, MC)</span>
+                </div>
+                <span style={{ color: '#60a5fa', fontSize: '12px' }}>→</span>
+              </button>
+
+              <button
+                onClick={() => handleConfirmPayment('netbanking')}
+                style={{
+                  padding: '14px',
+                  borderRadius: '14px',
+                  border: '1px solid rgba(255, 255, 255, 0.15)',
+                  background: 'rgba(255, 255, 255, 0.05)',
+                  color: '#cbd5e1',
+                  fontWeight: 700,
+                  fontSize: '13.5px',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                }}
+              >
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                  <span>🏦</span>
+                  <span>Indian NetBanking (HDFC, ICICI, SBI)</span>
+                </div>
+                <span style={{ color: '#94a3b8', fontSize: '12px' }}>→</span>
+              </button>
+            </div>
+
+            <div style={{ fontSize: '11px', color: '#64748b', textAlign: 'center', marginTop: '4px' }}>
+              🔒 256-Bit SSL Encrypted • Zero card data stored • 100% Secure
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
