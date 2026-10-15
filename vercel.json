@@ -1,6 +1,6 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
-  "buildCommand": "pnpm --filter @cornerstone/web build",
+  "buildCommand": "cd apps/web && pnpm install && pnpm run build",
   "outputDirectory": "apps/web/dist",
   "framework": "vite",
   "rewrites": [
