@@ -200,7 +200,7 @@ export const TambolaGame: React.FC = () => {
     return () => clearInterval(timer);
   }, [isAutoCalling, inLobby, calledNumbers, callSpeedSec]);
 
-  // Click on ticket cell to toggle dab
+  // Click on ticket cell to toggle dab (ONLY allowed if number has been called!)
   const toggleMarkCell = (ticketIdx: number, rowIndex: number, colIndex: number) => {
     const myPlayer = players[0];
     if (!myPlayer) return;
@@ -210,7 +210,17 @@ export const TambolaGame: React.FC = () => {
     const cell = targetGrid[rowIndex][colIndex];
     if (cell.num === null) return;
 
+    // Strict rule: Can only cut/mark if number has been called!
+    if (!calledNumbers.includes(cell.num)) {
+      soundFx.playSnakeHiss();
+      soundFx.vibrate([40, 40]);
+      setBoogieMessage(`⚠️ Number ${cell.num} has NOT been called yet! You can only cut numbers called by the caller.`);
+      setTimeout(() => setBoogieMessage(''), 2500);
+      return;
+    }
+
     soundFx.playCardSpecial();
+    soundFx.vibrate(25);
     const newGrids = myPlayer.grids.map((g, gIdx) => {
       if (gIdx !== ticketIdx) return g;
       return g.map((r, rIdx) =>

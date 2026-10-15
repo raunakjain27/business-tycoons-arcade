@@ -159,7 +159,17 @@ export const BingoGame: React.FC = () => {
     const cell = myPlayer.grid[rowIdx][colIdx];
     if (cell.num === 'FREE') return;
 
+    // Strict rule: Can only dab/cut if ball has been called!
+    const isBallDrawn = typeof cell.num === 'number' && calledBalls.some((b) => b.num === cell.num);
+    if (!isBallDrawn) {
+      soundFx.playSnakeHiss();
+      soundFx.vibrate([40, 40]);
+      addLog(`⚠️ B-${cell.num} has NOT been called yet! You can only cut numbers called by the caller.`);
+      return;
+    }
+
     soundFx.playCardSpecial();
+    soundFx.vibrate(25);
     const newGrid = myPlayer.grid.map((r, rI) =>
       r.map((c, cI) => (rI === rowIdx && cI === colIdx ? { ...c, marked: !c.marked } : c))
     );
