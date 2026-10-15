@@ -200,7 +200,6 @@ export const Dashboard: React.FC = () => {
         >
           {/* Permanent Player Account Card */}
           <div
-            onClick={() => setShowAccountModal(true)}
             style={{
               background: 'rgba(255, 255, 255, 0.06)',
               backdropFilter: 'blur(16px)',
@@ -208,47 +207,108 @@ export const Dashboard: React.FC = () => {
               borderRadius: '20px',
               padding: '18px 20px',
               display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-              cursor: 'pointer',
+              flexDirection: 'column',
+              gap: '14px',
               boxShadow: user.isVip ? '0 0 25px rgba(245, 158, 11, 0.25)' : 'none',
-              transition: 'transform 0.15s ease',
             }}
           >
-            <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
-              <div
+            <div
+              onClick={() => setShowAccountModal(true)}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                cursor: 'pointer',
+              }}
+            >
+              <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
+                <div
+                  style={{
+                    width: '48px',
+                    height: '48px',
+                    borderRadius: '16px',
+                    background: user.isVip ? 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)' : 'linear-gradient(135deg, #7c3aed 0%, #ec4899 100%)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    fontSize: '24px',
+                    boxShadow: '0 4px 15px rgba(0,0,0,0.4)',
+                  }}
+                >
+                  {user.avatar || '👑'}
+                </div>
+                <div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    <span style={{ fontSize: '15px', fontWeight: 900, color: '#ffffff' }}>
+                      {user.username}
+                    </span>
+                    {user.isVip && (
+                      <span style={{ fontSize: '10px', background: '#f59e0b', color: '#000', fontWeight: 900, padding: '1px 6px', borderRadius: '4px' }}>
+                        VIP
+                      </span>
+                    )}
+                  </div>
+                  <div style={{ fontSize: '12px', color: '#94a3b8', marginTop: '2px' }}>
+                    Balance: <strong style={{ color: '#10b981' }}>{user.coins} Coins</strong> • Edit Profile ⚙️
+                  </div>
+                </div>
+              </div>
+
+              <span style={{ color: '#c084fc', fontSize: '18px' }}>→</span>
+            </div>
+
+            {/* Quick Actions: Store & Daily Reward */}
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
+              <button
+                onClick={() => {
+                  const res = useUserStore.getState().claimDailyReward();
+                  if (res.success) {
+                    alert(`🎉 Day ${res.streak} Streak! Claimed +${res.reward} Coins!`);
+                  } else {
+                    alert(`✨ Daily reward already claimed today! Current Streak: ${res.streak} days.`);
+                  }
+                }}
                 style={{
-                  width: '48px',
-                  height: '48px',
-                  borderRadius: '16px',
-                  background: user.isVip ? 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)' : 'linear-gradient(135deg, #7c3aed 0%, #ec4899 100%)',
+                  background: 'rgba(236, 72, 153, 0.15)',
+                  border: '1px solid rgba(236, 72, 153, 0.35)',
+                  color: '#f472b6',
+                  borderRadius: '10px',
+                  padding: '8px 10px',
+                  fontSize: '11.5px',
+                  fontWeight: 800,
+                  cursor: 'pointer',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  fontSize: '24px',
-                  boxShadow: '0 4px 15px rgba(0,0,0,0.4)',
+                  gap: '6px',
                 }}
               >
-                {user.avatar || '👑'}
-              </div>
-              <div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                  <span style={{ fontSize: '15px', fontWeight: 900, color: '#ffffff' }}>
-                    {user.username}
-                  </span>
-                  {user.isVip && (
-                    <span style={{ fontSize: '10px', background: '#f59e0b', color: '#000', fontWeight: 900, padding: '1px 6px', borderRadius: '4px' }}>
-                      VIP
-                    </span>
-                  )}
-                </div>
-                <div style={{ fontSize: '12px', color: '#94a3b8', marginTop: '2px' }}>
-                  Balance: <strong style={{ color: '#10b981' }}>{user.coins} Coins</strong> • Edit Profile ⚙️
-                </div>
-              </div>
-            </div>
+                <span>🔥</span>
+                <span>Streak: {user.dailyStreak || 1}d</span>
+              </button>
 
-            <span style={{ color: '#c084fc', fontSize: '18px' }}>→</span>
+              <button
+                onClick={() => useUserStore.getState().setShowStoreModal(true)}
+                style={{
+                  background: 'linear-gradient(135deg, #7c3aed 0%, #ec4899 100%)',
+                  border: 'none',
+                  color: '#ffffff',
+                  borderRadius: '10px',
+                  padding: '8px 10px',
+                  fontSize: '11.5px',
+                  fontWeight: 800,
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '6px',
+                  boxShadow: '0 2px 10px rgba(124, 58, 237, 0.3)',
+                }}
+              >
+                <span>🛍️</span>
+                <span>Open Store</span>
+              </button>
+            </div>
           </div>
 
           {/* Quick Join Private Room Box */}

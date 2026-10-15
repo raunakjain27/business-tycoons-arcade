@@ -9,6 +9,7 @@ import { SettingsModal } from './components/SettingsModal';
 import { AccountModal } from './components/AccountModal';
 import { CustomFriendsModal } from './components/CustomFriendsModal';
 import { OnboardingModal } from './components/OnboardingModal';
+import { StoreModal } from './components/StoreModal';
 import { Dashboard } from './components/Dashboard';
 import { useUserStore } from './userStore';
 import { useHubStore } from './hubStore';
@@ -189,6 +190,28 @@ export function App() {
               </span>
             </div>
           )}
+
+          {/* In-App Store Button */}
+          <button
+            onClick={() => useUserStore.getState().setShowStoreModal(true)}
+            style={{
+              padding: '6px 14px',
+              borderRadius: '20px',
+              border: '1px solid rgba(236, 72, 153, 0.4)',
+              background: 'linear-gradient(135deg, rgba(124, 58, 237, 0.3) 0%, rgba(236, 72, 153, 0.3) 100%)',
+              color: '#f472b6',
+              fontSize: '12.5px',
+              fontWeight: 800,
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '6px',
+              boxShadow: '0 2px 10px rgba(236, 72, 153, 0.2)',
+            }}
+          >
+            <span>🛍️</span>
+            <span>Store</span>
+          </button>
 
           {/* User Account & Profile */}
           <button
@@ -404,6 +427,9 @@ export function App() {
           </div>
         )}
       </main>
+
+      {/* Global In-App Store & Customization Modal */}
+      <StoreModal />
     </div>
   );
 }
