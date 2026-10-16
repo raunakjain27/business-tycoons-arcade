@@ -5,6 +5,7 @@ import { useVoiceStore } from '../voiceStore';
 import { GameRoomLobby } from '../components/GameRoomLobby';
 import { VoiceRoomBar } from '../components/VoiceRoomBar';
 import { soundFx } from '../soundEffects';
+import { useCelebrationStore } from '../celebrationStore';
 
 interface TambolaTicketCell {
   num: number | null;
@@ -299,6 +300,16 @@ export const TambolaGame: React.FC = () => {
       soundFx.playCashRegister();
       soundFx.playVictory();
       soundFx.vibrate([100, 50, 100, 50, 200]);
+      if (awardId === 'fullHouse') {
+        useCelebrationStore.getState().triggerVictory({
+          gameTitle: 'Tambola (Housie)',
+          winnerName: myPlayer.name,
+          winnerAvatar: myPlayer.avatar || '🎟️',
+          coinsAwarded: targetAward.coins,
+          xpAwarded: 250,
+          reason: `${myPlayer.name} dabbed all 15 numbers on Ticket #${winningTicketIdx + 1} and claimed FULL HOUSE!`,
+        });
+      }
       setAwards((prev) =>
         prev.map((a) => (a.id === awardId ? { ...a, winner: `${myPlayer.name} (Ticket #${winningTicketIdx + 1})` } : a))
       );

@@ -20,6 +20,8 @@ namespace React {
     target: T & { value: string; checked?: boolean };
   }
   interface MouseEvent<T = any> {
+    currentTarget: any;
+    target: any;
     stopPropagation: () => void;
     preventDefault: () => void;
   }
@@ -43,9 +45,8 @@ declare module 'react' {
     target: T & { value: string; checked?: boolean };
   }
   export interface MouseEvent<T = any> {
-    stopPropagation: () => void;
-    preventDefault: () => void;
-  }  export interface MouseEvent<T = any> {
+    currentTarget: any;
+    target: any;
     stopPropagation: () => void;
     preventDefault: () => void;
   }

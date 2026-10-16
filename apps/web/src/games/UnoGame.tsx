@@ -6,6 +6,7 @@ import { useVoiceStore } from '../voiceStore';
 import { GameRoomLobby } from '../components/GameRoomLobby';
 import { VoiceRoomBar } from '../components/VoiceRoomBar';
 import { useUnoGame, UnoPlayer } from './unoGameLogic';
+import { useCelebrationStore } from '../celebrationStore';
 
 const COLOR_MAP: Record<
   'red' | 'blue' | 'green' | 'yellow' | 'wild',
@@ -106,6 +107,19 @@ export const UnoGame: React.FC = () => {
       disconnectVoice();
     }
   }, [inLobby, game.players, disconnectVoice]);
+
+  useEffect(() => {
+    if (game.winner) {
+      useCelebrationStore.getState().triggerVictory({
+        gameTitle: 'Color Clash (UNO)',
+        winnerName: game.winner.name,
+        winnerAvatar: game.winner.avatar || '👑',
+        coinsAwarded: 150,
+        xpAwarded: 180,
+        reason: `${game.winner.name} emptied their hand first and claimed the Uno championship!`,
+      });
+    }
+  }, [game.winner]);
 
   if (inLobby) {
     return (

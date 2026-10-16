@@ -6,6 +6,7 @@ import { useVoiceStore } from '../voiceStore';
 import { GameRoomLobby } from '../components/GameRoomLobby';
 import { VoiceRoomBar } from '../components/VoiceRoomBar';
 import { soundFx } from '../soundEffects';
+import { useCelebrationStore } from '../celebrationStore';
 
 interface BingoCardCell {
   num: number | 'FREE';
@@ -68,6 +69,19 @@ export const BingoGame: React.FC = () => {
   const [isAutoCalling, setIsAutoCalling] = useState(false);
   const [winner, setWinner] = useState<BingoPlayer | null>(null);
   const [log, setLog] = useState<string[]>(['Classic 5x5 BINGO 75 match ready! Form 5 in a row to win.']);
+
+  useEffect(() => {
+    if (winner) {
+      useCelebrationStore.getState().triggerVictory({
+        gameTitle: 'Bingo Blitz',
+        winnerName: winner.name,
+        winnerAvatar: winner.avatar || '👑',
+        coinsAwarded: 200,
+        xpAwarded: 160,
+        reason: `${winner.name} completed 5 in a row and shouted BINGO!`,
+      });
+    }
+  }, [winner]);
 
   const addLog = (msg: string) => {
     setLog((prev) => [msg, ...prev.slice(0, 19)]);

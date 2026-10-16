@@ -6,6 +6,7 @@ import { useVoiceStore } from '../voiceStore';
 import { GameRoomLobby } from '../components/GameRoomLobby';
 import { VoiceRoomBar } from '../components/VoiceRoomBar';
 import { soundFx } from '../soundEffects';
+import { useCelebrationStore } from '../celebrationStore';
 
 type PlayerColor = 'red' | 'green' | 'yellow' | 'blue';
 
@@ -103,6 +104,19 @@ export const LudoGame: React.FC = () => {
   const [hasRolled, setHasRolled] = useState(false);
   const [winner, setWinner] = useState<LudoPlayer | null>(null);
   const [gameLog, setGameLog] = useState<string[]>([]);
+
+  useEffect(() => {
+    if (winner) {
+      useCelebrationStore.getState().triggerVictory({
+        gameTitle: 'Ludo Royale',
+        winnerName: winner.name,
+        winnerAvatar: winner.avatar || '👑',
+        coinsAwarded: 200,
+        xpAwarded: 150,
+        reason: `${winner.name} guided all 4 tokens into the central home triangle!`,
+      });
+    }
+  }, [winner]);
 
   const timerRegistry = useRef<ReturnType<typeof setTimeout>[]>([]);
   const intervalRegistry = useRef<ReturnType<typeof setInterval> | null>(null);

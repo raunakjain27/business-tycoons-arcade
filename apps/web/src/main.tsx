@@ -29,6 +29,10 @@ import { BingoGame } from './games/BingoGame';
 import { CornerstoneGame } from './games/CornerstoneGame';
 import { HowToPlayModal } from './components/HowToPlayModal';
 import { DailyRewardModal } from './components/DailyRewardModal';
+import { ReactionOverlay } from './components/ReactionOverlay';
+import { VictoryCelebrationModal } from './components/VictoryCelebrationModal';
+import { LeaderboardModal } from './components/LeaderboardModal';
+import { useTrophyStore } from './trophyStore';
 import { soundFx } from './soundEffects';
 
 
@@ -299,6 +303,31 @@ export function App() {
             <span>Rules</span>
           </button>
 
+          {/* Hall of Fame / Trophy Room Button */}
+          <button
+            onClick={() => {
+              soundFx.playClick();
+              useTrophyStore.getState().setShowLeaderboardModal(true);
+            }}
+            style={{
+              padding: '6px 12px',
+              borderRadius: '20px',
+              border: '1.5px solid rgba(245, 158, 11, 0.4)',
+              background: 'linear-gradient(135deg, rgba(245, 158, 11, 0.18) 0%, rgba(236, 72, 153, 0.18) 100%)',
+              color: '#fbbf24',
+              fontSize: '12px',
+              fontWeight: 800,
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '5px',
+              boxShadow: '0 0 10px rgba(245, 158, 11, 0.25)',
+            }}
+          >
+            <span>🏆</span>
+            <span>Trophies</span>
+          </button>
+
           {/* Sound FX Mute/Unmute Toggle Button */}
           <button
             onClick={() => {
@@ -549,6 +578,15 @@ export function App() {
 
       {/* Daily Streak Chest & Free Coins Modal */}
       <DailyRewardModal />
+
+      {/* Global In-Game Floating Reactions & Party Chat Wheel */}
+      <ReactionOverlay />
+
+      {/* Universal Victory Celebration & Confetti Shower Podium */}
+      <VictoryCelebrationModal />
+
+      {/* Global Hall of Fame & Trophy Room Modal */}
+      <LeaderboardModal />
 
       {/* Global In-App Store & Customization Modal */}
       <StoreModal />

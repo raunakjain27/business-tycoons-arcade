@@ -6,6 +6,7 @@ import { useVoiceStore } from '../voiceStore';
 import { GameRoomLobby } from '../components/GameRoomLobby';
 import { VoiceRoomBar } from '../components/VoiceRoomBar';
 import { soundFx } from '../soundEffects';
+import { useCelebrationStore } from '../celebrationStore';
 
 interface Player {
   id: string;
@@ -56,6 +57,19 @@ export const SnakesLaddersGame: React.FC = () => {
   const [winner, setWinner] = useState<Player | null>(null);
   const [log, setLog] = useState<string[]>(['Game started on Tile 1! First to 100 wins.']);
   const [lastActionAnimation, setLastActionAnimation] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (winner) {
+      useCelebrationStore.getState().triggerVictory({
+        gameTitle: 'Snakes & Ladders',
+        winnerName: winner.name,
+        winnerAvatar: winner.avatar || '👑',
+        coinsAwarded: 150,
+        xpAwarded: 120,
+        reason: `${winner.name} successfully reached Tile 100 first!`,
+      });
+    }
+  }, [winner]);
 
   const addLog = (msg: string) => {
     setLog((prev) => [msg, ...prev.slice(0, 15)]);

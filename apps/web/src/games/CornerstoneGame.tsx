@@ -9,6 +9,7 @@ import { ActionPanel } from '../components/ActionPanel';
 import { PlayerDashboard } from '../components/PlayerDashboard';
 import { GameLog } from '../components/GameLog';
 import { Modals } from '../components/Modals';
+import { useCelebrationStore } from '../celebrationStore';
 
 export const CornerstoneGame: React.FC = () => {
   const { getOrCreateRoom } = useGameRoomStore();
@@ -30,6 +31,22 @@ export const CornerstoneGame: React.FC = () => {
       setInLobby(false);
     }
   }, [room.isGameStarted, inLobby]);
+
+  React.useEffect(() => {
+    if (gameState?.phase === 'gameOver') {
+      const activePlayers = gameState.turnOrder.filter((id) => gameState.players[id]?.status === 'active');
+      const winnerId = activePlayers[0] || gameState.turnPlayerId;
+      const winner = gameState.players[winnerId];
+      useCelebrationStore.getState().triggerVictory({
+        gameTitle: 'Business Tycoons',
+        winnerName: winner?.name || 'Tycoon Champion',
+        winnerAvatar: '🎩',
+        coinsAwarded: 300,
+        xpAwarded: 250,
+        reason: `${winner?.name || 'Winner'} achieved global monopoly domination!`,
+      });
+    }
+  }, [gameState?.phase]);
 
 
   const startMatchFromRoom = () => {
