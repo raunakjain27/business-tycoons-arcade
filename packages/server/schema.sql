@@ -62,7 +62,7 @@ CREATE TABLE IF NOT EXISTS room_participants (
     player_peg VARCHAR(32) NOT NULL DEFAULT 'classic',
     is_bot BOOLEAN NOT NULL DEFAULT FALSE,
     is_connected BOOLEAN NOT NULL DEFAULT TRUE,
-    role VARCHAR(32),                               -- e.g. 'Traitor', 'Faithful' in Traitors
+    "role" VARCHAR(32),                              -- e.g. 'Traitor', 'Faithful' in Traitors (quoted to avoid reserved SQL keyword)
     score_or_cash BIGINT DEFAULT 0,
     joined_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     UNIQUE (room_id, seat_index)
