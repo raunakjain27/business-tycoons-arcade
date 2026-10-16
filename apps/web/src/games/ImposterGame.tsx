@@ -347,7 +347,7 @@ export const ImposterGame: React.FC = () => {
                   type="text"
                   value={myClueInput}
                   onChange={(e: React.ChangeEvent<HTMLInputElement>) => setMyClueInput(e.target.value)}
-                  onKeyDown={(e: React.KeyboardEvent<HTMLInputElement>) => e.key === 'Enter' && submitMyClue()}
+                  onKeyDown={(e: KeyboardEvent) => e.key === 'Enter' && submitMyClue()}
                   placeholder="e.g. Needs freezing ice to stay afloat"
                   style={{
                     flex: 1,

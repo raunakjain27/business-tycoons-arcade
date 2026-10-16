@@ -760,19 +760,16 @@ export const TambolaGame: React.FC = () => {
                                     borderRadius: '10px',
                                     border: cell.marked
                                       ? '2px solid #34d399'
-                                      : isDrawn
-                                      ? '2px solid #f59e0b'
                                       : cell.num !== null
-                                      ? '1px solid rgba(255,255,255,0.14)'
+                                      ? '1px solid rgba(255,255,255,0.18)'
                                       : '1px solid rgba(255,255,255,0.03)',
                                     background: cell.marked
                                       ? 'radial-gradient(circle, #059669 0%, #064e3b 100%)'
-                                      : isDrawn
-                                      ? 'radial-gradient(circle, rgba(245, 158, 11, 0.35) 0%, rgba(180, 83, 9, 0.15) 100%)'
                                       : cell.num === null
                                       ? 'rgba(255,255,255,0.01)'
                                       : 'linear-gradient(180deg, rgba(255,255,255,0.08) 0%, rgba(255,255,255,0.02) 100%)',
-                                    color: cell.marked ? '#ffffff' : isDrawn ? '#fde68a' : cell.num ? '#ffffff' : 'transparent',
+                                    color: cell.marked ? '#ffffff' : cell.num ? '#ffffff' : 'transparent',
+
                                     fontSize: '18px',
                                     fontWeight: 900,
                                     cursor: cell.num ? 'pointer' : 'default',

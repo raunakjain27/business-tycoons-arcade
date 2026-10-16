@@ -376,7 +376,7 @@ export const GameRoomLobby: React.FC<GameRoomLobbyProps> = ({
             type="text"
             value={newPlayerName}
             onChange={(e: React.ChangeEvent<HTMLInputElement>) => setNewPlayerName(e.target.value)}
-            onKeyDown={(e: React.KeyboardEvent<HTMLInputElement>) => e.key === 'Enter' && handleAddFriend()}
+            onKeyDown={(e: KeyboardEvent) => e.key === 'Enter' && handleAddFriend()}
             placeholder="Friend's Name (e.g. Alex, Maya)"
             style={{
               flex: 1,

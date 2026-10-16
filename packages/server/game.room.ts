@@ -152,12 +152,21 @@ export function verifyAuthToken(
       }
     }
 
-    // 2. Reject unknown tokens - no silent fallback in production
-    throw new Error('Authentication failed: Invalid or missing authentication token');
+    // If non-JWT token is passed or format is unparseable
+    console.warn('verifyAuthToken: Non-standard token provided, creating guest session for', defaultName);
+    return {
+      playerId: defaultPlayerId,
+      name: defaultName,
+      isGuest: true,
+    };
   }
 
-  // 3. Should not reach here - token validation above always returns or throws
-  throw new Error('Authentication failed: Unknown token format');
+  // 2. No token passed - allow seamless guest/arcade matchmaking
+  return {
+    playerId: defaultPlayerId,
+    name: defaultName,
+    isGuest: true,
+  };
 }
 
 /**

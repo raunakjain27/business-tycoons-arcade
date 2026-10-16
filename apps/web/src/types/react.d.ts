@@ -45,8 +45,7 @@ declare module 'react' {
   export interface MouseEvent<T = any> {
     stopPropagation: () => void;
     preventDefault: () => void;
-  }
-  export interface MouseEvent<T = any> {
+  }  export interface MouseEvent<T = any> {
     stopPropagation: () => void;
     preventDefault: () => void;
   }
@@ -73,7 +72,7 @@ declare module 'react' {
     preventDefault: () => void;
   }
 
-  export { KeyboardEvent, FormEvent, TransitionEvent, PointerEvent, TouchEvent, WheelEvent };
+export { KeyboardEvent, TransitionEvent, PointerEvent, TouchEvent, WheelEvent };
 
   const React: {
     StrictMode: any;

@@ -33,39 +33,63 @@ interface RoomStore {
 const DEFAULT_AVATARS = ['👑', '🦊', '🐯', '🐼', '🦁', '🦄', '🐲', '🚀', '⚡', '🔥'];
 const DEFAULT_COLORS = ['#ec4899', '#3b82f6', '#10b981', '#f59e0b', '#8b5cf6', '#06b6d4', '#f43f5e', '#a855f7'];
 
-export const useGameRoomStore = create<RoomStore>((set, get) => ({
-  rooms: {},
+// Cross-tab / cross-window real-time room synchronizer
+const syncChannel = typeof window !== 'undefined' && 'BroadcastChannel' in window
+  ? new BroadcastChannel('tycoons_arcade_rooms_sync')
+  : null;
 
-  getOrCreateRoom: (gameId, hostName, maxPlayers = 8, minPlayers = 2) => {
-    const existing = get().rooms[gameId];
-    if (existing) return existing;
+function broadcastRooms(rooms: Record<string, GameRoomState>) {
+  try {
+    syncChannel?.postMessage({ type: 'ROOMS_UPDATE', rooms });
+  } catch (err) {
+    console.error('BroadcastChannel sync error:', err);
+  }
+}
 
-    const code = Math.random().toString(36).substring(2, 8).toUpperCase();
-    const newRoom: GameRoomState = {
-      roomCode: code,
-      isPrivate: true,
-      allowBots: true,
-      maxPlayers,
-      minPlayers,
-      isGameStarted: false,
-      players: [
-        {
-          id: 'player-1',
-          name: hostName || 'You (Host)',
-          isHost: true,
-          isBot: false,
-          avatar: '👑',
-          color: DEFAULT_COLORS[0],
-        },
-      ],
+export const useGameRoomStore = create<RoomStore>((set, get) => {
+  // Listen for room updates across browser tabs/windows
+  if (syncChannel) {
+    syncChannel.onmessage = (event) => {
+      if (event.data?.type === 'ROOMS_UPDATE' && event.data?.rooms) {
+        set({ rooms: event.data.rooms });
+      }
     };
+  }
 
-    set((state) => ({
-      rooms: { ...state.rooms, [gameId]: newRoom },
-    }));
+  return {
+    rooms: {},
 
-    return newRoom;
-  },
+    getOrCreateRoom: (gameId, hostName, maxPlayers = 8, minPlayers = 2) => {
+      const existing = get().rooms[gameId];
+      if (existing) return existing;
+
+      const code = Math.random().toString(36).substring(2, 8).toUpperCase();
+      const newRoom: GameRoomState = {
+        roomCode: code,
+        isPrivate: true,
+        allowBots: true,
+        maxPlayers,
+        minPlayers,
+        isGameStarted: false,
+        players: [
+          {
+            id: 'player-1',
+            name: hostName || 'You (Host)',
+            isHost: true,
+            isBot: false,
+            avatar: '👑',
+            color: DEFAULT_COLORS[0],
+          },
+        ],
+      };
+
+      const updatedRooms = { ...get().rooms, [gameId]: newRoom };
+      set({ rooms: updatedRooms });
+      broadcastRooms(updatedRooms);
+
+      return newRoom;
+    },
+
 
   toggleAllowBots: (gameId) => {
     set((state) => {
@@ -74,19 +98,18 @@ export const useGameRoomStore = create<RoomStore>((set, get) => ({
       const newAllowBots = !room.allowBots;
       let updatedPlayers = [...room.players];
       if (!newAllowBots) {
-        // remove existing bots
         updatedPlayers = updatedPlayers.filter((p) => !p.isBot);
       }
-      return {
-        rooms: {
-          ...state.rooms,
-          [gameId]: {
-            ...room,
-            allowBots: newAllowBots,
-            players: updatedPlayers,
-          },
+      const updatedRooms = {
+        ...state.rooms,
+        [gameId]: {
+          ...room,
+          allowBots: newAllowBots,
+          players: updatedPlayers,
         },
       };
+      broadcastRooms(updatedRooms);
+      return { rooms: updatedRooms };
     });
   },
 
@@ -103,15 +126,15 @@ export const useGameRoomStore = create<RoomStore>((set, get) => ({
         avatar: isBot ? '🤖' : DEFAULT_AVATARS[idx % DEFAULT_AVATARS.length],
         color: DEFAULT_COLORS[idx % DEFAULT_COLORS.length],
       };
-      return {
-        rooms: {
-          ...state.rooms,
-          [gameId]: {
-            ...room,
-            players: [...room.players, newPlayer],
-          },
+      const updatedRooms = {
+        ...state.rooms,
+        [gameId]: {
+          ...room,
+          players: [...room.players, newPlayer],
         },
       };
+      broadcastRooms(updatedRooms);
+      return { rooms: updatedRooms };
     });
   },
 
@@ -119,15 +142,15 @@ export const useGameRoomStore = create<RoomStore>((set, get) => ({
     set((state) => {
       const room = state.rooms[gameId];
       if (!room) return state;
-      return {
-        rooms: {
-          ...state.rooms,
-          [gameId]: {
-            ...room,
-            players: room.players.filter((p) => p.id !== playerId),
-          },
+      const updatedRooms = {
+        ...state.rooms,
+        [gameId]: {
+          ...room,
+          players: room.players.filter((p) => p.id !== playerId),
         },
       };
+      broadcastRooms(updatedRooms);
+      return { rooms: updatedRooms };
     });
   },
 
@@ -135,15 +158,15 @@ export const useGameRoomStore = create<RoomStore>((set, get) => ({
     set((state) => {
       const room = state.rooms[gameId];
       if (!room) return state;
-      return {
-        rooms: {
-          ...state.rooms,
-          [gameId]: {
-            ...room,
-            isGameStarted: true,
-          },
+      const updatedRooms = {
+        ...state.rooms,
+        [gameId]: {
+          ...room,
+          isGameStarted: true,
         },
       };
+      broadcastRooms(updatedRooms);
+      return { rooms: updatedRooms };
     });
   },
 
@@ -151,15 +174,15 @@ export const useGameRoomStore = create<RoomStore>((set, get) => ({
     set((state) => {
       const room = state.rooms[gameId];
       if (!room) return state;
-      return {
-        rooms: {
-          ...state.rooms,
-          [gameId]: {
-            ...room,
-            isGameStarted: false,
-          },
+      const updatedRooms = {
+        ...state.rooms,
+        [gameId]: {
+          ...room,
+          isGameStarted: false,
         },
       };
+      broadcastRooms(updatedRooms);
+      return { rooms: updatedRooms };
     });
   },
 
@@ -168,16 +191,17 @@ export const useGameRoomStore = create<RoomStore>((set, get) => ({
     set((state) => {
       const room = state.rooms[gameId];
       if (!room) return state;
-      return {
-        rooms: {
-          ...state.rooms,
-          [gameId]: {
-            ...room,
-            roomCode: code,
-          },
+      const updatedRooms = {
+        ...state.rooms,
+        [gameId]: {
+          ...room,
+          roomCode: code,
         },
       };
+      broadcastRooms(updatedRooms);
+      return { rooms: updatedRooms };
     });
     return code;
   },
-}));
+}; });
+
