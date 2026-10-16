@@ -10,8 +10,7 @@ import type {
 } from './types';
 import { computeRent, countOwned } from './index';
 import { getBoard } from '../content/boards';
-import eventsData from '../content/events.json' with { type: 'json' };import eventsData from '../content/events.json' with { type: 'json' };
-const eventsDataLocal = eventsData as { cards: EventCardDef[] };
+import eventsData from '../content/events.json' with { type: 'json' };
 
 export const BOARD: BoardDef = getBoard('default');
 const eventsDataLocal = eventsData as { cards: EventCardDef[] };
