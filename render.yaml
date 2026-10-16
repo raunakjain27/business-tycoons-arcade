@@ -1,12 +1,13 @@
 services:
-  # Colyseus Real-Time WebSocket Game Server (100% Free on Render)
+  # Colyseus Real-Time WebSocket Game Server (Free / Production on Render)
   - type: web
     name: tycoons-arcade-server
     runtime: node
     plan: free
     region: oregon
     buildCommand: pnpm install --prod=false --no-frozen-lockfile
-    startCommand: ./node_modules/.bin/tsx packages/server/index.ts
+    startCommand: node --import tsx packages/server/index.ts
+    healthCheckPath: /health
     envVars:
       - key: NODE_ENV
         value: production

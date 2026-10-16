@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useTrophyStore, LeaderboardEntry, Trophy } from '../trophyStore';
-import { useUserStore } from '../userStore';
+import { useUserStore, getApiBaseUrl } from '../userStore';
 import { soundFx } from '../soundEffects';
 
 const TOP_TYCOONS: LeaderboardEntry[] = [
@@ -30,10 +30,46 @@ export const LeaderboardModal: React.FC = () => {
   } = useTrophyStore();
   const { user } = useUserStore();
   const [boardType, setBoardType] = useState<'wealth' | 'streak'>('wealth');
+  const [liveTycoons, setLiveTycoons] = useState<LeaderboardEntry[]>(TOP_TYCOONS);
+  const [liveStreaks, setLiveStreaks] = useState<LeaderboardEntry[]>(TOP_STREAKS);
+
+  React.useEffect(() => {
+    if (!showLeaderboardModal) return;
+    const apiUrl = getApiBaseUrl();
+    fetch(`${apiUrl}/api/leaderboard`)
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => {
+        if (data?.byCoins && Array.isArray(data.byCoins) && data.byCoins.length > 0) {
+          const formattedCoins: LeaderboardEntry[] = data.byCoins.map((u: any, idx: number) => ({
+            rank: idx + 1,
+            username: u.handle || 'Player',
+            avatar: u.avatarId || '👑',
+            title: u.isVip ? 'VIP Tycoon' : `Level ${u.level || 1} Mogul`,
+            value: `$${(u.coins || 0).toLocaleString()}`,
+            badge: u.isVip ? 'VIP' : undefined,
+            isCurrentUser: u.id === user.id,
+          }));
+          setLiveTycoons(formattedCoins);
+        }
+        if (data?.byStreak && Array.isArray(data.byStreak) && data.byStreak.length > 0) {
+          const formattedStreaks: LeaderboardEntry[] = data.byStreak.map((u: any, idx: number) => ({
+            rank: idx + 1,
+            username: u.handle || 'Player',
+            avatar: u.avatarId || '👑',
+            title: 'Streak Master',
+            value: `${u.dailyStreak || 1} Days 🔥`,
+            badge: u.isVip ? 'VIP' : undefined,
+            isCurrentUser: u.id === user.id,
+          }));
+          setLiveStreaks(formattedStreaks);
+        }
+      })
+      .catch(() => {});
+  }, [showLeaderboardModal, user.id]);
 
   if (!showLeaderboardModal) return null;
 
-  const currentBoard = boardType === 'wealth' ? TOP_TYCOONS : TOP_STREAKS;
+  const currentBoard = boardType === 'wealth' ? liveTycoons : liveStreaks;
 
   return (
     <div

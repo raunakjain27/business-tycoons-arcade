@@ -1,5 +1,6 @@
 import React, { Component, ErrorInfo, ReactNode } from 'react';
 import { useHubStore } from '../hubStore';
+import { reportTelemetry } from '../errorTelemetry';
 
 interface Props {
   children: ReactNode;
@@ -23,6 +24,12 @@ export class GameErrorBoundary extends Component<Props, State> {
 
   public componentDidCatch(error: Error, errorInfo: ErrorInfo) {
     console.error('GameErrorBoundary caught an unhandled exception:', error, errorInfo);
+    reportTelemetry({
+      type: 'error',
+      message: error?.message || 'Component Crash',
+      stack: error?.stack,
+      context: { componentStack: errorInfo?.componentStack },
+    });
   }
 
   private handleReset = () => {

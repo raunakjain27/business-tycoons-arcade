@@ -1,8 +1,32 @@
-/**
- * WebRTC Mesh Audio Voice Engine
- * Handles real microphone stream capture, volume metering, peer audio distribution,
- * and turn-gated mute enforcement.
- */
+import { getApiBaseUrl } from './userStore';
+
+export interface IceServerConfig {
+  urls: string | string[];
+  username?: string;
+  credential?: string;
+}
+
+export const DEFAULT_ICE_SERVERS: IceServerConfig[] = [
+  { urls: 'stun:stun.l.google.com:19302' },
+  { urls: 'stun:stun1.l.google.com:19302' },
+  { urls: 'stun:stun2.l.google.com:19302' },
+  { urls: 'stun:stun.cloudflare.com:3478' },
+  {
+    urls: 'turn:openrelay.metered.ca:80',
+    username: 'openrelayproject',
+    credential: 'openrelayproject',
+  },
+  {
+    urls: 'turn:openrelay.metered.ca:443',
+    username: 'openrelayproject',
+    credential: 'openrelayproject',
+  },
+  {
+    urls: 'turns:openrelay.metered.ca:443?transport=tcp',
+    username: 'openrelayproject',
+    credential: 'openrelayproject',
+  },
+];
 
 export class WebRTCVoiceManager {
   private localStream: MediaStream | null = null;
@@ -12,6 +36,23 @@ export class WebRTCVoiceManager {
   private animFrameId: number | null = null;
   private isMuted: boolean = false;
   private onLevelChange: ((level: number) => void) | null = null;
+  private iceServers: IceServerConfig[] = DEFAULT_ICE_SERVERS;
+
+  async fetchProductionIceServers(): Promise<IceServerConfig[]> {
+    try {
+      const res = await fetch(`${getApiBaseUrl()}/api/webrtc/ice`);
+      if (res.ok) {
+        const data = await res.json();
+        if (data?.iceServers && Array.isArray(data.iceServers)) {
+          this.iceServers = data.iceServers;
+          return this.iceServers;
+        }
+      }
+    } catch (e) {
+      // Fallback to built-in default multi-STUN/TURN
+    }
+    return DEFAULT_ICE_SERVERS;
+  }
 
   async initMicrophone(onLevelChange?: (level: number) => void): Promise<boolean> {
     this.onLevelChange = onLevelChange || null;

@@ -22,6 +22,58 @@ export interface UserAccount {
   maxXp: number;
 }
 
+export function getApiBaseUrl(): string {
+  if (typeof window !== 'undefined') {
+    if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+      return 'http://localhost:2567';
+    }
+  }
+  return import.meta.env.VITE_API_URL || 'https://tycoons-arcade-server.onrender.com';
+}
+
+export async function syncUserWithCloud(user: UserAccount): Promise<UserAccount | null> {
+  try {
+    const res = await fetch(`${getApiBaseUrl()}/api/user/sync`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        id: user.id,
+        handle: user.username,
+        avatarId: user.avatar,
+        coins: user.coins,
+        xp: user.xp,
+        level: user.level,
+        dailyStreak: user.dailyStreak,
+        gamesWon: user.gamesWon,
+        isVip: user.isVip,
+        unlockedBoards: user.unlockedBoards,
+        unlockedPegs: user.unlockedPegs,
+        unlockedSoundPacks: user.unlockedSoundPacks,
+        activeSoundPack: user.activeSoundPack,
+        unlockedCelebrations: user.unlockedCelebrations,
+        activeCelebration: user.activeCelebration,
+        friendNames: user.friendNames,
+      }),
+    });
+    if (res.ok) {
+      const data = await res.json();
+      if (data?.user) {
+        return {
+          ...user,
+          coins: data.user.coins,
+          xp: data.user.xp,
+          level: data.user.level,
+          dailyStreak: data.user.dailyStreak,
+          gamesWon: data.user.gamesWon,
+        };
+      }
+    }
+  } catch (e) {
+    // Graceful offline fallback
+  }
+  return null;
+}
+
 const STORAGE_KEY = 'cornerstone_user_account';
 
 function loadInitialUser(): UserAccount {
@@ -132,6 +184,7 @@ export const useUserStore = create<UserStoreState>((set, get) => ({
     const updated = { ...user, xp: currentXp, level: currentLevel, maxXp: currentMaxXp };
     localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
     set({ user: updated });
+    syncUserWithCloud(updated).catch(() => {});
     return { leveledUp, newLevel: currentLevel };
   },
 
@@ -139,24 +192,28 @@ export const useUserStore = create<UserStoreState>((set, get) => ({
     const user = { ...get().user, username: name };
     localStorage.setItem(STORAGE_KEY, JSON.stringify(user));
     set({ user });
+    syncUserWithCloud(user).catch(() => {});
   },
 
   updateAvatar: (avatar: string) => {
     const user = { ...get().user, avatar };
     localStorage.setItem(STORAGE_KEY, JSON.stringify(user));
     set({ user });
+    syncUserWithCloud(user).catch(() => {});
   },
 
   updateFriendNames: (names: string[]) => {
     const user = { ...get().user, friendNames: names };
     localStorage.setItem(STORAGE_KEY, JSON.stringify(user));
     set({ user });
+    syncUserWithCloud(user).catch(() => {});
   },
 
   addCoins: (amount: number) => {
     const user = { ...get().user, coins: get().user.coins + amount };
     localStorage.setItem(STORAGE_KEY, JSON.stringify(user));
     set({ user });
+    syncUserWithCloud(user).catch(() => {});
   },
 
   recordGameWin: () => {
@@ -164,6 +221,7 @@ export const useUserStore = create<UserStoreState>((set, get) => ({
     const user = { ...get().user, gamesWon: (get().user.gamesWon || 0) + 1, coins: get().user.coins + 100 };
     localStorage.setItem(STORAGE_KEY, JSON.stringify(user));
     set({ user });
+    syncUserWithCloud(user).catch(() => {});
   },
 
   claimDailyReward: () => {
@@ -187,6 +245,7 @@ export const useUserStore = create<UserStoreState>((set, get) => ({
     };
     localStorage.setItem(STORAGE_KEY, JSON.stringify(updatedUser));
     set({ user: updatedUser });
+    syncUserWithCloud(updatedUser).catch(() => {});
     return { success: true, reward: totalReward, streak: newStreak };
   },
 
@@ -202,6 +261,7 @@ export const useUserStore = create<UserStoreState>((set, get) => ({
     };
     localStorage.setItem(STORAGE_KEY, JSON.stringify(user));
     set({ user });
+    syncUserWithCloud(user).catch(() => {});
   },
 
   setActiveSoundPack: (id: string) => {
@@ -229,6 +289,19 @@ export const useUserStore = create<UserStoreState>((set, get) => ({
     };
     localStorage.setItem(STORAGE_KEY, JSON.stringify(updatedUser));
     set({ user: updatedUser });
+    syncUserWithCloud(updatedUser).catch(() => {});
     return true;
   },
 }));
+
+// Background initial cloud sync on browser load
+if (typeof window !== 'undefined') {
+  setTimeout(() => {
+    const currentUser = useUserStore.getState().user;
+    syncUserWithCloud(currentUser).then((synced) => {
+      if (synced) {
+        useUserStore.setState({ user: synced });
+      }
+    }).catch(() => {});
+  }, 1000);
+}

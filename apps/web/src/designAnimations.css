@@ -84,3 +84,41 @@
     transform: translateY(0) scale(1);
   }
 }
+
+/* -------------------------------------------------------------------------- */
+/* Mobile Viewport & Touch Optimization for Production                        */
+/* -------------------------------------------------------------------------- */
+
+button, [role="button"], a {
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+
+@media (max-width: 768px) {
+  body {
+    padding-bottom: env(safe-area-inset-bottom, 16px);
+  }
+
+  /* Make modal dialogs full-width on mobile */
+  .modal-container {
+    width: 95% !important;
+    max-height: 94vh !important;
+    border-radius: 18px !important;
+  }
+
+  /* Compact controls */
+  input, select, button {
+    font-size: 15px !important;
+  }
+}
+
+@media (max-width: 480px) {
+  header {
+    padding: 10px 12px !important;
+  }
+
+  main {
+    padding: 8px !important;
+  }
+}
+
