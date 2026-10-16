@@ -185,7 +185,7 @@ export function App() {
                 Board:
                 <select
                   value={boardKey}
-                  onChange={(e) => {
+                  onChange={(e: React.ChangeEvent<HTMLSelectElement>) => {
                     setBoardKey(e.target.value as string);
                     if (!gameState) {
                       initLocalGame(3, 'Player 1', 'Tycoon');

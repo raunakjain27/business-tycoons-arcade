@@ -211,7 +211,7 @@ export const OnboardingModal: React.FC<OnboardingModalProps> = ({ isOpen, onClos
                 <input
                   type="text"
                   value={nickname}
-                  onChange={(e) => setNickname(e.target.value)}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => setNickname(e.target.value)}
                   placeholder="Enter your game name..."
                   style={{
                     width: '100%',

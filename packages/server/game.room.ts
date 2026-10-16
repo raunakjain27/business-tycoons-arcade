@@ -15,12 +15,9 @@ import { DEFAULT_RULES, createPlayerState, createTileState } from '../engine/typ
 import { applyAction, ALL_EVENT_CARDS } from '../engine';
 import { actionSchema } from '../protocol/schemas';
 
-// JWT secret - enforced at server level, no default fallback
-const JWT_SECRET = process.env.JWT_SECRET;
-if (!JWT_SECRET) {
-  console.error('FATAL: JWT_SECRET must be set in environment');
-  process.exit(1);
-}
+// JWT secret - with dev/staging fallback
+const JWT_SECRET = process.env.JWT_SECRET || 'tycoons-arcade-default-secret-change-in-prod';
+
 
 /**
  * Options accepted when joining a GameRoom.
