@@ -107,3 +107,12 @@ CREATE TABLE IF NOT EXISTS anonymous_entitlements (
 );
 
 CREATE INDEX IF NOT EXISTS idx_entitlements_token ON anonymous_entitlements (session_token_hash);
+
+-- ------------------------------------------------------------------------------
+-- 6. DISABLE RLS (ENABLE ANONYMOUS BACKEND API SYNC)
+-- ------------------------------------------------------------------------------
+ALTER TABLE anonymous_users DISABLE ROW LEVEL SECURITY;
+ALTER TABLE game_rooms DISABLE ROW LEVEL SECURITY;
+ALTER TABLE room_participants DISABLE ROW LEVEL SECURITY;
+ALTER TABLE game_audit_logs DISABLE ROW LEVEL SECURITY;
+ALTER TABLE anonymous_entitlements DISABLE ROW LEVEL SECURITY;
