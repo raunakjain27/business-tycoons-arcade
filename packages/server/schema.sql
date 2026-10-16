@@ -7,6 +7,13 @@
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 CREATE EXTENSION IF NOT EXISTS "pgcrypto";
 
+-- Safe cleanup to ensure fresh creation in correct dependency order
+DROP TABLE IF EXISTS anonymous_entitlements CASCADE;
+DROP TABLE IF EXISTS game_audit_logs CASCADE;
+DROP TABLE IF EXISTS room_participants CASCADE;
+DROP TABLE IF EXISTS game_rooms CASCADE;
+DROP TABLE IF EXISTS anonymous_users CASCADE;
+
 -- ------------------------------------------------------------------------------
 -- 1. ANONYMOUS USERS (NO PII, ZERO TRACKING)
 -- ------------------------------------------------------------------------------
