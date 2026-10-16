@@ -161,6 +161,7 @@ export const useGameStore = create<GameStoreState>((set, get) => ({
       gameState: state,
       errorMessage: null,
       selectedTile: null,
+      rooms: { 'local': roomState },
       getOrCreateRoom: () => roomState,
       addPlayer: () => {},
       resetRooms: () => set({ rooms: {} }),

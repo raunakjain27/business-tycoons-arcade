@@ -13,9 +13,13 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose })
     boardKey,
     setBoardKey,
     initLocalGame,
+    connectOnline,
+    disconnect,
+    gameMode,
     gameState,
     myPlayerId,
   } = useGameStore();
+
 
   const { user, setShowAccountModal, setShowCustomFriendsModal } = useUserStore();
 
@@ -598,7 +602,8 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose })
             backgroundColor: '#261b40',
             borderTop: '1px solid rgba(255, 255, 255, 0.08)',
             display: 'flex',
-            gap: '12px',
+            gap: '10px',
+            flexWrap: 'wrap',
           }}
         >
           <button
@@ -606,25 +611,52 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose })
             onClick={handleApplyAndRestart}
             style={{
               flex: 1,
+              minWidth: '150px',
               padding: '12px',
               borderRadius: '8px',
               border: 'none',
               backgroundColor: '#7c3aed',
               color: '#ffffff',
               fontWeight: 700,
-              fontSize: '14px',
+              fontSize: '13.5px',
               cursor: 'pointer',
               boxShadow: '0 4px 14px rgba(124, 58, 237, 0.4)',
               transition: 'all 0.15s ease',
             }}
           >
-            Apply & Start Game
+            🎮 Play vs Bots
           </button>
+
+          <button
+            type="button"
+            onClick={() => {
+              const code = Math.random().toString(36).substring(2, 8).toUpperCase();
+              connectOnline(code, playerName.trim() || 'Player 1', selectedRole);
+              onClose();
+            }}
+            style={{
+              flex: 1,
+              minWidth: '160px',
+              padding: '12px',
+              borderRadius: '8px',
+              border: 'none',
+              background: 'linear-gradient(135deg, #0284c7 0%, #2563eb 100%)',
+              color: '#ffffff',
+              fontWeight: 800,
+              fontSize: '13.5px',
+              cursor: 'pointer',
+              boxShadow: '0 4px 14px rgba(37, 99, 235, 0.4)',
+              transition: 'all 0.15s ease',
+            }}
+          >
+            🌐 Online Multiplayer
+          </button>
+
           <button
             type="button"
             onClick={onClose}
             style={{
-              padding: '12px 18px',
+              padding: '12px 16px',
               borderRadius: '8px',
               border: '1px solid rgba(255, 255, 255, 0.15)',
               backgroundColor: 'transparent',
@@ -637,6 +669,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose })
             Cancel
           </button>
         </div>
+
       </div>
     </div>
   );

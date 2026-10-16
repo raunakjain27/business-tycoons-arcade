@@ -263,6 +263,31 @@ export function App() {
           {view === 'game' && activeGame === 'cornerstone' && (
             <>
               <button
+                onClick={() => {
+                  disconnect();
+                  // Reset game state to lobby so ActionPanel shows the multiplayer lobby
+                  useGameStore.setState({ gameState: null, gameMode: 'online' });
+                }}
+                style={{
+                  padding: '6px 14px',
+                  borderRadius: '20px',
+                  border: '1px solid #38bdf8',
+                  background: 'linear-gradient(135deg, rgba(56, 189, 248, 0.25) 0%, rgba(37, 99, 235, 0.25) 100%)',
+                  color: '#38bdf8',
+                  fontSize: '12.5px',
+                  fontWeight: 800,
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                  boxShadow: '0 0 12px rgba(56, 189, 248, 0.3)',
+                }}
+              >
+                <span>🌐</span>
+                <span>{gameMode === 'online' && roomCode ? `Room: ${roomCode}` : 'Multiplayer Lobby'}</span>
+              </button>
+
+              <button
                 onClick={() => setShowSettings(true)}
                 style={{
                   padding: '6px 12px',
@@ -280,6 +305,7 @@ export function App() {
               >
                 ⚙️ Settings
               </button>
+
               <button
                 onClick={() => disconnect()}
                 style={{
