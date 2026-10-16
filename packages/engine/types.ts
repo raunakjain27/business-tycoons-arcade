@@ -11,6 +11,7 @@ export interface TileDef {
   type: TileType;
   name: string;
   districtId?: string | null;
+  colorGroup?: string | null;
   price?: number | null;
   taxAmount?: number | null;
   image?: string;
@@ -131,6 +132,7 @@ export interface RuleSet {
   doubleRentFullSet?: boolean;
   vacationCash?: boolean;
   noRentInPrison?: boolean;
+  freeParking?: boolean;
 }
 
 export interface GameState {
@@ -253,9 +255,7 @@ export function createTileState(): TileState {
     tier: 0 as Tier,
     mortgaged: false,
   };
-}
-
-/** Default ruleset */
+}/** Default ruleset */
 export const DEFAULT_RULES: RuleSet = {
   startingCash: 1500,
   paydayAmount: 200,
@@ -270,4 +270,5 @@ export const DEFAULT_RULES: RuleSet = {
   bankruptcyGraceSec: 60,
   maxPlayers: 6,
   teamMode: false,
+  freeParking: true,
 };

@@ -6,6 +6,7 @@
       "type": "start",
       "districtId": null,
       "price": null,
+      "colorGroup": null,
       "taxAmount": 200,
       "flag": "🏁"
     },
@@ -15,6 +16,7 @@
       "type": "property",
       "districtId": "Maharashtra",
       "price": 60,
+      "colorGroup": "Brown",
       "flag": "🇮🇳",
       "landmark": "🌊",
       "landmarkName": "Marine Drive"
@@ -25,6 +27,7 @@
       "type": "event",
       "districtId": null,
       "price": null,
+      "colorGroup": null,
       "flag": null
     },
     {
@@ -33,6 +36,7 @@
       "type": "property",
       "districtId": "Maharashtra",
       "price": 60,
+      "colorGroup": "Brown",
       "flag": "🇮🇳",
       "landmark": "🏰",
       "landmarkName": "Shaniwar Wada"
@@ -43,6 +47,7 @@
       "type": "tax",
       "districtId": null,
       "price": null,
+      "colorGroup": null,
       "taxAmount": 200,
       "flag": null
     },
@@ -52,6 +57,7 @@
       "type": "hub",
       "districtId": null,
       "price": 200,
+      "colorGroup": null,
       "flag": null
     },
     {
@@ -60,6 +66,7 @@
       "type": "property",
       "districtId": "Gujarat",
       "price": 100,
+      "colorGroup": "LightBlue",
       "flag": "🇮🇳",
       "landmark": "🦁",
       "landmarkName": "Sabarmati"
@@ -70,6 +77,7 @@
       "type": "event",
       "districtId": null,
       "price": null,
+      "colorGroup": null,
       "flag": null
     },
     {
@@ -78,6 +86,7 @@
       "type": "property",
       "districtId": "Gujarat",
       "price": 100,
+      "colorGroup": "LightBlue",
       "flag": "🇮🇳",
       "landmark": "💎",
       "landmarkName": "Diamond City"
@@ -88,6 +97,7 @@
       "type": "property",
       "districtId": "Gujarat",
       "price": 120,
+      "colorGroup": "Pink",
       "flag": "🇮🇳",
       "landmark": "🧵",
       "landmarkName": "Charkha"
@@ -98,6 +108,7 @@
       "type": "jail",
       "districtId": null,
       "price": null,
+      "colorGroup": null,
       "flag": null
     },
     {
@@ -106,6 +117,7 @@
       "type": "property",
       "districtId": "Rajasthan",
       "price": 140,
+      "colorGroup": "Pink",
       "flag": "🇮🇳",
       "landmark": "🏰",
       "landmarkName": "Hawa Mahal"
@@ -116,6 +128,7 @@
       "type": "utility",
       "districtId": null,
       "price": 150,
+      "colorGroup": "Orange",
       "flag": null
     },
     {
@@ -124,6 +137,7 @@
       "type": "property",
       "districtId": "Rajasthan",
       "price": 140,
+      "colorGroup": "Pink",
       "flag": "🇮🇳",
       "landmark": "⛵",
       "landmarkName": "Lake Palace"
@@ -134,6 +148,7 @@
       "type": "property",
       "districtId": "Rajasthan",
       "price": 160,
+      "colorGroup": "Orange",
       "flag": "🇮🇳",
       "landmark": "🏜️",
       "landmarkName": "Blue City"
@@ -144,6 +159,7 @@
       "type": "hub",
       "districtId": null,
       "price": 200,
+      "colorGroup": null,
       "flag": null
     },
     {
@@ -152,6 +168,7 @@
       "type": "property",
       "districtId": "Punjab",
       "price": 180,
+      "colorGroup": "Red",
       "flag": "🇮🇳",
       "landmark": "🛕",
       "landmarkName": "Golden Temple"
@@ -162,6 +179,7 @@
       "type": "event",
       "districtId": null,
       "price": null,
+      "colorGroup": null,
       "flag": null
     },
     {
@@ -170,6 +188,7 @@
       "type": "property",
       "districtId": "Punjab",
       "price": 180,
+      "colorGroup": "Red",
       "flag": "🇮🇳",
       "landmark": "🏭",
       "landmarkName": "Industrial Capital"
@@ -180,6 +199,7 @@
       "type": "property",
       "districtId": "Punjab",
       "price": 200,
+      "colorGroup": "Yellow",
       "flag": "🇮🇳",
       "landmark": "🏛️",
       "landmarkName": "Rock Garden"
@@ -190,6 +210,7 @@
       "type": "communityFund",
       "districtId": null,
       "price": null,
+      "colorGroup": null,
       "flag": null
     },
     {
@@ -198,6 +219,7 @@
       "type": "property",
       "districtId": "Karnataka",
       "price": 220,
+      "colorGroup": "Green",
       "flag": "🇮🇳",
       "landmark": "💻",
       "landmarkName": "Silicon Valley"
@@ -208,6 +230,7 @@
       "type": "event",
       "districtId": null,
       "price": null,
+      "colorGroup": null,
       "flag": null
     },
     {
@@ -216,6 +239,7 @@
       "type": "property",
       "districtId": "Karnataka",
       "price": 220,
+      "colorGroup": "Green",
       "flag": "🇮🇳",
       "landmark": "👑",
       "landmarkName": "Mysore Palace"
@@ -226,6 +250,7 @@
       "type": "property",
       "districtId": "Karnataka",
       "price": 240,
+      "colorGroup": "Green",
       "flag": "🇮🇳",
       "landmark": "🏖️",
       "landmarkName": "Coastal Port"
@@ -236,6 +261,7 @@
       "type": "hub",
       "districtId": null,
       "price": 200,
+      "colorGroup": null,
       "flag": null
     },
     {
@@ -244,6 +270,7 @@
       "type": "property",
       "districtId": "Telangana",
       "price": 260,
+      "colorGroup": "DarkBlue",
       "flag": "🇮🇳",
       "landmark": "🕌",
       "landmarkName": "Charminar"
@@ -254,6 +281,7 @@
       "type": "property",
       "districtId": "Telangana",
       "price": 260,
+      "colorGroup": "DarkBlue",
       "flag": "🇮🇳",
       "landmark": "🏛️",
       "landmarkName": "Kakatiya Gate"
@@ -264,6 +292,7 @@
       "type": "utility",
       "districtId": null,
       "price": 150,
+      "colorGroup": null,
       "flag": null
     },
     {
@@ -272,6 +301,7 @@
       "type": "property",
       "districtId": "Telangana",
       "price": 280,
+      "colorGroup": "DarkBlue",
       "flag": "🇮🇳",
       "landmark": "🌾",
       "landmarkName": "Fort City"
@@ -282,6 +312,7 @@
       "type": "goToJail",
       "districtId": null,
       "price": null,
+      "colorGroup": null,
       "flag": null
     },
     {
@@ -290,6 +321,7 @@
       "type": "property",
       "districtId": "Tamil Nadu",
       "price": 300,
+      "colorGroup": "DarkBlue",
       "flag": "🇮🇳",
       "landmark": "🛕",
       "landmarkName": "Marina Beach"
@@ -300,6 +332,7 @@
       "type": "property",
       "districtId": "Tamil Nadu",
       "price": 300,
+      "colorGroup": "DarkBlue",
       "flag": "🇮🇳",
       "landmark": "⚙️",
       "landmarkName": "Manchester of South"
@@ -310,6 +343,7 @@
       "type": "event",
       "districtId": null,
       "price": null,
+      "colorGroup": null,
       "flag": null
     },
     {
@@ -318,6 +352,7 @@
       "type": "property",
       "districtId": "Tamil Nadu",
       "price": 320,
+      "colorGroup": "DarkBlue",
       "flag": "🇮🇳",
       "landmark": "🛕",
       "landmarkName": "Meenakshi Temple"
@@ -328,6 +363,7 @@
       "type": "hub",
       "districtId": null,
       "price": 200,
+      "colorGroup": null,
       "flag": null
     },
     {
@@ -336,6 +372,7 @@
       "type": "event",
       "districtId": null,
       "price": null,
+      "colorGroup": null,
       "flag": null
     },
     {
@@ -344,6 +381,7 @@
       "type": "property",
       "districtId": "Delhi NCR",
       "price": 350,
+      "colorGroup": "DarkBlue",
       "flag": "🇮🇳",
       "landmark": "🇮🇳",
       "landmarkName": "India Gate"
@@ -363,6 +401,7 @@
       "type": "property",
       "districtId": "Delhi NCR",
       "price": 400,
+      "colorGroup": "DarkBlue",
       "flag": "🇮🇳",
       "landmark": "🏙️",
       "landmarkName": "Cyber City"

@@ -38,7 +38,7 @@ export function createInitialGameState(
       inJail: false,
       jailTurns: 0,
       doublesStreak: 0,
-      heldCards: [],
+      heldCards: ['jail_card'],
       teamId: null,
       abilityReadyRound: 1,
       status: 'active',
@@ -81,6 +81,7 @@ export function createInitialGameState(
       singleDiceMode: false,
       doubleRentFullSet: true,
       vacationCash: true,
+      freeParking: true,
       noRentInPrison: true,
       ...rulesOverride,
     },
@@ -235,8 +236,12 @@ export function applyLocalAction(
           });
           break;
         }
+        // Doubles: extra turn (standard Monopoly rule)
+        state.phase = 'awaitRoll';
       } else {
         player.doublesStreak = 0;
+        // Non-doubles: end turn
+        state.phase = 'awaitEndTurn';
       }
 
       movePlayer(state, player, total, events);
@@ -389,6 +394,32 @@ export function applyLocalAction(
         state.auction = null;
         const turnPlayer = state.players[state.turnPlayerId];
         state.phase = turnPlayer && turnPlayer.doublesStreak > 0 && !turnPlayer.inJail ? 'awaitRoll' : 'awaitEndTurn';
+      } else if (now >= (state.auction?.endsAt ?? 0)) {
+        // Auto-resolve auction when timer expires
+        if (state.auction.highBidder) {
+          const winner = state.players[state.auction.highBidder];
+          const winningTile = state.tiles[state.auction.tileId];
+          if (winner && winningTile) {
+            winner.cash -= state.auction.highBid;
+            winningTile.ownerId = winner.id;
+            events.push({
+              type: 'AUCTION_WON',
+              playerId: winner.id,
+              tileId: state.auction.tileId,
+              amount: state.auction.highBid,
+              reason: `${winner.name} won ${auctionTileDef.name} for $${state.auction.highBid} (auction timed out)!`,
+            });
+          }
+        } else {
+          events.push({
+            type: 'AUCTION_ENDED_NO_BIDS',
+            tileId: state.auction.tileId,
+            reason: `No bids received. ${auctionTileDef.name} remains unowned. Auction timed out.`,
+          });
+        }
+        state.auction = null;
+        const turnPlayer = state.players[state.turnPlayerId];
+        state.phase = turnPlayer && turnPlayer.doublesStreak > 0 && !turnPlayer.inJail ? 'awaitRoll' : 'awaitEndTurn';
       }
       break;
     }
@@ -406,6 +437,19 @@ export function applyLocalAction(
       }
       if (!ownsFullDistrict(state, playerId, def.districtId)) {
         return { state: currentState, events: [], error: 'Must own all properties in the district to build' };
+      }
+      // Check color-group ownership: player must own all properties with the same colorGroup
+      if (def.colorGroup) {
+        const colorGroup = def.colorGroup;
+        const ownedColorGroupTiles = Object.entries(state.tiles).filter(
+          ([_, t]) => t.ownerId === playerId && getTileDef(Number(_))?.colorGroup === colorGroup
+        ).length;
+        const totalColorGroupTiles = BOARD_DATA.tiles.filter(
+          t => getTileDef(t.id)?.colorGroup === colorGroup
+        ).length;
+        if (ownedColorGroupTiles < totalColorGroupTiles) {
+          return { state: currentState, events: [], error: 'Must own all properties of the same color group to build' };
+        }
       }
       if (tState.tier >= 4) {
         return { state: currentState, events: [], error: 'Maximum building tier already reached (Landmark)' };
