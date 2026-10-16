@@ -17,7 +17,7 @@ export class ColyseusConnection {
   async connect(
     serverUrl: string,
     roomName: string,
-    options: { name: string; roleId?: string | null; tokenId?: string; boardKey?: string },
+    options: { name: string; roleId?: string | null; tokenId?: string; boardKey?: string; rules?: Record<string, unknown> },
     callbacks: ColyseusCallbacks
   ): Promise<{ roomId: string; sessionId: string }> {
     this.callbacks = callbacks;

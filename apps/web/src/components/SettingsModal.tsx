@@ -28,6 +28,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose })
   const [selectedRole, setSelectedRole] = useState<RoleId>((gameState?.players[myPlayerId]?.roleId as RoleId) || 'Tycoon');
   const [selectedPeg, setSelectedPeg] = useState<string>(gameState?.players[myPlayerId]?.tokenId || 'alien');
   const [startingCash, setStartingCash] = useState<number>(gameState?.rules.startingCash ?? 1500);
+  const [turnTimerSec, setTurnTimerSec] = useState<number>(gameState?.rules.turnTimerSec ?? 30);
 
   // Richup Game Settings
   const [privateRoom, setPrivateRoom] = useState<boolean>(true);
@@ -55,6 +56,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose })
         vacationCash,
         auctionOnDecline: auction,
         noRentInPrison,
+        turnTimerSec,
       },
       selectedPeg
     );
@@ -379,6 +381,38 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose })
                 </div>
               </div>
 
+
+              {/* Turn Timer */}
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <div>
+                  <div style={{ fontSize: '13.5px', fontWeight: 600, color: '#f8fafc', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    <span>⏱</span>
+                    <span>Turn timer</span>
+                  </div>
+                  <div style={{ fontSize: '11.5px', color: '#94a3b8' }}>Auto-end turn after N seconds of inactivity</div>
+                </div>
+                <div style={{ display: 'flex', gap: '4px' }}>
+                  {[15, 30, 60, 90, 120].map(sec => (
+                    <button
+                      key={sec}
+                      type="button"
+                      onClick={() => setTurnTimerSec(sec)}
+                      style={{
+                        padding: '4px 8px',
+                        borderRadius: '6px',
+                        border: turnTimerSec === sec ? '2px solid #8b5cf6' : '1px solid rgba(255,255,255,0.1)',
+                        backgroundColor: turnTimerSec === sec ? '#7c3aed' : 'rgba(255,255,255,0.04)',
+                        color: '#ffffff',
+                        fontSize: '11px',
+                        fontWeight: 700,
+                        cursor: 'pointer',
+                      }}
+                    >
+                      {sec}s
+                    </button>
+                  ))}
+                </div>
+              </div>
               {/* Board Map Selection */}
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <div>

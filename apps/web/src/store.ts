@@ -45,6 +45,9 @@ export interface GameStoreState {
   isConnecting: boolean;
   errorMessage: string | null;
   auctionTimeLeft: number | null;
+  turnTimerSec: number | null;
+  turnTimerActive: boolean;
+  turnTimerRemaining: number | null;
 
   // Setters & UI controls
   setGameMode: (mode: GameMode) => void;
@@ -56,6 +59,8 @@ export interface GameStoreState {
   setShowAbilityModal: (show: boolean) => void;
   dismissEventCard: () => void;
   clearError: () => void;
+  setTurnTimerActive: (active: boolean) => void;
+  setTurnTimerRemaining: (remaining: number | null) => void;
 
   // Game control
   initLocalGame: (
@@ -67,7 +72,7 @@ export interface GameStoreState {
     rulesOverride?: Partial<GameState['rules']>,
     pegId?: string
   ) => void;
-  connectOnline: (roomName?: string, name?: string, roleId?: string) => Promise<void>;
+  connectOnline: (roomName?: string, name?: string, roleId?: string, turnTimerSec?: number) => Promise<void>;
   disconnect: () => void;
   dispatchAction: (action: Action) => void;
 
@@ -109,6 +114,9 @@ export const useGameStore = create<GameStoreState>((set, get) => ({
   isConnecting: false,
   errorMessage: null,
   auctionTimeLeft: null,
+  turnTimerSec: null,
+  turnTimerActive: false,
+  turnTimerRemaining: null,
 
   rooms: { local: emptyLocalRoomState },
   getOrCreateRoom: (gameId: string, hostName: string, maxPlayers: number, minPlayers: number) => ({
@@ -134,6 +142,8 @@ export const useGameStore = create<GameStoreState>((set, get) => ({
   setShowAbilityModal: (show: boolean) => set({ showAbilityModal: show }),
   dismissEventCard: () => set({ activeEventCard: null }),
   clearError: () => set({ errorMessage: null }),
+  setTurnTimerActive: (active: boolean) => set({ turnTimerActive: active }),
+  setTurnTimerRemaining: (remaining: number | null) => set({ turnTimerRemaining: remaining }),
 
   initLocalGame: (
     playerCount = 4,
@@ -190,9 +200,10 @@ export const useGameStore = create<GameStoreState>((set, get) => ({
       addPlayer: () => {},
       resetRooms: () => set({ rooms: {} }),
     });
+    if ((get() as any)._timerInterval) clearInterval((get() as any)._timerInterval);
   },
 
-  connectOnline: async (roomName = 'game', name = 'Player', roleId = 'Tycoon') => {
+  connectOnline: async (roomName = 'game', name = 'Player', roleId = 'Tycoon', turnTimerSec?: number) => {
     set({ isConnecting: true, errorMessage: null });
     const { serverUrl } = get();
 
@@ -201,7 +212,7 @@ export const useGameStore = create<GameStoreState>((set, get) => ({
       const { roomId, sessionId } = await colyseusConnection.connect(
         serverUrl,
         roomName,
-        { name, roleId, boardKey },
+        { name, roleId, boardKey, rules: turnTimerSec ? { turnTimerSec } : undefined },
         {
           onStateChange: (state: GameState) => {
             set({ gameState: state });
@@ -292,6 +303,52 @@ export const useGameStore = create<GameStoreState>((set, get) => ({
           type: 'general',
         },
       });
+      // For human players, automatically end the turn after the card resolves
+      // so the dice can pass to the next player (no delay — snappier flow)
+      if (gameState.turnPlayerId === myPlayerId) {
+        // Defer just enough for the UI to render the card text
+        Promise.resolve().then(() => {
+          const freshState = get().gameState;
+          if (freshState && freshState.phase !== 'gameOver') {
+            get().dispatchAction({ type: 'END_TURN' });
+          }
+        });
+      }
+    }
+
+    // Start/re-start turn timer for human player
+    if (gameMode === 'local' && gameState && gameState.turnPlayerId === myPlayerId) {
+      const sec = gameState.rules?.turnTimerSec ?? 30;
+      set({
+        turnTimerSec: sec,
+        turnTimerActive: true,
+        turnTimerRemaining: sec,
+      });
+      if ((get() as any)._timerInterval) clearInterval((get() as any)._timerInterval);
+      ;(get() as any)._timerInterval = setInterval(() => {
+        const st = get().gameState;
+        if (!st || st.phase === 'gameOver' || st.turnPlayerId !== myPlayerId) {
+          set({ turnTimerActive: false, turnTimerRemaining: null });
+          if ((get() as any)._timerInterval) clearInterval((get() as any)._timerInterval);
+          return;
+        }
+        const rem = get().turnTimerRemaining;
+        if (rem === null || rem <= 0) {
+          set({ turnTimerActive: false, turnTimerRemaining: null });
+          if ((get() as any)._timerInterval) clearInterval((get() as any)._timerInterval);
+          return;
+        }
+        set({ turnTimerRemaining: Math.max(0, rem - 1) });
+        if (rem <= 1) {
+          // Timer expired — auto-end turn
+          set({ turnTimerActive: false, turnTimerRemaining: null });
+          if ((get() as any)._timerInterval) clearInterval((get() as any)._timerInterval);
+          const fs = get().gameState;
+          if (fs && fs.phase !== 'gameOver') {
+            get().dispatchAction({ type: 'END_TURN' });
+          }
+        }
+      }, 1000);
     }
 
     // Check if a bot should now take its turn

@@ -79,11 +79,37 @@ export const Board: React.FC<BoardProps> = ({ gameState }) => {
           .board-responsive-container {
             padding: 4px !important;
             gap: 1px !important;
-            grid-template-columns: minmax(42px, 1.4fr) repeat(9, minmax(24px, 1fr)) minmax(42px, 1.4fr) !important;
-            grid-template-rows: minmax(42px, 1.4fr) repeat(9, minmax(24px, 1fr)) minmax(42px, 1.4fr) !important;
+            grid-template-columns: minmax(36px, 1.4fr) repeat(9, minmax(20px, 1fr)) minmax(36px, 1.4fr) !important;
+            grid-template-rows: minmax(36px, 1.4fr) repeat(9, minmax(20px, 1fr)) minmax(36px, 1.4fr) !important;
           }
           .board-responsive-container .animated-landmark {
-            font-size: 11px !important;
+            font-size: 10px !important;
+          }
+          .board-center-console {
+            padding: 6px 4px !important;
+          }
+          .board-event-log {
+            min-height: 60px !important;
+            max-height: 100px !important;
+            padding: 4px 6px !important;
+          }
+        }
+        @media (max-width: 420px) {
+          .board-responsive-container {
+            padding: 2px !important;
+            gap: 1px !important;
+            grid-template-columns: minmax(30px, 1.3fr) repeat(9, minmax(17px, 1fr)) minmax(30px, 1.3fr) !important;
+            grid-template-rows: minmax(30px, 1.3fr) repeat(9, minmax(17px, 1fr)) minmax(30px, 1.3fr) !important;
+          }
+          .board-responsive-container .animated-landmark {
+            font-size: 8px !important;
+          }
+          .board-center-console {
+            padding: 4px 2px !important;
+          }
+          .board-event-log {
+            min-height: 50px !important;
+            max-height: 80px !important;
           }
         }
       `}</style>
@@ -560,8 +586,41 @@ export const Board: React.FC<BoardProps> = ({ gameState }) => {
           );
         })}
 
+        {/* Turn Timer Display */}
+        {(() => {
+          const timerActive = useGameStore.getState().turnTimerActive;
+          const timerRem = useGameStore.getState().turnTimerRemaining;
+          if (!timerActive || timerRem === null) return null;
+          const low = timerRem <= 5;
+          return (
+            <div
+              style={{
+                position: 'absolute',
+                top: '8px',
+                right: '10px',
+                backgroundColor: low ? 'rgba(239, 68, 68, 0.25)' : 'rgba(34, 197, 94, 0.20)',
+                border: low ? '1px solid rgba(239, 68, 68, 0.6)' : '1px solid rgba(34, 197, 94, 0.4)',
+                borderRadius: '20px',
+                padding: '3px 10px',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '5px',
+                fontSize: '12px',
+                fontWeight: 700,
+                color: low ? '#fca5a5' : '#86efac',
+                animation: low ? 'pulse 1s infinite' : 'none',
+                zIndex: 10,
+              }}
+            >
+              <span style={{ fontSize: '11px' }}>⏱</span>
+              <span>{timerRem}s</span>
+            </div>
+          );
+        })()}
+
         {/* Board Center Console: Dice shifted up, Roll button, Event Log integrated below */}
         <div
+          className="board-center-console"
           style={{
             gridRow: '2 / 11',
             gridColumn: '2 / 11',
@@ -610,6 +669,7 @@ export const Board: React.FC<BoardProps> = ({ gameState }) => {
 
           {/* Embedded Game Event Log Directly On The Board (Below Dice) */}
           <div
+            className="board-event-log"
             style={{
               width: '100%',
               flex: 1,

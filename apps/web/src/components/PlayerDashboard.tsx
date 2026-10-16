@@ -134,6 +134,34 @@ export const PlayerDashboard: React.FC<PlayerDashboardProps> = ({ gameState }) =
               </div>
             </div>
 
+            {/* Turn Timer for current player */}
+            {isCurrentTurn && (() => {
+              const timerActive = useGameStore.getState().turnTimerActive;
+              const timerRem = useGameStore.getState().turnTimerRemaining;
+              if (!timerActive || timerRem === null) return null;
+              const low = timerRem <= 5;
+              return (
+                <div
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '6px',
+                    padding: '5px 0',
+                    backgroundColor: low ? 'rgba(239, 68, 68, 0.15)' : 'rgba(34, 197, 94, 0.12)',
+                    borderRadius: '8px',
+                    border: low ? '1px solid rgba(239, 68, 68, 0.35)' : '1px solid rgba(34, 197, 94, 0.30)',
+                  }}
+                >
+                  <span style={{ fontSize: '16px' }}>⏱</span>
+                  <span style={{ fontSize: '15px', fontWeight: 800, color: low ? '#fca5a5' : '#86efac' }}>
+                    {timerRem}s
+                  </span>
+                  {low && <span style={{ fontSize: '10px', color: '#fca5a5', animation: 'pulse 1s infinite' }}>hurry!</span>}
+                </div>
+              );
+            })()}
+
             {/* Properties Owned Strip */}
             <div>
               <div style={{ fontSize: '10px', color: '#94a3b8', marginBottom: '4px' }}>

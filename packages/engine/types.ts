@@ -158,6 +158,7 @@ export interface GameState {
   housesAvailable?: number;
   towersAvailable?: number;
   lastDice: [number, number] | null;
+  turnTimerStart?: number;
   auction: AuctionState | null;
   trades: TradeOffer[];
   pendingDebt: { debtorId: PlayerId; creditorId: PlayerId | 'bank'; amount: number } | null;

@@ -33,6 +33,7 @@ export const ActionPanel: React.FC<ActionPanelProps> = ({ gameState }) => {
   const [playerName, setPlayerName] = useState('Player 1');
   const [selectedRole, setSelectedRole] = useState<RoleId>('Tycoon');
   const [botCount, setBotCount] = useState(2);
+  const [turnTimerSec, setTurnTimerSec] = useState(30);
   const [onlineRoomInput, setOnlineRoomInput] = useState('game');
 
   // Custom bid input
@@ -225,9 +226,9 @@ export const ActionPanel: React.FC<ActionPanelProps> = ({ gameState }) => {
         <button
           onClick={() => {
             if (gameMode === 'local') {
-              initLocalGame(botCount + 1, playerName, selectedRole);
+              initLocalGame(botCount + 1, playerName, selectedRole, false, 1500, { turnTimerSec });
             } else {
-              connectOnline(onlineRoomInput, playerName, selectedRole);
+              connectOnline(onlineRoomInput, playerName, selectedRole, turnTimerSec);
             }
           }}
           disabled={isConnecting}
@@ -382,6 +383,37 @@ export const ActionPanel: React.FC<ActionPanelProps> = ({ gameState }) => {
                 </div>
               ) : (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', alignItems: 'center' }}>
+                  {/* Turn Timer Badge */}
+                  {(() => {
+                    const timerActive = useGameStore.getState().turnTimerActive;
+                    const timerRem = useGameStore.getState().turnTimerRemaining;
+                    if (!timerActive || timerRem === null) return null;
+                    const low = timerRem <= 5;
+                    return (
+                      <div
+                        style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '6px',
+                          padding: '4px 10px',
+                          backgroundColor: low ? 'rgba(239, 68, 68, 0.20)' : 'rgba(34, 197, 94, 0.15)',
+                          borderRadius: '20px',
+                          border: low ? '1px solid rgba(239, 68, 68, 0.5)' : '1px solid rgba(34, 197, 94, 0.35)',
+                        }}
+                      >
+                        <span style={{ fontSize: '13px' }}>⏱</span>
+                        <span style={{
+                          fontSize: '13px',
+                          fontWeight: 700,
+                          color: low ? '#fca5a5' : '#86efac',
+                          animation: low ? 'pulse 1s infinite' : 'none',
+                        }}>
+                          {timerRem}s
+                        </span>
+                      </div>
+                    );
+                  })()}
+
                   <p style={{ fontSize: '14px', color: '#cbd5e1' }}>
                     Roll the dice to move across the Business Tycoons board.
                   </p>
@@ -832,7 +864,7 @@ export const ActionPanel: React.FC<ActionPanelProps> = ({ gameState }) => {
             A player has achieved complete domination in the Business Tycoons arena!
           </p>
           <button
-            onClick={() => initLocalGame(3, playerName, selectedRole)}
+            onClick={() => initLocalGame(3, playerName, selectedRole, false, 1500, { turnTimerSec })}
             style={{ ...primaryButtonStyle, alignSelf: 'center' }}
           >
             Play Another Game

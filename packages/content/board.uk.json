@@ -6,6 +6,7 @@
       "type": "start",
       "districtId": null,
       "price": null,
+      "colorGroup": null,
       "taxAmount": 200,
       "flag": "🇬🇧"
     },
@@ -15,6 +16,7 @@
       "type": "property",
       "districtId": "East London",
       "price": 60,
+      "colorGroup": "Brown",
       "flag": "🇬🇧",
       "landmark": "🔔"
     },
@@ -24,6 +26,7 @@
       "type": "event",
       "districtId": null,
       "price": null,
+      "colorGroup": null,
       "flag": "🇬🇧"
     },
     {
@@ -32,6 +35,7 @@
       "type": "property",
       "districtId": "East London",
       "price": 60,
+      "colorGroup": "Brown",
       "flag": "🇬🇧",
       "landmark": "🛣️"
     },
@@ -50,6 +54,7 @@
       "type": "hub",
       "districtId": null,
       "price": 200,
+      "colorGroup": null,
       "flag": "🇬🇧"
     },
     {
@@ -58,6 +63,7 @@
       "type": "property",
       "districtId": "Scotland",
       "price": 100,
+      "colorGroup": "LightBlue",
       "flag": "🇬🇧",
       "landmark": "🚉"
     },
@@ -67,6 +73,7 @@
       "type": "event",
       "districtId": null,
       "price": null,
+      "colorGroup": null,
       "flag": "🇬🇧"
     },
     {
@@ -75,6 +82,7 @@
       "type": "property",
       "districtId": "Scotland",
       "price": 100,
+      "colorGroup": "LightBlue",
       "flag": "🇬🇧",
       "landmark": "🏘️"
     },
@@ -84,6 +92,7 @@
       "type": "property",
       "districtId": "Scotland",
       "price": 120,
+      "colorGroup": "Pink",
       "flag": "🇬🇧",
       "landmark": "🌳"
     },
@@ -93,6 +102,7 @@
       "type": "jail",
       "districtId": null,
       "price": null,
+      "colorGroup": null,
       "flag": "🇬🇧"
     },
     {
@@ -101,6 +111,7 @@
       "type": "property",
       "districtId": "North London",
       "price": 140,
+      "colorGroup": "Orange",
       "flag": "🇬🇧",
       "landmark": "🏛️"
     },
@@ -110,6 +121,7 @@
       "type": "utility",
       "districtId": null,
       "price": 150,
+      "colorGroup": "Orange",
       "flag": "🇬🇧"
     },
     {
@@ -118,6 +130,7 @@
       "type": "property",
       "districtId": "North London",
       "price": 140,
+      "colorGroup": "Orange",
       "flag": "🇬🇧",
       "landmark": "💂"
     },
@@ -127,6 +140,7 @@
       "type": "property",
       "districtId": "North London",
       "price": 160,
+      "colorGroup": "Red",
       "flag": "🇬🇧",
       "landmark": "🦁"
     },
@@ -136,6 +150,7 @@
       "type": "hub",
       "districtId": null,
       "price": 200,
+      "colorGroup": null,
       "flag": "🇬🇧"
     },
     {
@@ -144,6 +159,7 @@
       "type": "property",
       "districtId": "Wales",
       "price": 180,
+      "colorGroup": "Red",
       "flag": "🇬🇧",
       "landmark": "⚖️"
     },
@@ -153,6 +169,7 @@
       "type": "influence",
       "districtId": null,
       "price": null,
+      "colorGroup": null,
       "flag": "🇬🇧"
     },
     {
@@ -161,6 +178,7 @@
       "type": "property",
       "districtId": "Wales",
       "price": 180,
+      "colorGroup": "Red",
       "flag": "🇬🇧",
       "landmark": "🛍️"
     },
@@ -170,6 +188,7 @@
       "type": "property",
       "districtId": "Wales",
       "price": 200,
+      "colorGroup": "Yellow",
       "flag": "🇬🇧",
       "landmark": "👮"
     },
@@ -179,6 +198,7 @@
       "type": "communityFund",
       "districtId": null,
       "price": null,
+      "colorGroup": null,
       "flag": "🇬🇧"
     },
     {
@@ -187,6 +207,7 @@
       "type": "property",
       "districtId": "Midlands",
       "price": 220,
+      "colorGroup": "Green",
       "flag": "🇬🇧",
       "landmark": "🎭"
     },
@@ -204,8 +225,8 @@
       "type": "property",
       "districtId": "Midlands",
       "price": 220,
-      "flag": "🇬🇧",
-      "landmark": "📰"
+      "colorGroup": "Green",
+      "flag": "🇬🇧"
     },
     {
       "id": 24,
@@ -213,8 +234,8 @@
       "type": "property",
       "districtId": "Midlands",
       "price": 240,
-      "flag": "🇬🇧",
-      "landmark": "🏛️"
+      "colorGroup": "Green",
+      "flag": "🇬🇧"
     },
     {
       "id": 25,
@@ -222,6 +243,7 @@
       "type": "hub",
       "districtId": null,
       "price": 200,
+      "colorGroup": null,
       "flag": "🇬🇧"
     },
     {
@@ -230,6 +252,7 @@
       "type": "property",
       "districtId": "South Coast",
       "price": 260,
+      "colorGroup": "DarkBlue",
       "flag": "🇬🇧",
       "landmark": "🎬"
     },
@@ -239,6 +262,7 @@
       "type": "property",
       "districtId": "South Coast",
       "price": 260,
+      "colorGroup": "DarkBlue",
       "flag": "🇬🇧",
       "landmark": "🚗"
     },
@@ -248,6 +272,7 @@
       "type": "utility",
       "districtId": null,
       "price": 150,
+      "colorGroup": null,
       "flag": "🇬🇧"
     },
     {
@@ -256,6 +281,7 @@
       "type": "property",
       "districtId": "South Coast",
       "price": 280,
+      "colorGroup": "DarkBlue",
       "flag": "🇬🇧",
       "landmark": "🎪"
     },
@@ -265,6 +291,7 @@
       "type": "goToJail",
       "districtId": null,
       "price": null,
+      "colorGroup": null,
       "flag": "🇬🇧"
     },
     {
@@ -273,6 +300,7 @@
       "type": "property",
       "districtId": "North England",
       "price": 300,
+      "colorGroup": "DarkBlue",
       "flag": "🇬🇧",
       "landmark": "🛍️"
     },
@@ -282,6 +310,7 @@
       "type": "property",
       "districtId": "North England",
       "price": 300,
+      "colorGroup": "DarkBlue",
       "flag": "🇬🇧",
       "landmark": "🚌"
     },
@@ -291,6 +320,7 @@
       "type": "influence",
       "districtId": null,
       "price": null,
+      "colorGroup": null,
       "flag": "🇬🇧"
     },
     {
@@ -299,6 +329,7 @@
       "type": "property",
       "districtId": "North England",
       "price": 320,
+      "colorGroup": "DarkBlue",
       "flag": "🇬🇧",
       "landmark": "💎"
     },
@@ -308,6 +339,7 @@
       "type": "hub",
       "districtId": null,
       "price": 200,
+      "colorGroup": null,
       "flag": "🇬🇧"
     },
     {
@@ -324,6 +356,7 @@
       "type": "property",
       "districtId": "West London Elite",
       "price": 350,
+      "colorGroup": "DarkBlue",
       "flag": "🇬🇧",
       "landmark": "👑"
     },
@@ -342,6 +375,7 @@
       "type": "property",
       "districtId": "West London Elite",
       "price": 400,
+      "colorGroup": "DarkBlue",
       "flag": "🇬🇧",
       "landmark": "🏰"
     }

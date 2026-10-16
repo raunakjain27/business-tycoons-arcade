@@ -6,6 +6,7 @@
       "type": "start",
       "districtId": null,
       "price": null,
+      "colorGroup": null,
       "taxAmount": 200,
       "flag": "🥂"
     },
@@ -15,6 +16,7 @@
       "type": "property",
       "districtId": "Red Light",
       "price": 60,
+      "colorGroup": "Brown",
       "flag": "💋",
       "landmark": "💄",
       "landmarkName": "Lipstick Lounge"
@@ -25,6 +27,7 @@
       "type": "event",
       "districtId": null,
       "price": null,
+      "colorGroup": null,
       "flag": null
     },
     {
@@ -33,6 +36,7 @@
       "type": "property",
       "districtId": "Red Light",
       "price": 60,
+      "colorGroup": "Brown",
       "flag": "💋",
       "landmark": "👠",
       "landmarkName": "High Heels Club"
@@ -52,6 +56,7 @@
       "type": "hub",
       "districtId": null,
       "price": 200,
+      "colorGroup": null,
       "flag": null
     },
     {
@@ -60,6 +65,7 @@
       "type": "property",
       "districtId": "Speakeasy",
       "price": 100,
+      "colorGroup": "LightBlue",
       "flag": "🍸",
       "landmark": "🍷",
       "landmarkName": "Vintage Cellar"
@@ -70,6 +76,7 @@
       "type": "event",
       "districtId": null,
       "price": null,
+      "colorGroup": null,
       "flag": null
     },
     {
@@ -78,6 +85,7 @@
       "type": "property",
       "districtId": "Speakeasy",
       "price": 100,
+      "colorGroup": "LightBlue",
       "flag": "🍸",
       "landmark": "🥃",
       "landmarkName": "Oak Barrel"
@@ -88,6 +96,7 @@
       "type": "property",
       "districtId": "Speakeasy",
       "price": 120,
+      "colorGroup": "Pink",
       "flag": "🍸",
       "landmark": "🗝️",
       "landmarkName": "Hidden Vault"
@@ -98,6 +107,7 @@
       "type": "jail",
       "districtId": null,
       "price": null,
+      "colorGroup": null,
       "flag": null
     },
     {
@@ -106,6 +116,7 @@
       "type": "property",
       "districtId": "Sin City",
       "price": 140,
+      "colorGroup": "Orange",
       "flag": "🎲",
       "landmark": "🎰",
       "landmarkName": "Jackpot Suite"
@@ -116,6 +127,7 @@
       "type": "utility",
       "districtId": null,
       "price": 150,
+      "colorGroup": "Orange",
       "flag": null
     },
     {
@@ -124,6 +136,7 @@
       "type": "property",
       "districtId": "Sin City",
       "price": 140,
+      "colorGroup": "Orange",
       "flag": "🎲",
       "landmark": "♠️",
       "landmarkName": "Ace Lounge"
@@ -134,6 +147,7 @@
       "type": "property",
       "districtId": "Sin City",
       "price": 160,
+      "colorGroup": "Red",
       "flag": "🎲",
       "landmark": "🪙",
       "landmarkName": "Gold Stacks"
@@ -144,6 +158,7 @@
       "type": "hub",
       "districtId": null,
       "price": 200,
+      "colorGroup": null,
       "flag": null
     },
     {
@@ -152,6 +167,7 @@
       "type": "property",
       "districtId": "Bikini Strip",
       "price": 180,
+      "colorGroup": "Red",
       "flag": "👙",
       "landmark": "🪩",
       "landmarkName": "Disco Dome"
@@ -162,6 +178,7 @@
       "type": "event",
       "districtId": null,
       "price": null,
+      "colorGroup": null,
       "flag": null
     },
     {
@@ -170,6 +187,7 @@
       "type": "property",
       "districtId": "Bikini Strip",
       "price": 180,
+      "colorGroup": "Red",
       "flag": "👙",
       "landmark": "🍹",
       "landmarkName": "Sunset Cabana"
@@ -180,6 +198,7 @@
       "type": "property",
       "districtId": "Bikini Strip",
       "price": 200,
+      "colorGroup": "Yellow",
       "flag": "👙",
       "landmark": "🌴",
       "landmarkName": "Ocean Villa"
@@ -190,6 +209,7 @@
       "type": "communityFund",
       "districtId": null,
       "price": null,
+      "colorGroup": null,
       "flag": null
     },
     {
@@ -198,6 +218,7 @@
       "type": "property",
       "districtId": "Rave Quarter",
       "price": 220,
+      "colorGroup": "Green",
       "flag": "⚡",
       "landmark": "🔊",
       "landmarkName": "Subwoofer Bass"
@@ -208,6 +229,7 @@
       "type": "event",
       "districtId": null,
       "price": null,
+      "colorGroup": null,
       "flag": null
     },
     {
@@ -216,6 +238,7 @@
       "type": "property",
       "districtId": "Rave Quarter",
       "price": 220,
+      "colorGroup": "Green",
       "flag": "⚡",
       "landmark": "🔥",
       "landmarkName": "Fire Floor"
@@ -226,6 +249,7 @@
       "type": "property",
       "districtId": "Rave Quarter",
       "price": 240,
+      "colorGroup": "Green",
       "flag": "⚡",
       "landmark": "🎛️",
       "landmarkName": "DJ Deck"
@@ -236,6 +260,7 @@
       "type": "hub",
       "districtId": null,
       "price": 200,
+      "colorGroup": null,
       "flag": null
     },
     {
@@ -244,6 +269,7 @@
       "type": "property",
       "districtId": "Penthouses",
       "price": 260,
+      "colorGroup": "DarkBlue",
       "flag": "🥂",
       "landmark": "🛁",
       "landmarkName": "Infinity Jacuzzi"
@@ -254,6 +280,7 @@
       "type": "property",
       "districtId": "Penthouses",
       "price": 260,
+      "colorGroup": "DarkBlue",
       "flag": "🥂",
       "landmark": "🍾",
       "landmarkName": "Dom Pérignon"
@@ -264,6 +291,7 @@
       "type": "utility",
       "districtId": null,
       "price": 150,
+      "colorGroup": null,
       "flag": null
     },
     {
@@ -272,6 +300,7 @@
       "type": "property",
       "districtId": "Penthouses",
       "price": 280,
+      "colorGroup": "DarkBlue",
       "flag": "🥂",
       "landmark": "💎",
       "landmarkName": "Diamond Penthouse"
@@ -282,6 +311,7 @@
       "type": "goToJail",
       "districtId": null,
       "price": null,
+      "colorGroup": null,
       "flag": null
     },
     {
@@ -290,6 +320,7 @@
       "type": "property",
       "districtId": "Scandal Row",
       "price": 300,
+      "colorGroup": "DarkBlue",
       "flag": "🎭",
       "landmark": "🕯️",
       "landmarkName": "Midnight Candle"
@@ -300,6 +331,7 @@
       "type": "property",
       "districtId": "Scandal Row",
       "price": 300,
+      "colorGroup": "DarkBlue",
       "flag": "🎭",
       "landmark": "🎭",
       "landmarkName": "Venetian Mask"
@@ -310,6 +342,7 @@
       "type": "event",
       "districtId": null,
       "price": null,
+      "colorGroup": null,
       "flag": null
     },
     {
@@ -318,6 +351,7 @@
       "type": "property",
       "districtId": "Scandal Row",
       "price": 320,
+      "colorGroup": "DarkBlue",
       "flag": "🎭",
       "landmark": "🌹",
       "landmarkName": "Black Rose"
@@ -328,6 +362,7 @@
       "type": "hub",
       "districtId": null,
       "price": 200,
+      "colorGroup": null,
       "flag": null
     },
     {
@@ -336,6 +371,7 @@
       "type": "event",
       "districtId": null,
       "price": null,
+      "colorGroup": null,
       "flag": null
     },
     {
@@ -344,6 +380,7 @@
       "type": "property",
       "districtId": "Elite Sins",
       "price": 350,
+      "colorGroup": "DarkBlue",
       "flag": "👑",
       "landmark": "🛥️",
       "landmarkName": "Mega Yacht Deck"
@@ -363,6 +400,7 @@
       "type": "property",
       "districtId": "Elite Sins",
       "price": 400,
+      "colorGroup": "DarkBlue",
       "flag": "👑",
       "landmark": "🏝️",
       "landmarkName": "Helipad Island"
