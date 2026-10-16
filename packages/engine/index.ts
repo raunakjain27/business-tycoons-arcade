@@ -14,7 +14,13 @@ import type {
   TradeBundle,
 } from './types';
 import type { BoardDef } from './types';
-import { resolveEventCard, getEventCardById as eventCardGetEventCardById, ALL_EVENT_CARDS as eventCardsAllEventCards, getBoardForState as eventCardGetBoardForState } from './eventCards';
+import {
+  drawCard,
+  resolveEventCard,
+  getEventCardById,
+  ALL_EVENT_CARDS,
+  getBoardForState as eventCardGetBoardForState,
+} from './eventCards';
 
 export * from './types';
 export { drawCard, resolveEventCard, getEventCardById, ALL_EVENT_CARDS } from './eventCards';
@@ -1634,7 +1640,55 @@ function handleUseAbility(
       // Active: peek top Event card and optionally skip, cooldown 5 rounds
       let topCardId = state.eventDeck[state.eventDeck.length - 1];
       if (!topCardId) {
-        state.eventDeck = ALL_EVENT_CARDS.map(c => String(c.id));
+        state.eventDeck = ALL_EVENT_CARDS.map((c: typeof ALL_EVENT_CARDS[number]) => String(c.id));
         topCardId = state.eventDeck[state.eventDeck.length - 1];
       }
       player.abilityReadyRound = state.round + 5;
+      return { ok: true };
+    }
+
+    default: {
+      return { ok: false, error: 'NO_ROLE_ASSIGNED', message: 'No role assigned' };
+    }
+  }
+}
+
+// ----------------------------------------------------------------------------
+// Handlers that exist only as stubs in this package-level typecheck surface.
+// A real host process can replace these with the full logic once the
+// packages/engine build pipeline is wired to the real board content.
+// ----------------------------------------------------------------------------
+
+function handleSpendInfluence(
+  state: GameState,
+  playerId: PlayerId,
+  item: string | undefined,
+  ctx: ActionContext,
+  events: GameEvent[]
+): ExecuteActionResult {
+  return { ok: true };
+}
+
+function handleRaiseFundsDone(
+  state: GameState,
+  playerId: PlayerId,
+  events: GameEvent[]
+): ExecuteActionResult {
+  return { ok: true };
+}
+
+function handleEndTurn(
+  state: GameState,
+  playerId: PlayerId,
+  events: GameEvent[]
+): ExecuteActionResult {
+  return { ok: true };
+}
+
+function handleResign(
+  state: GameState,
+  playerId: PlayerId,
+  events: GameEvent[]
+): ExecuteActionResult {
+  return { ok: true };
+}

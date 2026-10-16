@@ -1,18 +1,15 @@
 import eventsJson from '../../../packages/content/events.json' with { type: 'json' };
-import type { TileDef, DistrictDef, TileId, GameEvent } from '../../../packages/engine/types';
-import type { BoardDef } from '../../../packages/engine/types';
+import type { BoardDef, TileId, DistrictDef, TileDef } from '../../../packages/engine/types';
 
 // ---------------------------------------------------------------------------
-// Board surface for the web app.
-// Event card data is loaded from packages/content/events.json because that is
-// the JSON file the web app can include in its own typecheck program. Board,
-// role, peg, and other engine-only constants stay stubbed here so the web app
-// does not depend on package-source files it does not own in this project.
+// Web-app board surface is intentionally stubbed so apps/web can typecheck
+// without depending on package-source files it does not own. WebView/host code
+// should backfill the real board from packages/content/*.json at runtime.
 // ---------------------------------------------------------------------------
 
 export interface BoardData {
-  tiles: TileDef[];
-  districts: DistrictDef[];
+  tiles: readonly TileDef[];
+  districts: readonly DistrictDef[];
 }
 
 export const BOARD_DATA: BoardData = { tiles: [], districts: [] };
@@ -25,15 +22,10 @@ export function getDistrictDef(tileId: TileId): DistrictDef | undefined {
   return BOARD_DATA.districts.find(d => (d.tileIds as readonly TileId[]).includes(tileId));
 }
 
-export const PLAYER_ROLES = [] as Array<{ key: string; label: string }>;
 export type RoleId = string;
-
-export const PLAYER_COLORS = [] as Array<string>;
-export const AVAILABLE_PEGS = [] as Array<string>;
-
-export const AVAILABLE_BOARDS = [] as Array<{ key: string; name: string }>;
+export const PLAYER_COLORS: readonly string[] = [];
+export const AVAILABLE_PEGS: readonly string[] = [];
 export const BOARD_CURRENCY = 'USD';
-export const INFLUENCE_ITEMS = [] as Array<{ id: string; name: string }>;
 
 export function formatCurrency(amount: number): string {
   return new Intl.NumberFormat('en-US', { style: 'currency', currency: BOARD_CURRENCY }).format(amount);
@@ -58,19 +50,74 @@ export interface EventCardDef {
   // when a real board/event pack is loaded.
 }
 
-export const EVENT_CARDS: EventCardDef[] = (eventsJson as any)?.cards ?? [] as unknown as EventCardDef[];
-
+export const EVENT_CARDS: readonly EventCardDef[] = (eventsJson as any)?.cards ?? [] as unknown as readonly EventCardDef[];
 export function setBoard(key: string) {
   // Placeholder; real board switching is orchestrated by the host runtime.
 }
-
 export function getBoard(key: string = 'default'): BoardDef {
   return {} as BoardDef;
 }
-
 export const DEFAULT_BOARD_KEY = 'default';
 
 export function getEventCardById(id: number | string): EventCardDef | undefined {
   const numericId = typeof id === 'number' ? id : Number(id);
   return EVENT_CARDS.find(c => c.id === numericId);
+}
+
+// ---------------------------------------------------------------------------
+// Typed web surface for UI code that needs concrete board shapes, not the
+// raw engine `TileDef` which drives gameplay logic and is not the runtime
+// shape the web app receives from the host/content bundle.
+// ---------------------------------------------------------------------------
+
+export interface PlayerRole {
+  id: string;
+  name: string;
+  label: string;
+  perk?: string;
+  icon?: string;
+  color?: string;
+  isPremium?: boolean;
+}
+
+export interface AvailableBoard {
+  key: string;
+  name: string;
+}
+
+export interface InfluenceItem {
+  id: string;
+  name: string;
+  cost?: number;
+  desc?: string;
+}
+
+export interface BoardTile {
+  id: TileId;
+  name: string;
+  type: string;
+  price: number;
+  icon?: string;
+  animation?: string;
+  districtId?: string;
+  taxAmount?: number;
+}
+
+export const PLAYER_ROLES: readonly PlayerRole[] = [];
+export const PLAYER_COLORS: readonly string[] = [];
+export const AVAILABLE_PEGS: readonly string[] = [];
+export const AVAILABLE_BOARDS: readonly AvailableBoard[] = [];
+export const INFLUENCE_ITEMS: readonly InfluenceItem[] = [];
+export const BOARD_TILES: readonly BoardTile[] = [];
+
+export function getBoardTile(tileId: TileId): BoardTile | undefined {
+  return BOARD_TILES.find(t => t.id === tileId);
+}
+
+export function getInfluenceItem(id: string): InfluenceItem | undefined {
+  return INFLUENCE_ITEMS.find(i => i.id === id);
+}
+
+export function getAvailableBoardKey(key: string): AvailableBoard | undefined {
+  return AVAILABLE_BOARDS.find(b => b.key === key);
 }
