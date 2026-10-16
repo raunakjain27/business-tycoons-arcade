@@ -448,7 +448,7 @@ export const Board: React.FC<BoardProps> = ({ gameState }) => {
                           {/* Country Flag or 18+ Custom Edit Button */}
                           {gameState.boardKey === 'customfriends' ? (
                             <button
-                              onClick={(e) => {
+                              onClick={(e: React.MouseEvent<HTMLButtonElement>) => {
                                 e.stopPropagation();
                                 setEditingTileId(tile.id);
                                 setEditNameInput(tile.name);
@@ -691,7 +691,7 @@ export const Board: React.FC<BoardProps> = ({ gameState }) => {
               }}
             >
               <div
-                onClick={e => e.stopPropagation()}
+                onClick={(e: React.MouseEvent<HTMLDivElement>) => e.stopPropagation()}
                 style={{
                   width: '280px',
                   backgroundColor: '#1f1938',
@@ -794,7 +794,7 @@ export const Board: React.FC<BoardProps> = ({ gameState }) => {
             }}
           >
             <div
-              onClick={(e) => e.stopPropagation()}
+              onClick={(e: React.MouseEvent<HTMLDivElement>) => e.stopPropagation()}
               style={{
                 width: '320px',
                 backgroundColor: '#1f1938',
@@ -822,7 +822,7 @@ export const Board: React.FC<BoardProps> = ({ gameState }) => {
                 <input
                   type="text"
                   value={editNameInput}
-                  onChange={(e) => setEditNameInput(e.target.value)}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => setEditNameInput(e.target.value)}
                   placeholder="Enter name (e.g. Rachel Green)"
                   autoFocus
                   style={{

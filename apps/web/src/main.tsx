@@ -186,7 +186,7 @@ export function App() {
                 <select
                   value={boardKey}
                   onChange={(e) => {
-                    setBoardKey(e.target.value);
+                    setBoardKey(e.target.value as string);
                     if (!gameState) {
                       initLocalGame(3, 'Player 1', 'Tycoon');
                     }

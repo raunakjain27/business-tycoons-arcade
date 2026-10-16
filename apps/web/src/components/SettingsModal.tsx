@@ -108,7 +108,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose })
           overflow: 'hidden',
           fontFamily: 'system-ui, -apple-system, sans-serif',
         }}
-        onClick={e => e.stopPropagation()}
+        onClick={(e: React.MouseEvent<HTMLDivElement>) => e.stopPropagation()}
       >
         {/* Header / Profile banner matching Richup */}
         <div
@@ -145,7 +145,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose })
                 <input
                   type="text"
                   value={playerName}
-                  onChange={e => setPlayerName(e.target.value)}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => setPlayerName(e.target.value)}
                   placeholder="Enter name"
                   style={{
                     backgroundColor: 'rgba(255,255,255,0.06)',
@@ -184,7 +184,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose })
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
             <select
               value={selectedRole}
-              onChange={e => setSelectedRole(e.target.value as RoleId)}
+              onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setSelectedRole(e.target.value as RoleId)}
               style={{
                 backgroundColor: 'rgba(255, 255, 255, 0.08)',
                 border: '1px solid rgba(255, 255, 255, 0.16)',
@@ -387,7 +387,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose })
                 <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                   <select
                     value={boardKey}
-                    onChange={e => handleSelectBoard(e.target.value)}
+                    onChange={(e: React.ChangeEvent<HTMLSelectElement>) => handleSelectBoard(e.target.value)}
                     style={{
                       backgroundColor: '#261b40',
                       border: '1px solid rgba(255, 255, 255, 0.16)',

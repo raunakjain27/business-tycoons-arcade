@@ -53,7 +53,7 @@ export const CustomFriendsModal: React.FC = () => {
           color: '#f8fafc',
           overflow: 'hidden',
         }}
-        onClick={e => e.stopPropagation()}
+        onClick={(e: React.MouseEvent<HTMLDivElement>) => e.stopPropagation()}
       >
         {/* Header */}
         <div
@@ -119,7 +119,7 @@ export const CustomFriendsModal: React.FC = () => {
                 <input
                   type="text"
                   value={name}
-                  onChange={e => handleNameChange(i, e.target.value)}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleNameChange(i, e.target.value)}
                   placeholder={`Friend ${i + 1}`}
                   style={{
                     backgroundColor: 'rgba(0, 0, 0, 0.35)',

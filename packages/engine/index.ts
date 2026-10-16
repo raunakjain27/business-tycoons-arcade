@@ -18,7 +18,7 @@ import { drawCard, resolveEventCard, getEventCardById } from './eventCards';
 import { getBoard } from '../content/boards';
 
 export * from './types';
-export { drawCard, resolveEventCard, getEventCardById } from './eventCards';
+export { drawCard, resolveEventCard, getEventCardById, ALL_EVENT_CARDS } from './eventCards';
 export { getBoard, BOARDS } from '../content/boards';
 
 export function getBoardForState(state?: GameState): BoardDef {
