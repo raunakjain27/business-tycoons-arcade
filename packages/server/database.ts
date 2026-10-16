@@ -57,10 +57,50 @@ export class ArcadeDatabase {
   private filePath: string;
   private state: DatabaseState;
   private saveTimeout: NodeJS.Timeout | null = null;
+  private supabaseUrl = process.env.SUPABASE_URL || '';
+  private supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_ANON_KEY || '';
 
   constructor() {
     this.filePath = path.resolve(process.cwd(), '.arcade_database.json');
     this.state = this.loadState();
+    if (this.supabaseUrl && this.supabaseKey) {
+      console.log('⚡ Supabase Cloud Persistence detected and active!');
+    }
+  }
+
+  private async syncToSupabase(user: PersistedUser): Promise<void> {
+    if (!this.supabaseUrl || !this.supabaseKey) return;
+    try {
+      await fetch(`${this.supabaseUrl}/rest/v1/anonymous_users`, {
+        method: 'POST',
+        headers: {
+          apikey: this.supabaseKey,
+          Authorization: `Bearer ${this.supabaseKey}`,
+          'Content-Type': 'application/json',
+          Prefer: 'resolution=merge-duplicates',
+        },
+        body: JSON.stringify({
+          session_token_hash: user.sessionTokenHash,
+          handle: user.handle,
+          avatar_id: user.avatarId,
+          is_vip: user.isVip,
+          settings_json: {
+            coins: user.coins,
+            xp: user.xp,
+            level: user.level,
+            dailyStreak: user.dailyStreak,
+            gamesWon: user.gamesWon,
+            unlockedBoards: user.unlockedBoards,
+            unlockedPegs: user.unlockedPegs,
+            friendNames: user.friendNames,
+            trophies: user.trophies,
+          },
+          last_active_at: new Date().toISOString(),
+        }),
+      });
+    } catch (err) {
+      console.warn('[SUPABASE SYNC WARNING]', err);
+    }
   }
 
   private loadState(): DatabaseState {
@@ -177,6 +217,7 @@ export class ArcadeDatabase {
 
     this.state.users[payload.id] = merged;
     this.scheduleSave();
+    this.syncToSupabase(merged).catch(() => {});
     return merged;
   }
 
