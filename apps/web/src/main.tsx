@@ -27,10 +27,14 @@ import { WordGame } from './games/WordGame';
 import { TambolaGame } from './games/TambolaGame';
 import { BingoGame } from './games/BingoGame';
 import { CornerstoneGame } from './games/CornerstoneGame';
+import { HowToPlayModal } from './components/HowToPlayModal';
+import { DailyRewardModal } from './components/DailyRewardModal';
+import { soundFx } from './soundEffects';
 
 
 export function App() {
   const [showSettings, setShowSettings] = React.useState(false);
+  const [isMuted, setIsMuted] = React.useState(() => soundFx.getIsMuted());
   const [showOnboarding, setShowOnboarding] = React.useState(() => {
     try {
       return !localStorage.getItem('cornerstone_onboarded');
@@ -212,6 +216,114 @@ export function App() {
               </span>
             </div>
           )}
+
+          {/* Level & XP & Coins Badge */}
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px',
+              background: 'rgba(255, 255, 255, 0.05)',
+              border: '1px solid rgba(255, 255, 255, 0.1)',
+              borderRadius: '20px',
+              padding: '4px 12px',
+            }}
+          >
+            <span style={{ fontSize: '11px', fontWeight: 800, color: '#a78bfa' }}>
+              Lv.{user.level || 1}
+            </span>
+            <div style={{ width: '42px', height: '6px', borderRadius: '3px', background: 'rgba(255, 255, 255, 0.15)', overflow: 'hidden' }}>
+              <div
+                style={{
+                  width: `${Math.min(100, Math.round(((user.xp || 0) / (user.maxXp || 300)) * 100))}%`,
+                  height: '100%',
+                  background: 'linear-gradient(90deg, #a78bfa, #ec4899)',
+                  borderRadius: '3px',
+                }}
+              />
+            </div>
+            <span style={{ fontSize: '12px', fontWeight: 800, color: '#fbbf24', display: 'flex', alignItems: 'center', gap: '3px' }}>
+              🪙 {user.coins}
+            </span>
+          </div>
+
+          {/* Daily Streak Chest Button */}
+          <button
+            onClick={() => {
+              soundFx.playClick();
+              useUserStore.getState().setShowDailyModal(true);
+            }}
+            style={{
+              padding: '6px 12px',
+              borderRadius: '20px',
+              border: '1.5px solid #f59e0b',
+              background: 'linear-gradient(135deg, rgba(245, 158, 11, 0.25) 0%, rgba(236, 72, 153, 0.25) 100%)',
+              color: '#fbbf24',
+              fontSize: '12px',
+              fontWeight: 800,
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '5px',
+              boxShadow: '0 0 10px rgba(245, 158, 11, 0.3)',
+            }}
+          >
+            <span>🎁</span>
+            <span>Daily</span>
+            {user.lastClaimDate !== new Date().toISOString().slice(0, 10) && (
+              <span style={{ width: '7px', height: '7px', borderRadius: '50%', background: '#ef4444' }} />
+            )}
+          </button>
+
+          {/* How to Play Rules Button */}
+          <button
+            onClick={() => {
+              soundFx.playClick();
+              useUserStore.getState().openRulesModal(activeGame);
+            }}
+            style={{
+              padding: '6px 12px',
+              borderRadius: '20px',
+              border: '1px solid rgba(255, 255, 255, 0.18)',
+              background: 'rgba(255, 255, 255, 0.08)',
+              color: '#cbd5e1',
+              fontSize: '12px',
+              fontWeight: 700,
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '5px',
+            }}
+          >
+            <span>❓</span>
+            <span>Rules</span>
+          </button>
+
+          {/* Sound FX Mute/Unmute Toggle Button */}
+          <button
+            onClick={() => {
+              const next = soundFx.toggleMute();
+              setIsMuted(next);
+              if (!next) soundFx.playClick();
+            }}
+            title={isMuted ? 'Unmute Sound Effects' : 'Mute Sound Effects'}
+            style={{
+              width: '32px',
+              height: '32px',
+              borderRadius: '50%',
+              border: '1px solid rgba(255, 255, 255, 0.2)',
+              background: isMuted ? 'rgba(239, 68, 68, 0.2)' : 'rgba(16, 185, 129, 0.2)',
+              color: '#ffffff',
+              fontSize: '15px',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              boxShadow: isMuted ? 'none' : '0 0 10px rgba(16, 185, 129, 0.3)',
+            }}
+          >
+            {isMuted ? '🔇' : '🔊'}
+          </button>
 
           {/* In-App Store Button */}
           <button
@@ -431,6 +543,12 @@ export function App() {
         )}
       </main>
 
+
+      {/* Universal 1-Minute How to Play Guide Modal */}
+      <HowToPlayModal />
+
+      {/* Daily Streak Chest & Free Coins Modal */}
+      <DailyRewardModal />
 
       {/* Global In-App Store & Customization Modal */}
       <StoreModal />

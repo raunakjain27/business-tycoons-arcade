@@ -240,6 +240,56 @@ class SoundEffectsEngine {
   }
 
   /**
+   * 🪙 Coin Collect
+   */
+  public playCoin() {
+    const ctx = this.getContext();
+    if (!ctx) return;
+
+    const freqs = [1046.5, 1396.91, 2093.0];
+    freqs.forEach((freq, i) => {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(freq, ctx.currentTime + i * 0.06);
+
+      gain.gain.setValueAtTime(0.18, ctx.currentTime + i * 0.06);
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + i * 0.06 + 0.14);
+
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+
+      osc.start(ctx.currentTime + i * 0.06);
+      osc.stop(ctx.currentTime + i * 0.06 + 0.16);
+    });
+  }
+
+  /**
+   * 🖱️ UI Click
+   */
+  public playClick() {
+    const ctx = this.getContext();
+    if (!ctx) return;
+
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+
+    osc.type = 'triangle';
+    osc.frequency.setValueAtTime(800, ctx.currentTime);
+    osc.frequency.exponentialRampToValueAtTime(400, ctx.currentTime + 0.02);
+
+    gain.gain.setValueAtTime(0.1, ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.02);
+
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+
+    osc.start(ctx.currentTime);
+    osc.stop(ctx.currentTime + 0.03);
+  }
+
+  /**
    * 🎉 Victory Fanfare (legacy alias kept for Store / celebration integrations)
    */
   public playFanfare(): void {

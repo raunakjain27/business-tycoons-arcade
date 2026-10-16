@@ -299,17 +299,17 @@ export const ActionPanel: React.FC<ActionPanelProps> = ({ gameState }) => {
   return (
     <div
       style={{
-        background: 'rgba(255, 255, 255, 0.9)',
-        backdropFilter: 'blur(12px)',
-        borderRadius: '16px',
-        border: '1px solid #e2e8f0',
-        padding: '20px',
+        background: 'linear-gradient(145deg, rgba(26, 22, 37, 0.95) 0%, rgba(15, 11, 26, 0.95) 100%)',
+        backdropFilter: 'blur(16px) saturate(180%)',
+        borderRadius: '20px',
+        border: '1px solid rgba(255, 255, 255, 0.12)',
+        padding: '22px',
         display: 'flex',
         flexDirection: 'column',
         gap: '16px',
         width: '100%',
         minHeight: '360px',
-        boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1)',
+        boxShadow: '0 20px 40px -15px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.1)',
       }}
     >
       {/* Turn Header Banner */}

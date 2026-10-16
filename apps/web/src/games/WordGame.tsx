@@ -54,17 +54,17 @@ export const WordGame: React.FC = () => {
   };
 
   useEffect(() => {
-    const interval = useRef<ReturnType<typeof setInterval> | null>(null);
+    let timer: any = null;
     if (isPlaying && timerSec > 0) {
-      interval.current = setInterval(() => {
+      timer = setInterval(() => {
         setTimerSec((prev) => prev - 1);
       }, 1000);
     } else if (timerSec === 0 && isPlaying) {
       submitRound();
     }
     return () => {
-      if (interval.current) {
-        clearInterval(interval.current);
+      if (timer) {
+        clearInterval(timer);
       }
     };
   }, [isPlaying, timerSec]);

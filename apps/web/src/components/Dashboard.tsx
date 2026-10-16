@@ -638,26 +638,47 @@ export const Dashboard: React.FC = () => {
                 </div>
               </div>
 
-              {/* Primary action */}
+              {/* Primary action & Quick Rules */}
               <div
                 style={{
                   marginTop: '12px',
                   display: 'flex',
                   alignItems: 'center',
-                  gap: '6px',
+                  gap: '8px',
                 }}
               >
+                <button
+                  onClick={(e: React.MouseEvent) => {
+                    e.stopPropagation();
+                    useUserStore.getState().openRulesModal(game.id);
+                  }}
+                  style={{
+                    padding: '5px 10px',
+                    borderRadius: '8px',
+                    border: '1px solid rgba(255, 255, 255, 0.15)',
+                    background: 'rgba(255, 255, 255, 0.05)',
+                    color: '#94a3b8',
+                    fontSize: '11px',
+                    fontWeight: 700,
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '4px',
+                  }}
+                >
+                  ❓ Rules
+                </button>
                 <span
                   style={{
                     flex: 1,
+                    textAlign: 'right',
                     fontSize: '13px',
                     fontWeight: 800,
                     color: isCurrent ? '#f472b6' : '#e2e8f0',
                   }}
                 >
-                  {isCurrent ? 'Continue Playing' : 'Play Game'}
+                  {isCurrent ? 'Continue Playing' : 'Play Now'} →
                 </span>
-                <span style={{ color: '#c084fc', fontSize: '14px' }}>→</span>
               </div>
             </div>
           );

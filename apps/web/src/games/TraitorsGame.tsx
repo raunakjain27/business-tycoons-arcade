@@ -145,17 +145,17 @@ export const TraitorsGame: React.FC = () => {
 
   // Countdown clock for Roundtable speaking turn
   useEffect(() => {
-    const timer = useRef<IntervalId | null>(null);
+    let timer: any = null;
     if (phase === 'roundtable' && speechTimer > 0) {
-      timer.current = setInterval(() => {
+      timer = setInterval(() => {
         setSpeechTimer((prev) => prev - 1);
       }, 1000);
     } else if (phase === 'roundtable' && speechTimer === 0) {
       passSpeakingTurn();
     }
     return () => {
-      if (timer.current) {
-        clearInterval(timer.current);
+      if (timer) {
+        clearInterval(timer);
       }
     };
   }, [phase, speechTimer, roundtableSpeakerIdx]);

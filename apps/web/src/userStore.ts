@@ -17,6 +17,9 @@ export interface UserAccount {
   dailyStreak: number;
   lastClaimDate?: string;
   gamesWon: number;
+  level: number;
+  xp: number;
+  maxXp: number;
 }
 
 const STORAGE_KEY = 'cornerstone_user_account';
@@ -33,6 +36,9 @@ function loadInitialUser(): UserAccount {
         activeCelebration: 'confetti',
         dailyStreak: 1,
         gamesWon: 0,
+        level: 1,
+        xp: 120,
+        maxXp: 300,
         ...parsed,
       };
     }
@@ -54,6 +60,9 @@ function loadInitialUser(): UserAccount {
     activeCelebration: 'confetti',
     dailyStreak: 1,
     gamesWon: 12,
+    level: 1,
+    xp: 120,
+    maxXp: 300,
     friendNames: [
       'Rohan', 'Sneha', 'Kabir', 'Ananya', 'Aarav',
       'Pooja', 'Vikram', 'Tara', 'Aditya', 'Neha',
@@ -68,14 +77,21 @@ export interface UserStoreState {
   showAccountModal: boolean;
   showCustomFriendsModal: boolean;
   showStoreModal: boolean;
+  showDailyModal: boolean;
+  showRulesModal: boolean;
+  rulesGameId: string;
   setShowAccountModal: (show: boolean) => void;
   setShowCustomFriendsModal: (show: boolean) => void;
   setShowStoreModal: (show: boolean) => void;
+  setShowDailyModal: (show: boolean) => void;
+  openRulesModal: (gameId?: string) => void;
+  closeRulesModal: () => void;
   updateUsername: (name: string) => void;
   updateAvatar: (avatar: string) => void;
   updateFriendNames: (names: string[]) => void;
   upgradeToVip: () => void;
   addCoins: (amount: number) => void;
+  addXp: (amount: number) => { leveledUp: boolean; newLevel: number };
   claimDailyReward: () => { success: boolean; reward: number; streak: number };
   unlockItem: (type: 'board' | 'peg' | 'sound' | 'celebration', id: string, cost: number) => boolean;
   setActiveSoundPack: (id: string) => void;
@@ -88,10 +104,36 @@ export const useUserStore = create<UserStoreState>((set, get) => ({
   showAccountModal: false,
   showCustomFriendsModal: false,
   showStoreModal: false,
+  showDailyModal: false,
+  showRulesModal: false,
+  rulesGameId: 'cornerstone',
 
   setShowAccountModal: (show: boolean) => set({ showAccountModal: show }),
   setShowCustomFriendsModal: (show: boolean) => set({ showCustomFriendsModal: show }),
   setShowStoreModal: (show: boolean) => set({ showStoreModal: show }),
+  setShowDailyModal: (show: boolean) => set({ showDailyModal: show }),
+  openRulesModal: (gameId?: string) => set({ showRulesModal: true, rulesGameId: gameId || 'cornerstone' }),
+  closeRulesModal: () => set({ showRulesModal: false }),
+
+  addXp: (amount: number) => {
+    const { user } = get();
+    let currentXp = user.xp + amount;
+    let currentLevel = user.level;
+    let currentMaxXp = user.maxXp;
+    let leveledUp = false;
+
+    while (currentXp >= currentMaxXp) {
+      currentXp -= currentMaxXp;
+      currentLevel += 1;
+      currentMaxXp = Math.round(currentMaxXp * 1.35);
+      leveledUp = true;
+    }
+
+    const updated = { ...user, xp: currentXp, level: currentLevel, maxXp: currentMaxXp };
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
+    set({ user: updated });
+    return { leveledUp, newLevel: currentLevel };
+  },
 
   updateUsername: (name: string) => {
     const user = { ...get().user, username: name };
@@ -118,7 +160,8 @@ export const useUserStore = create<UserStoreState>((set, get) => ({
   },
 
   recordGameWin: () => {
-    const user = { ...get().user, gamesWon: (get().user.gamesWon || 0) + 1, coins: get().user.coins + 50 };
+    get().addXp(150);
+    const user = { ...get().user, gamesWon: (get().user.gamesWon || 0) + 1, coins: get().user.coins + 100 };
     localStorage.setItem(STORAGE_KEY, JSON.stringify(user));
     set({ user });
   },
