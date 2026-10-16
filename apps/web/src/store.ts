@@ -92,7 +92,10 @@ const emptyLocalRoomState: RoomState = {
 export const useGameStore = create<GameStoreState>((set, get) => ({
   gameMode: 'local',
   serverUrl:
-    import.meta.env.VITE_SERVER_URL || 'wss://tycoons-arcade-server.onrender.com',
+    import.meta.env.VITE_SERVER_URL ||
+    (typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
+      ? 'ws://localhost:2567'
+      : 'wss://tycoons-arcade-server.onrender.com'),
 
   boardKey: 'default',
   roomCode: null,
