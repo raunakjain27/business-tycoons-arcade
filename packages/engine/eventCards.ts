@@ -10,17 +10,16 @@ import type {
 } from './types';
 import { computeRent, countOwned } from './index';
 import eventsData from '../content/events.json' with { type: 'json' };
+import boardDefault from '../content/board.json' with { type: 'json' };
+import { BOARDS as ALL_BOARDS, getBoard as contentGetBoard } from '../content/boards';
 
-export const BOARD: BoardDef = {} as BoardDef;
+export const BOARD: BoardDef = boardDefault as BoardDef;
 const eventsDataLocal = eventsData as { cards: EventCardDef[] };
 export const ALL_EVENT_CARDS: EventCardDef[] = eventsDataLocal.cards;
 
 export function getBoardForState(state?: GameState): BoardDef {
   const key = (state as any)?.boardKey ?? 'default';
-  if (key === 'default') {
-    return BOARD;
-  }
-  return {} as BoardDef;
+  return contentGetBoard(key) || BOARD;
 }
 
 export interface EventCardDef {

@@ -34,6 +34,7 @@ import { VictoryCelebrationModal } from './components/VictoryCelebrationModal';
 import { LeaderboardModal } from './components/LeaderboardModal';
 import { useTrophyStore } from './trophyStore';
 import { soundFx } from './soundEffects';
+import { GameErrorBoundary } from './components/GameErrorBoundary';
 
 
 export function App() {
@@ -547,29 +548,31 @@ export function App() {
           boxSizing: 'border-box',
         }}
       >
-        {view === 'dashboard' ? (
-          <Dashboard />
-        ) : activeGame === 'uno' ? (
-          <UnoGame />
-        ) : activeGame === 'ludo' ? (
-          <LudoGame />
-        ) : activeGame === 'snakes' ? (
-          <SnakesLaddersGame />
-        ) : activeGame === 'imposter' ? (
-          <ImposterGame />
-        ) : activeGame === 'traitors' ? (
-          <TraitorsGame />
-        ) : activeGame === 'sequence' ? (
-          <SequenceGame />
-        ) : activeGame === 'wordgame' ? (
-          <WordGame />
-        ) : activeGame === 'tambola' ? (
-          <TambolaGame />
-        ) : activeGame === 'bingo' ? (
-          <BingoGame />
-        ) : (
-          <CornerstoneGame />
-        )}
+        <GameErrorBoundary>
+          {view === 'dashboard' ? (
+            <Dashboard />
+          ) : activeGame === 'uno' ? (
+            <UnoGame />
+          ) : activeGame === 'ludo' ? (
+            <LudoGame />
+          ) : activeGame === 'snakes' ? (
+            <SnakesLaddersGame />
+          ) : activeGame === 'imposter' ? (
+            <ImposterGame />
+          ) : activeGame === 'traitors' ? (
+            <TraitorsGame />
+          ) : activeGame === 'sequence' ? (
+            <SequenceGame />
+          ) : activeGame === 'wordgame' ? (
+            <WordGame />
+          ) : activeGame === 'tambola' ? (
+            <TambolaGame />
+          ) : activeGame === 'bingo' ? (
+            <BingoGame />
+          ) : (
+            <CornerstoneGame />
+          )}
+        </GameErrorBoundary>
       </main>
 
 

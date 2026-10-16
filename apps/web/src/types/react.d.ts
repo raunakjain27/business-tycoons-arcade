@@ -75,6 +75,16 @@ declare module 'react' {
 
 export { KeyboardEvent, TransitionEvent, PointerEvent, TouchEvent, WheelEvent };
 
+  export class Component<P = {}, S = {}> {
+    props: P;
+    state: S;
+    setState(state: Partial<S> | ((prevState: S, props: P) => Partial<S>), callback?: () => void): void;
+    render(): any;
+  }
+  export interface ErrorInfo {
+    componentStack?: string;
+  }
+
   const React: {
     StrictMode: any;
     useState: typeof useState;
@@ -82,6 +92,7 @@ export { KeyboardEvent, TransitionEvent, PointerEvent, TouchEvent, WheelEvent };
     useRef: typeof useRef;
     useMemo: typeof useMemo;
     useCallback: typeof useCallback;
+    Component: typeof Component;
     createElement: any;
   };
   export default React;

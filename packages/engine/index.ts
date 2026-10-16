@@ -25,29 +25,23 @@ import {
 export * from './types';
 export { drawCard, resolveEventCard, getEventCardById, ALL_EVENT_CARDS } from './eventCards';
 
-export const BOARDS: Record<string, BoardDef> = {} as Record<string, BoardDef>;
-export const BOARD: BoardDef = {} as BoardDef;
+import boardDefault from '../content/board.json' with { type: 'json' };
+import { BOARDS as ALL_BOARDS, getBoard as contentGetBoard } from '../content/boards';
+
+export const BOARD: BoardDef = boardDefault as BoardDef;
+export const BOARDS: Record<string, BoardDef> = ALL_BOARDS;
 
 export function setActiveBoard(key: string): BoardDef {
-  // Runtime host is responsible for loading the real board for `key`.
-  // This package-level stub keeps the engine package self-contained so the
-  // web app can typecheck it without pulling in packages/content/boards.
-  return BOARD;
+  return getBoard(key);
 }
 
-export function getBoard(key: string): BoardDef {
-  // Kept as a named export so existing call sites that import { getBoard }
-  // from the engine package still compile. The real board source lives in the
-  // host/build tooling, not in this package's web-typecheck program.
-  return BOARD;
+export function getBoard(key: string = 'default'): BoardDef {
+  return contentGetBoard(key) || BOARD;
 }
 
 export function getBoardForState(state?: GameState): BoardDef {
   const key = state?.boardKey ?? 'default';
-  if (key === 'default') {
-    return BOARD;
-  }
-  return BOARD;
+  return getBoard(key);
 }
 
 // Forward any callers that imported this from the engine package root.
@@ -1653,11 +1647,80 @@ function handleUseAbility(
   }
 }
 
-// ----------------------------------------------------------------------------
-// Handlers that exist only as stubs in this package-level typecheck surface.
-// A real host process can replace these with the full logic once the
-// packages/engine build pipeline is wired to the real board content.
-// ----------------------------------------------------------------------------
+function advanceTurn(state: GameState, events: GameEvent[]): void {
+  const activePlayers = state.turnOrder.filter(id => state.players[id].status === 'active');
+  if (activePlayers.length <= 1) {
+    state.phase = 'gameOver';
+    events.push({
+      type: 'game_over',
+      winnerId: activePlayers[0] ?? null,
+    });
+    return;
+  }
+
+  const currentIndex = state.turnOrder.indexOf(state.turnPlayerId);
+  let nextIndex = (currentIndex + 1) % state.turnOrder.length;
+  let wrapped = nextIndex <= currentIndex;
+
+  while (state.players[state.turnOrder[nextIndex]].status !== 'active') {
+    nextIndex = (nextIndex + 1) % state.turnOrder.length;
+    if (nextIndex <= currentIndex) {
+      wrapped = true;
+    }
+  }
+
+  if (wrapped) {
+    state.round += 1;
+    if (state.rules.marketCycle && state.round % 4 === 0) {
+      state.market.current = { kind: state.market.forecast.kind, roundsLeft: 4 };
+      const kinds: MarketKind[] = ['steady', 'boom', 'crash', 'creditSurge', 'creditFreeze'];
+      const nextKind = kinds[Math.floor(Math.random() * kinds.length)];
+      state.market.forecast = { kind: nextKind };
+      events.push({
+        type: 'market_cycle',
+        current: state.market.current.kind,
+        forecast: state.market.forecast.kind,
+      });
+    }
+  }
+
+  const nextPlayerId = state.turnOrder[nextIndex];
+  state.turnPlayerId = nextPlayerId;
+  const nextPlayer = state.players[nextPlayerId];
+
+  nextPlayer.doublesStreak = 0;
+
+  if (nextPlayer.pendingLoan && state.round >= nextPlayer.pendingLoan.dueRound) {
+    nextPlayer.cash -= nextPlayer.pendingLoan.amount;
+    events.push({
+      type: 'loan_repaid',
+      playerId: nextPlayerId,
+      amount: nextPlayer.pendingLoan.amount,
+    });
+    nextPlayer.pendingLoan = null;
+    if (nextPlayer.cash < 0) {
+      state.phase = 'awaitDebtSettlement';
+      state.pendingDebt = {
+        debtorId: nextPlayerId,
+        creditorId: 'bank',
+        amount: Math.abs(nextPlayer.cash),
+      };
+      return;
+    }
+  }
+
+  if (nextPlayer.inJail) {
+    state.phase = 'awaitJailChoice';
+  } else {
+    state.phase = 'awaitRoll';
+  }
+
+  events.push({
+    type: 'turn_started',
+    playerId: nextPlayerId,
+    round: state.round,
+  });
+}
 
 function handleSpendInfluence(
   state: GameState,
@@ -1666,7 +1729,49 @@ function handleSpendInfluence(
   ctx: ActionContext,
   events: GameEvent[]
 ): ExecuteActionResult {
-  return { ok: true };
+  const player = state.players[playerId];
+  if (!player) return { ok: false, error: 'PLAYER_INACTIVE' };
+
+  switch (item) {
+    case 'lawyer': {
+      if (player.influence < 2) return { ok: false, error: 'INFLUENCE_INSUFFICIENT', message: 'Lawyer requires 2 influence' };
+      if (!player.inJail) return { ok: false, error: 'ILLEGAL_MOVE', message: 'Player is not in jail' };
+      player.influence -= 2;
+      player.inJail = false;
+      player.jailTurns = 0;
+      state.phase = 'awaitRoll';
+      events.push({ type: 'influence_spent', playerId, item: 'lawyer', cost: 2 });
+      return { ok: true };
+    }
+    case 'waiver': {
+      if (player.influence < 1) return { ok: false, error: 'INFLUENCE_INSUFFICIENT', message: 'Waiver requires 1 influence' };
+      player.influence -= 1;
+      (player as any).hasRentWaiver = true;
+      events.push({ type: 'influence_spent', playerId, item: 'waiver', cost: 1 });
+      return { ok: true };
+    }
+    case 'rezone': {
+      if (player.influence < 2) return { ok: false, error: 'INFLUENCE_INSUFFICIENT', message: 'Rezone requires 2 influence' };
+      player.influence -= 2;
+      (player as any).hasRezone = true;
+      events.push({ type: 'influence_spent', playerId, item: 'rezone', cost: 2 });
+      return { ok: true };
+    }
+    case 'lobby': {
+      if (player.influence < 3) return { ok: false, error: 'INFLUENCE_INSUFFICIENT', message: 'Lobby requires 3 influence' };
+      player.influence -= 3;
+      state.market.forecast = { kind: 'boom' };
+      events.push({ type: 'influence_spent', playerId, item: 'lobby', cost: 3 });
+      return { ok: true };
+    }
+    default:
+      if (player.influence >= 1) {
+        player.influence -= 1;
+        events.push({ type: 'influence_spent', playerId, item: item ?? 'generic', cost: 1 });
+        return { ok: true };
+      }
+      return { ok: false, error: 'INFLUENCE_INSUFFICIENT', message: 'Not enough influence' };
+  }
 }
 
 function handleRaiseFundsDone(
@@ -1674,6 +1779,59 @@ function handleRaiseFundsDone(
   playerId: PlayerId,
   events: GameEvent[]
 ): ExecuteActionResult {
+  const player = state.players[playerId];
+  if (!player) return { ok: false, error: 'PLAYER_INACTIVE' };
+
+  if (player.cash >= 0) {
+    state.pendingDebt = null;
+    state.phase = 'awaitEndTurn';
+    return { ok: true };
+  }
+
+  // Player goes bankrupt
+  player.status = 'bankrupt';
+  const creditorId = state.pendingDebt?.creditorId;
+
+  if (creditorId && creditorId !== 'bank' && state.players[creditorId]) {
+    for (const [tidStr, tile] of Object.entries(state.tiles)) {
+      if (tile.ownerId === playerId) {
+        tile.ownerId = creditorId;
+      }
+    }
+    state.players[creditorId].heldCards.push(...player.heldCards);
+    player.heldCards = [];
+    state.players[creditorId].influence += player.influence;
+    player.influence = 0;
+  } else {
+    for (const [tidStr, tile] of Object.entries(state.tiles)) {
+      if (tile.ownerId === playerId) {
+        tile.ownerId = null;
+        tile.tier = 0;
+        tile.mortgaged = false;
+      }
+    }
+    player.heldCards = [];
+    player.influence = 0;
+  }
+
+  state.pendingDebt = null;
+  events.push({
+    type: 'bankrupt',
+    playerId,
+    creditorId: creditorId ?? 'bank',
+  });
+
+  const activePlayers = state.turnOrder.filter(id => state.players[id].status === 'active');
+  if (activePlayers.length <= 1) {
+    state.phase = 'gameOver';
+    events.push({
+      type: 'game_over',
+      winnerId: activePlayers[0] ?? null,
+    });
+    return { ok: true };
+  }
+
+  advanceTurn(state, events);
   return { ok: true };
 }
 
@@ -1682,6 +1840,14 @@ function handleEndTurn(
   playerId: PlayerId,
   events: GameEvent[]
 ): ExecuteActionResult {
+  if (state.phase !== 'awaitEndTurn') {
+    return { ok: false, error: 'WRONG_PHASE', message: 'Cannot end turn now' };
+  }
+  if (state.pendingDebt !== null && state.players[playerId].cash < 0) {
+    return { ok: false, error: 'BANKRUPTCY', message: 'You must resolve your debt before ending turn' };
+  }
+
+  advanceTurn(state, events);
   return { ok: true };
 }
 
@@ -1690,5 +1856,40 @@ function handleResign(
   playerId: PlayerId,
   events: GameEvent[]
 ): ExecuteActionResult {
+  const player = state.players[playerId];
+  if (!player || player.status !== 'active') {
+    return { ok: false, error: 'PLAYER_INACTIVE', message: 'Player is not active' };
+  }
+
+  player.status = 'bankrupt';
+  for (const [tidStr, tile] of Object.entries(state.tiles)) {
+    if (tile.ownerId === playerId) {
+      tile.ownerId = null;
+      tile.tier = 0;
+      tile.mortgaged = false;
+    }
+  }
+  player.heldCards = [];
+  player.influence = 0;
+
+  events.push({
+    type: 'player_resigned',
+    playerId,
+  });
+
+  const activePlayers = state.turnOrder.filter(id => state.players[id].status === 'active');
+  if (activePlayers.length <= 1) {
+    state.phase = 'gameOver';
+    events.push({
+      type: 'game_over',
+      winnerId: activePlayers[0] ?? null,
+    });
+    return { ok: true };
+  }
+
+  if (state.turnPlayerId === playerId) {
+    advanceTurn(state, events);
+  }
+
   return { ok: true };
 }
