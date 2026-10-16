@@ -26,6 +26,8 @@ import { SequenceGame } from './games/SequenceGame';
 import { WordGame } from './games/WordGame';
 import { TambolaGame } from './games/TambolaGame';
 import { BingoGame } from './games/BingoGame';
+import { CornerstoneGame } from './games/CornerstoneGame';
+
 
 export function App() {
   const [showSettings, setShowSettings] = React.useState(false);
@@ -425,54 +427,10 @@ export function App() {
         ) : activeGame === 'bingo' ? (
           <BingoGame />
         ) : (
-          /* Cornerstone Game */
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '20px', width: '100%' }}>
-            {gameState ? (
-              <>
-                {/* Top Row: Board (Left) + Action Panel (Right) */}
-                <div
-                  style={{
-                    display: 'flex',
-                    flexDirection: 'row',
-                    gap: '20px',
-                    alignItems: 'flex-start',
-                    flexWrap: 'wrap',
-                  }}
-                >
-                  {/* Board */}
-                  <div style={{ flex: '1 1 540px', minWidth: 0, display: 'flex', justifyContent: 'center' }}>
-                    <div style={{ width: '100%', maxWidth: '860px' }}>
-                      <Board gameState={gameState} />
-                    </div>
-                  </div>
-
-                  {/* Action Panel */}
-                  <div style={{ flex: '0 1 340px', minWidth: 0, width: '100%' }}>
-                    <ActionPanel gameState={gameState} />
-                  </div>
-                </div>
-
-                {/* Middle Row: Player Dashboard */}
-                <div>
-                  <PlayerDashboard gameState={gameState} />
-                </div>
-
-                {/* Bottom Row: Game Log */}
-                <div>
-                  <GameLog events={gameState.log} />
-                </div>
-
-                {/* Modals & Overlays */}
-                <Modals gameState={gameState} />
-              </>
-            ) : (
-              <div style={{ maxWidth: '500px', margin: '60px auto', width: '100%' }}>
-                <ActionPanel gameState={null} />
-              </div>
-            )}
-          </div>
+          <CornerstoneGame />
         )}
       </main>
+
 
       {/* Global In-App Store & Customization Modal */}
       <StoreModal />

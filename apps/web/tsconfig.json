@@ -1,11 +1,11 @@
 {
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
-    "rootDir": "./src",
     "noEmit": true,
     "jsx": "react-jsx",
     "lib": ["ES2022", "DOM", "DOM.Iterable"],
     "types": ["vite/client"]
-  },    "include": ["src/**/*.ts", "src/**/*.tsx", "../../packages/content/**/*.json", "../../packages/engine/**/*.ts", "../../packages/engine/**/*.json", "../../packages/engine/*.test.ts", "../../packages/engine/integration_test.ts"],
+  },
+  "include": ["src/**/*.ts", "src/**/*.tsx", "../../packages/content/**/*.json", "../../packages/engine/**/*.ts", "../../packages/engine/**/*.json", "../../packages/engine/*.test.ts", "../../packages/engine/integration_test.ts"],
   "exclude": ["node_modules", "dist"]
 }

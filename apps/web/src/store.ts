@@ -80,6 +80,15 @@ export interface GameStoreState {
   resetRooms: () => void;
 }
 
+const emptyLocalRoomState: RoomState = {
+  roomCode: 'local',
+  players: [],
+  allowBots: true,
+  gameId: 'local',
+  gameTitle: 'Local Game',
+  isGameStarted: false,
+};
+
 export const useGameStore = create<GameStoreState>((set, get) => ({
   gameMode: 'local',
   serverUrl:
@@ -97,6 +106,18 @@ export const useGameStore = create<GameStoreState>((set, get) => ({
   isConnecting: false,
   errorMessage: null,
   auctionTimeLeft: null,
+
+  rooms: { local: emptyLocalRoomState },
+  getOrCreateRoom: (gameId: string, hostName: string, maxPlayers: number, minPlayers: number) => ({
+    roomCode: gameId,
+    players: [],
+    allowBots: true,
+    gameId,
+    gameTitle: hostName,
+    isGameStarted: false,
+  }),
+  addPlayer: (gameId: string, name: string, isBot: boolean) => {},
+  resetRooms: () => set({ rooms: {} }),
 
   setGameMode: (mode: GameMode) => set({ gameMode: mode }),
   setServerUrl: (url: string) => set({ serverUrl: url }),
@@ -161,7 +182,7 @@ export const useGameStore = create<GameStoreState>((set, get) => ({
       gameState: state,
       errorMessage: null,
       selectedTile: null,
-      rooms: { 'local': roomState },
+      rooms: { local: roomState },
       getOrCreateRoom: () => roomState,
       addPlayer: () => {},
       resetRooms: () => set({ rooms: {} }),

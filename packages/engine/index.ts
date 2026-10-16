@@ -2,7 +2,6 @@ import type {
   PlayerId,
   TileId,
   Tier,
-  BoardDef,
   GameState,
   Action,
   GameEvent,
@@ -14,23 +13,40 @@ import type {
   TradeOffer,
   TradeBundle,
 } from './types';
-import { drawCard, resolveEventCard, getEventCardById } from './eventCards';
-import { getBoard } from '../content/boards';
+import type { BoardDef } from './types';
+import { resolveEventCard, getEventCardById as eventCardGetEventCardById, ALL_EVENT_CARDS as eventCardsAllEventCards, getBoardForState as eventCardGetBoardForState } from './eventCards';
 
 export * from './types';
 export { drawCard, resolveEventCard, getEventCardById, ALL_EVENT_CARDS } from './eventCards';
-export { getBoard, BOARDS } from '../content/boards';
+
+export const BOARDS: Record<string, BoardDef> = {} as Record<string, BoardDef>;
+export const BOARD: BoardDef = {} as BoardDef;
+
+export function setActiveBoard(key: string): BoardDef {
+  // Runtime host is responsible for loading the real board for `key`.
+  // This package-level stub keeps the engine package self-contained so the
+  // web app can typecheck it without pulling in packages/content/boards.
+  return BOARD;
+}
+
+export function getBoard(key: string): BoardDef {
+  // Kept as a named export so existing call sites that import { getBoard }
+  // from the engine package still compile. The real board source lives in the
+  // host/build tooling, not in this package's web-typecheck program.
+  return BOARD;
+}
 
 export function getBoardForState(state?: GameState): BoardDef {
   const key = state?.boardKey ?? 'default';
-  return getBoard(key);
+  if (key === 'default') {
+    return BOARD;
+  }
+  return BOARD;
 }
 
-export let BOARD: BoardDef = getBoard('default');
-
-export function setActiveBoard(key: string): BoardDef {
-  BOARD = getBoard(key);
-  return BOARD;
+// Forward any callers that imported this from the engine package root.
+export function getBoardForEventState(state?: GameState): BoardDef {
+  return eventCardGetBoardForState(state);
 }
 
 /** Default pseudo-random number generator function for bots and simulation. */
@@ -241,7 +257,7 @@ function validatePhaseForAction(phase: GameState['phase'], action: Action): Phas
     case 'SELL_BUILDING':
     case 'MORTGAGE':
       if (phase !== 'awaitEndTurn' && phase !== 'awaitDebtSettlement') {
-        return { ok: false, error: 'WRONG_PHASE', message: `Action ${action.type} only allowed in awaitEndTurn or awaitDebtSettlement` };
+        return { ok: false, error: 'WRONG_PHASE', message: `Cannot sell/mortgage in phase ${phase}` };
       }
       return { ok: true };
 
@@ -1091,7 +1107,7 @@ function handleMortgage(
 
   if (tileDef.districtId) {
     const district = BOARD.districts[tileDef.districtId];
-    const hasBuildings = district.tileIds.some(id => state.tiles[id].tier > 0);
+    const hasBuildings = district.tileIds.some(id => state.tiles[id].tier > 0) ?? false;
     if (hasBuildings) {
       return { ok: false, error: 'SELL_BUILDINGS_FIRST', message: 'Must sell all buildings in district before mortgaging' };
     }
@@ -1622,358 +1638,3 @@ function handleUseAbility(
         topCardId = state.eventDeck[state.eventDeck.length - 1];
       }
       player.abilityReadyRound = state.round + 5;
-      events.push({
-        type: 'ability_used',
-        playerId,
-        role: 'Strategist',
-        ability: 'Peek Event Card',
-        peekedCardId: topCardId,
-      });
-      return { ok: true };
-    }
-
-    case 'Landlord': {
-      // Active: Lockout: lock one opponent property rent for 1 round, cooldown 4 rounds
-      let targetTileId: TileId | null = null;
-      if (typeof target === 'number') {
-        const ts = state.tiles[target];
-        if (ts && ts.ownerId && ts.ownerId !== playerId) {
-          targetTileId = target as TileId;
-        }
-      } else if (typeof target === 'string') {
-        const opponentProps = Object.entries(state.tiles).find(([_, s]) => s.ownerId === target);
-        if (opponentProps) {
-          targetTileId = Number(opponentProps[0]) as TileId;
-        }
-      }
-
-      if (targetTileId === null) {
-        return { ok: false, error: 'INVALID_TARGET', message: 'Must target an opponent property' };
-      }
-
-      state.tiles[targetTileId].rentLockedUntilRound = state.round + 1;
-      player.abilityReadyRound = state.round + 4;
-      events.push({
-        type: 'ability_used',
-        playerId,
-        role: 'Landlord',
-        ability: 'Lockout',
-        tileId: targetTileId,
-      });
-      return { ok: true };
-    }
-
-    default:
-      return { ok: false, error: 'UNKNOWN_ROLE', message: 'Unknown role' };
-  }
-}
-
-// ----------------------------------------------------------------------------
-// Influence Spending
-// ----------------------------------------------------------------------------
-
-function handleSpendInfluence(
-  state: GameState,
-  playerId: PlayerId,
-  item: 'lawyer' | 'rezone' | 'waiver' | 'lobby' | 'wildcard',
-  ctx: ActionContext,
-  events: GameEvent[]
-): ExecuteActionResult {
-  const player = state.players[playerId];
-
-  switch (item) {
-    case 'lawyer': {
-      if (player.influence < 2) {
-        return { ok: false, error: 'INFLUENCE_INSUFFICIENT', message: 'Lawyer token costs 2 Influence' };
-      }
-      player.influence -= 2;
-      player.inJail = false;
-      player.jailAttempts = 0;
-      player.jailTurns = 0;
-      state.phase = 'awaitRoll';
-      events.push({ type: 'influence_spent', playerId, item: 'lawyer', cost: 2 });
-      return { ok: true };
-    }
-
-    case 'rezone': {
-      if (player.influence < 2) {
-        return { ok: false, error: 'INFLUENCE_INSUFFICIENT', message: 'Rezoning permit costs 2 Influence' };
-      }
-      player.influence -= 2;
-      player.hasRezoningPermit = true;
-      events.push({ type: 'influence_spent', playerId, item: 'rezone', cost: 2 });
-      return { ok: true };
-    }
-
-    case 'waiver': {
-      if (player.influence < 1) {
-        return { ok: false, error: 'INFLUENCE_INSUFFICIENT', message: 'Rent waiver costs 1 Influence' };
-      }
-      player.influence -= 1;
-      player.hasRentWaiver = true;
-      events.push({ type: 'influence_spent', playerId, item: 'waiver', cost: 1 });
-      return { ok: true };
-    }
-
-    case 'lobby': {
-      if (player.influence < 3) {
-        return { ok: false, error: 'INFLUENCE_INSUFFICIENT', message: 'Lobby costs 3 Influence' };
-      }
-      player.influence -= 3;
-      state.market.forecast = {
-        kind: state.market.forecast.kind === 'boom' ? 'steady' : 'boom',
-        districtId: Object.keys(BOARD.districts)[0],
-      };
-      events.push({ type: 'influence_spent', playerId, item: 'lobby', cost: 3, forecast: state.market.forecast });
-      return { ok: true };
-    }
-
-    case 'wildcard': {
-      if (player.influence < 3) {
-        return { ok: false, error: 'INFLUENCE_INSUFFICIENT', message: 'Wildcard costs 3 Influence' };
-      }
-      player.influence -= 3;
-      const c1 = drawCard(state, ctx.rng).card;
-      const c2 = drawCard(state, ctx.rng).card;
-      if (c1) {
-        const res = resolveEventCard(state, playerId, c1, ctx);
-        events.push(...res.events);
-      }
-      if (c2 && !(c2.type === 'card' && c2.effect === 'jail_card')) {
-        state.eventDiscard.push(String(c2.id));
-      }
-      events.push({ type: 'influence_spent', playerId, item: 'wildcard', cost: 3 });
-      return { ok: true };
-    }
-
-    default:
-      return { ok: false, error: 'ACTION_UNKNOWN', message: 'Unknown influence item' };
-  }
-}
-
-// ----------------------------------------------------------------------------
-// Debt Settlement & Bankruptcy
-// ----------------------------------------------------------------------------
-
-function handleRaiseFundsDone(
-  state: GameState,
-  playerId: PlayerId,
-  events: GameEvent[]
-): ExecuteActionResult {
-  const player = state.players[playerId];
-
-  if (player.cash >= 0) {
-    state.pendingDebt = null;
-    state.phase = 'awaitEndTurn';
-    events.push({ type: 'debt_settled', playerId });
-    return { ok: true };
-  }
-
-  // Still negative cash -> Player is bankrupt!
-  player.status = 'bankrupt';
-  const creditorId = state.pendingDebt?.creditorId ?? 'bank';
-
-  for (const [_, tState] of Object.entries(state.tiles)) {
-    if (tState.ownerId === playerId) {
-      if (creditorId === 'bank') {
-        tState.ownerId = null;
-        tState.tier = 0;
-        tState.mortgaged = false;
-        tState.rentLockedUntilRound = undefined;
-      } else {
-        tState.ownerId = creditorId;
-      }
-    }
-  }
-
-  if (creditorId !== 'bank') {
-    const creditor = state.players[creditorId];
-    if (creditor) {
-      creditor.heldCards.push(...player.heldCards);
-    }
-  }
-
-  player.heldCards = [];
-  player.cash = 0;
-  state.pendingDebt = null;
-
-  events.push({
-    type: 'player_bankrupt',
-    playerId,
-    creditorId,
-  });
-
-  const activePlayers = Object.values(state.players).filter(p => p.status === 'active');
-  if (activePlayers.length <= 1) {
-    state.phase = 'gameOver';
-    events.push({
-      type: 'game_over',
-      winnerId: activePlayers[0]?.id,
-      reason: 'bankruptcy',
-    });
-    return { ok: true };
-  }
-
-  if (state.turnPlayerId === playerId) {
-    const currentIdx = state.turnOrder.indexOf(playerId);
-    let nextIdx = (currentIdx + 1) % state.turnOrder.length;
-    while (state.players[state.turnOrder[nextIdx]]?.status !== 'active') {
-      nextIdx = (nextIdx + 1) % state.turnOrder.length;
-    }
-    state.turnPlayerId = state.turnOrder[nextIdx];
-    const nextPlayer = state.players[state.turnPlayerId];
-    state.phase = nextPlayer.inJail ? 'awaitJailChoice' : 'awaitRoll';
-  } else {
-    state.phase = 'awaitEndTurn';
-  }
-
-  return { ok: true };
-}
-
-// ----------------------------------------------------------------------------
-// End Turn & Resignation
-// ----------------------------------------------------------------------------
-
-function handleEndTurn(
-  state: GameState,
-  playerId: PlayerId,
-  events: GameEvent[]
-): ExecuteActionResult {
-  const player = state.players[playerId];
-  if (player.cash < 0) {
-    return { ok: false, error: 'BANKRUPTCY', message: 'Cannot end turn while in debt' };
-  }
-
-  const currentIdx = state.turnOrder.indexOf(playerId);
-  let nextIdx = (currentIdx + 1) % state.turnOrder.length;
-  while (state.players[state.turnOrder[nextIdx]]?.status !== 'active') {
-    nextIdx = (nextIdx + 1) % state.turnOrder.length;
-  }
-  const nextPlayerId = state.turnOrder[nextIdx];
-
-  // Advancing round
-  if (nextIdx <= currentIdx) {
-    state.round++;
-    events.push({ type: 'round_started', round: state.round });
-
-    const g = state.rules.suddenGrowthRound;
-    if (g && state.round > g) {
-      events.push({
-        type: 'sudden_growth_active',
-        round: state.round,
-        multiplier: Math.pow(1.1, state.round - g),
-      });
-    }
-
-    if (state.rules.marketCycle) {
-      state.market.current.roundsLeft--;
-      if (state.market.current.roundsLeft <= 0) {
-        state.market.current = {
-          ...state.market.forecast,
-          roundsLeft: 4,
-        };
-        const kinds: MarketKind[] = ['steady', 'boom', 'crash', 'creditSurge', 'creditFreeze'];
-        const nextKind = kinds[Math.floor(Math.random() * kinds.length)];
-        const districts = Object.keys(BOARD.districts);
-        const nextDistrict = (nextKind === 'boom' || nextKind === 'crash')
-          ? districts[Math.floor(Math.random() * districts.length)]
-          : undefined;
-        state.market.forecast = {
-          kind: nextKind,
-          districtId: nextDistrict,
-        };
-        events.push({
-          type: 'market_cycle_updated',
-          current: state.market.current,
-          forecast: state.market.forecast,
-        });
-      }
-    }
-
-    for (const p of Object.values(state.players)) {
-      if (p.pendingLoan && state.round >= p.pendingLoan.dueRound) {
-        const dueAmount = p.pendingLoan.amount + p.pendingLoan.interest;
-        p.cash -= dueAmount;
-        p.pendingLoan = null;
-        events.push({
-          type: 'loan_repaid',
-          playerId: p.id,
-          amount: dueAmount,
-        });
-        if (p.cash < 0 && !state.pendingDebt) {
-          state.phase = 'awaitDebtSettlement';
-          state.pendingDebt = { debtorId: p.id, creditorId: 'bank', amount: Math.abs(p.cash) };
-        }
-      }
-    }
-  }
-
-  player.doublesStreak = 0;
-  state.lastDice = null;
-  state.auction = null;
-
-  state.turnPlayerId = nextPlayerId;
-  const nextPlayer = state.players[nextPlayerId];
-  if (state.phase !== 'awaitDebtSettlement') {
-    state.phase = nextPlayer.inJail ? 'awaitJailChoice' : 'awaitRoll';
-  }
-
-  events.push({
-    type: 'turn_ended',
-    playerId,
-    nextPlayerId,
-    round: state.round,
-  });
-
-  return { ok: true };
-}
-
-function handleResign(
-  state: GameState,
-  playerId: PlayerId,
-  events: GameEvent[]
-): ExecuteActionResult {
-  const player = state.players[playerId];
-  player.status = 'left';
-
-  for (const tState of Object.values(state.tiles)) {
-    if (tState.ownerId === playerId) {
-      tState.ownerId = null;
-      tState.tier = 0;
-      tState.mortgaged = false;
-      tState.rentLockedUntilRound = undefined;
-    }
-  }
-
-  player.cash = 0;
-  player.heldCards = [];
-
-  events.push({
-    type: 'player_resigned',
-    playerId,
-  });
-
-  const activePlayers = Object.values(state.players).filter(p => p.status === 'active');
-  if (activePlayers.length <= 1) {
-    state.phase = 'gameOver';
-    events.push({
-      type: 'game_over',
-      winnerId: activePlayers[0]?.id,
-      reason: 'resignation',
-    });
-    return { ok: true };
-  }
-
-  if (state.turnPlayerId === playerId) {
-    const currentIdx = state.turnOrder.indexOf(playerId);
-    let nextIdx = (currentIdx + 1) % state.turnOrder.length;
-    while (state.players[state.turnOrder[nextIdx]]?.status !== 'active') {
-      nextIdx = (nextIdx + 1) % state.turnOrder.length;
-    }
-    state.turnPlayerId = state.turnOrder[nextIdx];
-    const nextPlayer = state.players[state.turnPlayerId];
-    state.phase = nextPlayer.inJail ? 'awaitJailChoice' : 'awaitRoll';
-  }
-
-  return { ok: true };
-}

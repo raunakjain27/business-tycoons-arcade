@@ -56,7 +56,7 @@ export const Dashboard: React.FC = () => {
     setJoinError('');
 
     const rooms = useGameRoomStore.getState().rooms;
-    let foundGame: GameId = 'tambola';
+    let foundGame: GameId | null = null;
     for (const [gid, r] of Object.entries(rooms)) {
       if (r.roomCode === trimmed) {
         foundGame = gid as GameId;
@@ -64,11 +64,15 @@ export const Dashboard: React.FC = () => {
       }
     }
 
-    const targetRoom = useGameRoomStore.getState().getOrCreateRoom(foundGame, 'Host');
+    // Default to Business Tycoons if entering a general room code
+    const gameToJoin: GameId = foundGame || 'cornerstone';
+
+    const targetRoom = useGameRoomStore.getState().getOrCreateRoom(gameToJoin, 'Host');
     targetRoom.roomCode = trimmed;
-    useGameRoomStore.getState().addPlayer(foundGame, user.username || 'Friend', false);
-    setActiveGame(foundGame);
+    useGameRoomStore.getState().addPlayer(gameToJoin, user.username || 'Friend', false);
+    setActiveGame(gameToJoin);
   };
+
 
   return (
     <div
