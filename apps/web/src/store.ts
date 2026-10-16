@@ -83,10 +83,8 @@ export interface GameStoreState {
 export const useGameStore = create<GameStoreState>((set, get) => ({
   gameMode: 'local',
   serverUrl:
-    import.meta.env.VITE_SERVER_URL ||
-    (typeof window !== 'undefined' && window.location.hostname !== 'localhost'
-      ? 'wss://tycoons-arcade-server.onrender.com'
-      : 'ws://localhost:2567'),
+    import.meta.env.VITE_SERVER_URL || 'wss://tycoons-arcade-server.onrender.com',
+
   boardKey: 'default',
   roomCode: null,
   myPlayerId: 'p1',

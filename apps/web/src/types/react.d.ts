@@ -46,12 +46,34 @@ declare module 'react' {
     stopPropagation: () => void;
     preventDefault: () => void;
   }
+  export interface MouseEvent<T = any> {
+    stopPropagation: () => void;
+    preventDefault: () => void;
+  }
   export interface KeyboardEvent<T = any> {
     key: string;
     stopPropagation: () => void;
     preventDefault: () => void;
   }
   export type FormEvent<T = any> = any;
+  export interface TransitionEvent<T = any> {
+    stopPropagation: () => void;
+    preventDefault: () => void;
+  }
+  export interface PointerEvent<T = any> {
+    stopPropagation: () => void;
+    preventDefault: () => void;
+  }
+  export interface TouchEvent<T = any> {
+    stopPropagation: () => void;
+    preventDefault: () => void;
+  }
+  export interface WheelEvent<T = any> {
+    stopPropagation: () => void;
+    preventDefault: () => void;
+  }
+
+  export { KeyboardEvent, FormEvent, TransitionEvent, PointerEvent, TouchEvent, WheelEvent };
 
   const React: {
     StrictMode: any;
