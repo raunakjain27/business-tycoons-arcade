@@ -20,6 +20,9 @@ export const CornerstoneGame: React.FC = () => {
     roomCode,
     initLocalGame,
     connectOnline,
+    myPlayerId,
+    dispatchAction,
+    turnTimerRemaining,
   } = useGameStore();
 
   const room = getOrCreateRoom('cornerstone', 'You (Tycoon 👑)', 8, 2);
@@ -153,6 +156,116 @@ export const CornerstoneGame: React.FC = () => {
 
       {/* Modals & Overlays */}
       {gameState && <Modals gameState={gameState} />}
+
+      {/* Mobile Sticky Turn Action Bar (Only on mobile when active turn) */}
+      {gameState && gameState.turnPlayerId === myPlayerId && gameState.phase !== 'gameOver' && (
+        <div
+          className="mobile-sticky-action-bar"
+          style={{
+            position: 'fixed',
+            bottom: 'env(safe-area-inset-bottom, 12px)',
+            left: '12px',
+            right: '12px',
+            backgroundColor: 'rgba(22, 17, 39, 0.96)',
+            backdropFilter: 'blur(16px)',
+            border: '1.5px solid #a78bfa',
+            borderRadius: '16px',
+            padding: '10px 14px',
+            boxShadow: '0 10px 30px rgba(0,0,0,0.85), 0 0 20px rgba(124, 58, 237, 0.4)',
+            zIndex: 90,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            gap: '10px',
+          }}
+        >
+          {gameState.phase === 'awaitRoll' && (
+            <button
+              onClick={() => dispatchAction({ type: 'ROLL' })}
+              style={{
+                width: '100%',
+                padding: '13px',
+                borderRadius: '12px',
+                border: 'none',
+                background: 'linear-gradient(135deg, #7c3aed 0%, #ec4899 100%)',
+                color: '#ffffff',
+                fontSize: '15px',
+                fontWeight: 900,
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '8px',
+                boxShadow: '0 4px 15px rgba(236,72,153,0.4)',
+              }}
+            >
+              <span>🎲</span>
+              <span>ROLL DICE</span>
+              {turnTimerRemaining !== null && (
+                <span style={{ fontSize: '12px', opacity: 0.85, fontWeight: 700 }}>
+                  ({turnTimerRemaining}s)
+                </span>
+              )}
+            </button>
+          )}
+
+          {gameState.phase === 'awaitBuyDecision' && (
+            <div style={{ display: 'flex', gap: '8px', width: '100%', alignItems: 'center' }}>
+              <button
+                onClick={() => dispatchAction({ type: 'BUY' })}
+                style={{
+                  flex: 1,
+                  padding: '12px',
+                  borderRadius: '10px',
+                  border: 'none',
+                  backgroundColor: '#10b981',
+                  color: '#ffffff',
+                  fontSize: '13px',
+                  fontWeight: 800,
+                  cursor: 'pointer',
+                }}
+              >
+                Buy Property
+              </button>
+              <button
+                onClick={() => dispatchAction({ type: 'DECLINE_BUY' })}
+                style={{
+                  flex: 1,
+                  padding: '12px',
+                  borderRadius: '10px',
+                  border: '1px solid rgba(255,255,255,0.2)',
+                  backgroundColor: 'rgba(239, 68, 68, 0.25)',
+                  color: '#fca5a5',
+                  fontSize: '13px',
+                  fontWeight: 800,
+                  cursor: 'pointer',
+                }}
+              >
+                Auction
+              </button>
+            </div>
+          )}
+
+          {gameState.phase === 'awaitEndTurn' && (
+            <button
+              onClick={() => dispatchAction({ type: 'END_TURN' })}
+              style={{
+                width: '100%',
+                padding: '13px',
+                borderRadius: '12px',
+                border: 'none',
+                backgroundColor: '#3b82f6',
+                color: '#ffffff',
+                fontSize: '14px',
+                fontWeight: 800,
+                cursor: 'pointer',
+              }}
+            >
+              End Turn ⏩
+            </button>
+          )}
+        </div>
+      )}
     </div>
   );
 };

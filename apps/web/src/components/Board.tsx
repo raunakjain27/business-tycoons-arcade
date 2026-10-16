@@ -77,39 +77,53 @@ export const Board: React.FC<BoardProps> = ({ gameState }) => {
         }
         @media (max-width: 640px) {
           .board-responsive-container {
-            padding: 4px !important;
+            padding: 3px !important;
             gap: 1px !important;
-            grid-template-columns: minmax(36px, 1.4fr) repeat(9, minmax(20px, 1fr)) minmax(36px, 1.4fr) !important;
-            grid-template-rows: minmax(36px, 1.4fr) repeat(9, minmax(20px, 1fr)) minmax(36px, 1.4fr) !important;
+            grid-template-columns: minmax(34px, 1fr) repeat(9, minmax(18px, 1fr)) minmax(34px, 1fr) !important;
+            grid-template-rows: minmax(34px, 1fr) repeat(9, minmax(18px, 1fr)) minmax(34px, 1fr) !important;
+            aspect-ratio: 1 / 1 !important;
+            width: 100% !important;
+            max-width: 100vw !important;
+            box-sizing: border-box !important;
           }
           .board-responsive-container .animated-landmark {
             font-size: 10px !important;
           }
+          .tile-city-name, .tile-label-name, .tile-flag-badge {
+            display: none !important;
+          }
+          .tile-price-pill {
+            font-size: 6.5px !important;
+            padding: 0 1px !important;
+          }
           .board-center-console {
-            padding: 6px 4px !important;
+            padding: 4px 3px !important;
           }
           .board-event-log {
-            min-height: 60px !important;
-            max-height: 100px !important;
-            padding: 4px 6px !important;
+            min-height: 48px !important;
+            max-height: 80px !important;
+            padding: 3px 5px !important;
+            font-size: 9px !important;
           }
         }
         @media (max-width: 420px) {
           .board-responsive-container {
             padding: 2px !important;
             gap: 1px !important;
-            grid-template-columns: minmax(30px, 1.3fr) repeat(9, minmax(17px, 1fr)) minmax(30px, 1.3fr) !important;
-            grid-template-rows: minmax(30px, 1.3fr) repeat(9, minmax(17px, 1fr)) minmax(30px, 1.3fr) !important;
+            grid-template-columns: minmax(28px, 1fr) repeat(9, minmax(15px, 1fr)) minmax(28px, 1fr) !important;
+            grid-template-rows: minmax(28px, 1fr) repeat(9, minmax(15px, 1fr)) minmax(28px, 1fr) !important;
           }
           .board-responsive-container .animated-landmark {
             font-size: 8px !important;
           }
+          .tile-price-pill {
+            font-size: 5.5px !important;
+          }
           .board-center-console {
-            padding: 4px 2px !important;
+            padding: 2px !important;
           }
           .board-event-log {
-            min-height: 50px !important;
-            max-height: 80px !important;
+            display: none !important;
           }
         }
       `}</style>
@@ -336,6 +350,7 @@ export const Board: React.FC<BoardProps> = ({ gameState }) => {
                     <div style={{ width: '100%', display: 'flex', justifyContent: 'center' }}>
                       {tile.price ? (
                         <span
+                          className="tile-price-pill"
                           style={{
                             fontSize: '8.5px',
                             fontWeight: 700,
@@ -349,11 +364,11 @@ export const Board: React.FC<BoardProps> = ({ gameState }) => {
                           {formatCurrency(tile.price, gameState.boardKey)}
                         </span>
                       ) : tile.type === 'tax' ? (
-                        <span style={{ fontSize: '7.5px', color: '#94a3b8', fontWeight: 700, whiteSpace: 'nowrap' }}>
+                        <span className="tile-label-name" style={{ fontSize: '7.5px', color: '#94a3b8', fontWeight: 700, whiteSpace: 'nowrap' }}>
                           {tile.name}
                         </span>
                       ) : (
-                        <span style={{ fontSize: '8px', fontWeight: 700, color: '#c084fc', whiteSpace: 'nowrap' }}>
+                        <span className="tile-label-name" style={{ fontSize: '8px', fontWeight: 700, color: '#c084fc', whiteSpace: 'nowrap' }}>
                           {tile.name}
                         </span>
                       )}
@@ -374,7 +389,7 @@ export const Board: React.FC<BoardProps> = ({ gameState }) => {
                       {tile.type === 'hub' && (
                         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
                           <span style={{ fontSize: '16px' }}>✈️</span>
-                          <span style={{ fontSize: '8px', fontWeight: 700, color: '#94a3b8', textAlign: 'center', whiteSpace: 'normal', lineHeight: 1.1 }}>
+                          <span className="tile-label-name" style={{ fontSize: '8px', fontWeight: 700, color: '#94a3b8', textAlign: 'center', whiteSpace: 'normal', lineHeight: 1.1 }}>
                             {tile.name}
                           </span>
                         </div>
@@ -386,7 +401,7 @@ export const Board: React.FC<BoardProps> = ({ gameState }) => {
                           <span style={{ fontSize: '16px' }}>
                             {tile.name.includes('Water') ? '💧' : '⚡'}
                           </span>
-                          <span style={{ fontSize: '7.5px', fontWeight: 700, color: '#94a3b8', textAlign: 'center', whiteSpace: 'normal', lineHeight: 1.1 }}>
+                          <span className="tile-label-name" style={{ fontSize: '7.5px', fontWeight: 700, color: '#94a3b8', textAlign: 'center', whiteSpace: 'normal', lineHeight: 1.1 }}>
                             {tile.name}
                           </span>
                         </div>
@@ -452,6 +467,7 @@ export const Board: React.FC<BoardProps> = ({ gameState }) => {
 
                           {/* City Name - 2 lines wrapped cleanly so it never clips */}
                           <span
+                            className="tile-city-name"
                             style={{
                               fontSize: tile.name.length > 11 ? '8px' : '8.5px',
                               fontWeight: 700,

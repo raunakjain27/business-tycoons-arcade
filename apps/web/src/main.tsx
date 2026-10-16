@@ -39,6 +39,7 @@ import { GameErrorBoundary } from './components/GameErrorBoundary';
 
 export function App() {
   const [showSettings, setShowSettings] = React.useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = React.useState(false);
   const [isMuted, setIsMuted] = React.useState(() => soundFx.getIsMuted());
   const [showOnboarding, setShowOnboarding] = React.useState(() => {
     try {
@@ -116,7 +117,7 @@ export function App() {
           zIndex: 50,
         }}
       >
-        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+        <div className="desktop-header-brand" style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
           <div
             onClick={() => setView('dashboard')}
             style={{
@@ -147,8 +148,95 @@ export function App() {
           </div>
         </div>
 
+        {/* Mobile Header Bar (Only visible on screens <= 768px) */}
+        <div className="mobile-header-bar" style={{ display: 'none', width: '100%', justifyContent: 'space-between', alignItems: 'center' }}>
+          <div onClick={() => setView('dashboard')} style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
+            <div
+              style={{
+                width: '30px',
+                height: '30px',
+                borderRadius: '8px',
+                background: 'linear-gradient(135deg, #f472b6 0%, #a78bfa 100%)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                fontWeight: 900,
+                fontSize: '14px',
+                color: '#ffffff',
+              }}
+            >
+              BT
+            </div>
+            <div>
+              <div style={{ fontSize: '14px', fontWeight: 900, color: '#f8fafc', lineHeight: 1.1 }}>TYCOONS ARCADE</div>
+              <div style={{ fontSize: '9px', color: '#a78bfa' }}>
+                {view === 'dashboard' ? '🕹️ Arcade Hub' : activeGame.toUpperCase()}
+              </div>
+            </div>
+          </div>
+
+          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+            {/* Coins Badge */}
+            <div
+              onClick={() => useUserStore.getState().setShowStoreModal(true)}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '3px',
+                background: 'rgba(251, 191, 36, 0.15)',
+                border: '1px solid rgba(251, 191, 36, 0.35)',
+                padding: '3px 8px',
+                borderRadius: '12px',
+                fontSize: '11px',
+                fontWeight: 800,
+                color: '#fbbf24',
+                cursor: 'pointer',
+              }}
+            >
+              <span>🪙</span>
+              <span>{user.coins || 1500}</span>
+            </div>
+
+            {/* Profile Avatar */}
+            <button
+              onClick={() => setShowAccountModal(true)}
+              style={{
+                padding: '4px 7px',
+                borderRadius: '12px',
+                border: user.isVip ? '1.5px solid #f59e0b' : '1px solid rgba(255, 255, 255, 0.2)',
+                backgroundColor: 'rgba(255, 255, 255, 0.08)',
+                color: '#ffffff',
+                fontSize: '14px',
+                cursor: 'pointer',
+              }}
+            >
+              {user.avatar || '👑'}
+            </button>
+
+            {/* Mobile Hamburger Menu Button */}
+            <button
+              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              style={{
+                padding: '5px 10px',
+                borderRadius: '8px',
+                border: '1px solid rgba(255, 255, 255, 0.2)',
+                background: mobileMenuOpen ? '#7c3aed' : 'rgba(255, 255, 255, 0.08)',
+                color: '#ffffff',
+                fontSize: '13px',
+                fontWeight: 800,
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '4px',
+              }}
+            >
+              {mobileMenuOpen ? '✕' : '☰'}
+            </button>
+          </div>
+        </div>
+
         {/* Global Controls & Status */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
+        <div className="desktop-header-controls" style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
           {/* Dashboard / Arcade Hub Toggle Button */}
           <button
             onClick={() => setView(view === 'dashboard' ? 'game' : 'dashboard')}
@@ -483,6 +571,161 @@ export function App() {
             </>
           )}
         </div>
+
+        {/* Mobile Menu Drawer (Toggled by hamburger on mobile) */}
+        {mobileMenuOpen && (
+          <div
+            className="mobile-menu-drawer"
+            style={{
+              width: '100%',
+              marginTop: '10px',
+              padding: '14px',
+              backgroundColor: 'rgba(22, 17, 39, 0.98)',
+              border: '1px solid rgba(255, 255, 255, 0.12)',
+              borderRadius: '14px',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '10px',
+              boxShadow: '0 10px 25px rgba(0,0,0,0.5)',
+            }}
+          >
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <span style={{ fontSize: '11px', fontWeight: 800, color: '#a78bfa', textTransform: 'uppercase' }}>
+                Game Options & Controls
+              </span>
+              <button
+                onClick={() => {
+                  const muted = soundFx.toggleMute();
+                  setIsMuted(muted);
+                }}
+                style={{
+                  padding: '4px 10px',
+                  borderRadius: '12px',
+                  background: isMuted ? 'rgba(239, 68, 68, 0.2)' : 'rgba(16, 185, 129, 0.2)',
+                  border: isMuted ? '1px solid #ef4444' : '1px solid #10b981',
+                  color: '#fff',
+                  fontSize: '11px',
+                  cursor: 'pointer',
+                  fontWeight: 700,
+                }}
+              >
+                {isMuted ? '🔇 Audio Muted' : '🔊 Audio On'}
+              </button>
+            </div>
+
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
+              <button
+                onClick={() => {
+                  setView(view === 'dashboard' ? 'game' : 'dashboard');
+                  setMobileMenuOpen(false);
+                }}
+                style={{
+                  padding: '9px',
+                  borderRadius: '10px',
+                  background: 'linear-gradient(135deg, #7c3aed 0%, #ec4899 100%)',
+                  color: '#fff',
+                  fontSize: '12px',
+                  fontWeight: 700,
+                  cursor: 'pointer',
+                }}
+              >
+                {view === 'dashboard' ? '▶ Return to Game' : '🎮 Arcade Hub'}
+              </button>
+
+              <button
+                onClick={() => {
+                  setShowSettings(true);
+                  setMobileMenuOpen(false);
+                }}
+                style={{
+                  padding: '9px',
+                  borderRadius: '10px',
+                  background: 'rgba(255,255,255,0.08)',
+                  border: '1px solid rgba(255,255,255,0.15)',
+                  color: '#fff',
+                  fontSize: '12px',
+                  fontWeight: 700,
+                  cursor: 'pointer',
+                }}
+              >
+                ⚙️ Match Settings
+              </button>
+            </div>
+
+            {view === 'game' && activeGame === 'cornerstone' && (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', borderTop: '1px solid rgba(255,255,255,0.08)', paddingTop: '10px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <span style={{ fontSize: '12px', color: '#cbd5e1' }}>Select Board Map:</span>
+                  <select
+                    value={boardKey}
+                    onChange={(e: React.ChangeEvent<HTMLSelectElement>) => {
+                      setBoardKey(e.target.value as string);
+                      if (!gameState) {
+                        initLocalGame(3, 'Player 1', 'Tycoon');
+                      }
+                      setMobileMenuOpen(false);
+                    }}
+                    style={{
+                      padding: '4px 8px',
+                      borderRadius: '6px',
+                      backgroundColor: '#0f3460',
+                      color: '#ffffff',
+                      border: '1px solid #243356',
+                      fontSize: '11px',
+                    }}
+                  >
+                    {AVAILABLE_BOARDS.map((b) => (
+                      <option key={b} value={b}>
+                        {b.toUpperCase()}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
+                  <button
+                    onClick={() => {
+                      disconnect();
+                      useGameStore.setState({ gameState: null, gameMode: 'online' });
+                      setMobileMenuOpen(false);
+                    }}
+                    style={{
+                      padding: '8px',
+                      borderRadius: '8px',
+                      background: 'rgba(56, 189, 248, 0.2)',
+                      border: '1px solid #38bdf8',
+                      color: '#38bdf8',
+                      fontSize: '11px',
+                      fontWeight: 700,
+                      cursor: 'pointer',
+                    }}
+                  >
+                    🌐 Online Room
+                  </button>
+
+                  <button
+                    onClick={() => {
+                      initLocalGame(4, user.username || 'Player 1', 'Tycoon');
+                      setMobileMenuOpen(false);
+                    }}
+                    style={{
+                      padding: '8px',
+                      borderRadius: '8px',
+                      background: 'rgba(233, 69, 96, 0.25)',
+                      border: '1px solid #e94560',
+                      color: '#ff8a9e',
+                      fontSize: '11px',
+                      fontWeight: 700,
+                      cursor: 'pointer',
+                    }}
+                  >
+                    🔄 Restart Match
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
       </header>
 
       {/* Settings & Player Configuration Modal */}

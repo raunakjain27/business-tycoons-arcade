@@ -35,6 +35,7 @@ export const ActionPanel: React.FC<ActionPanelProps> = ({ gameState }) => {
   const [botCount, setBotCount] = useState(2);
   const [turnTimerSec, setTurnTimerSec] = useState(30);
   const [onlineRoomInput, setOnlineRoomInput] = useState('game');
+  const [isMobile, setIsMobile] = useState(navigator.maxTouchPoints > 1 || window.innerWidth < 768);
 
   // Custom bid input
   const [customBid, setCustomBid] = useState('');
@@ -51,7 +52,7 @@ export const ActionPanel: React.FC<ActionPanelProps> = ({ gameState }) => {
           display: 'flex',
           flexDirection: 'column',
           gap: '16px',
-          width: '100%',
+          width: isMobile ? '100%' : '500px',
           boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1)',
         }}
       >
@@ -246,18 +247,18 @@ export const ActionPanel: React.FC<ActionPanelProps> = ({ gameState }) => {
             transition: 'transform 0.1s, background-color 0.2s',
           }}
         >
-          {isConnecting ? 'Connecting to Colyseus...' : gameMode === 'local' ? 'Start Local Match' : 'Join / Create Room'}
+         {isConnecting ? 'Connecting to Colyseus...' : gameMode === 'local' ? 'Start Local Match' : 'Join / Create Room'}
         </button>
 
         {errorMessage && (
           <div
             style={{
-              padding: '10px 14px',
+              padding: isMobile ? '8px 12px' : '10px 14px',
               backgroundColor: '#451a1a',
               border: '1px solid #ef4444',
-              borderRadius: '6px',
+              borderRadius: isMobile ? '6px' : '6px',
               color: '#fca5a5',
-              fontSize: '12px',
+              fontSize: '11px',
             }}
           >
             {errorMessage}
@@ -274,26 +275,26 @@ export const ActionPanel: React.FC<ActionPanelProps> = ({ gameState }) => {
 
   // Helper button styling
   const primaryButtonStyle: React.CSSProperties = {
-    padding: '12px 20px',
+    padding: isMobile ? '10px 16px' : '12px 20px',
     borderRadius: '8px',
     border: 'none',
     background: 'linear-gradient(135deg, #f472b6 0%, #a78bfa 100%)',
     color: '#ffffff',
     fontWeight: 700,
-    fontSize: '14px',
+    fontSize: isMobile ? '12px' : '14px',
     cursor: 'pointer',
     boxShadow: '0 4px 12px rgba(167, 139, 250, 0.35)',
     transition: 'transform 0.1s',
   };
 
   const secondaryButtonStyle: React.CSSProperties = {
-    padding: '10px 16px',
+    padding: isMobile ? '8px 12px' : '10px 16px',
     borderRadius: '8px',
     background: 'rgba(31, 26, 48, 0.9)',
     color: '#cbd5e1',
     border: '1px solid rgba(255, 255, 255, 0.12)',
     fontWeight: 600,
-    fontSize: '13px',
+    fontSize: isMobile ? '11px' : '13px',
     cursor: 'pointer',
   };
 
@@ -304,12 +305,12 @@ export const ActionPanel: React.FC<ActionPanelProps> = ({ gameState }) => {
         backdropFilter: 'blur(16px) saturate(180%)',
         borderRadius: '20px',
         border: '1px solid rgba(255, 255, 255, 0.12)',
-        padding: '22px',
+        padding: isMobile ? '16px' : '22px',
         display: 'flex',
-        flexDirection: 'column',
-        gap: '16px',
-        width: '100%',
-        minHeight: '360px',
+        flexDirection: isMobile ? 'column' : 'column',
+        gap: isMobile ? '12px' : '16px',
+        width: isMobile ? '100%' : '500px',
+        minHeight: isMobile ? '280px' : '360px',
         boxShadow: '0 20px 40px -15px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.1)',
       }}
     >

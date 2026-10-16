@@ -9,7 +9,7 @@ interface PlayerDashboardProps {
 
 export const PlayerDashboard: React.FC<PlayerDashboardProps> = ({ gameState }) => {
   const { myPlayerId } = useGameStore();
-
+  const isMobile = navigator.maxTouchPoints > 1 || window.innerWidth < 768;
   // Find owned tiles per player
   const tilesByOwner: Record<string, TileId[]> = {};
   for (const [idStr, tState] of Object.entries(gameState.tiles) as [string, TileState][]) {
@@ -21,12 +21,12 @@ export const PlayerDashboard: React.FC<PlayerDashboardProps> = ({ gameState }) =
 
   return (
     <div
+      className="player-dashboard-grid"
       style={{
-        display: 'grid',
-        gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
-        gap: '12px',
-        width: '100%',
-      }}
+        display: 'grid',          gridTemplateColumns: 'repeat(auto-fit, minmax(isMobile ? 160px : 220px, 1fr))',
+            gap: isMobile ? '8px' : '12px',
+            width: '100%',
+          }}
     >
       {gameState.turnOrder.map((pId: string, idx: number) => {
         const player = gameState.players[pId];
@@ -36,6 +36,7 @@ export const PlayerDashboard: React.FC<PlayerDashboardProps> = ({ gameState }) =
         const isMe = myPlayerId === pId;
         const isBankrupt = player.status === 'bankrupt';
         const playerColor = PLAYER_COLORS[idx % PLAYER_COLORS.length] ?? '#3b82f6';
+    const isCompact = isMobile ? 'compact' : '';
         const ownedTiles = tilesByOwner[pId] ?? [];
 
         return (
@@ -49,13 +50,13 @@ export const PlayerDashboard: React.FC<PlayerDashboardProps> = ({ gameState }) =
                 ? '2px solid #a78bfa'
                 : '1px solid rgba(255, 255, 255, 0.08)',
               borderRadius: '12px',
-              padding: '14px',
+              padding: isMobile ? '10px' : '14px',
               display: 'flex',
               flexDirection: 'column',
-              gap: '10px',
-              boxShadow: isCurrentTurn ? `0 8px 24px -4px ${playerColor}40, 0 4px 8px -2px rgba(0,0,0,0.5)` : '0 4px 6px -1px rgba(0,0,0,0.3)',
+              gap: isMobile ? '8px' : '10px',
+              boxShadow: isCurrentTurn ? `0 6px 16px -2px ${playerColor}40, 0 2px 4px -1px rgba(0,0,0,0.5)` : '0 3px 4px -1px rgba(0,0,0,0.3)',
               opacity: isBankrupt ? 0.45 : 1,
-              transition: 'all 0.3s ease',
+              transition: 'all 0.2s ease',
               position: 'relative',
               overflow: 'hidden',
               backdropFilter: 'blur(12px)',
@@ -146,18 +147,18 @@ export const PlayerDashboard: React.FC<PlayerDashboardProps> = ({ gameState }) =
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
-                    gap: '6px',
-                    padding: '5px 0',
-                    backgroundColor: low ? 'rgba(239, 68, 68, 0.15)' : 'rgba(34, 197, 94, 0.12)',
-                    borderRadius: '8px',
-                    border: low ? '1px solid rgba(239, 68, 68, 0.35)' : '1px solid rgba(34, 197, 94, 0.30)',
+                    gap: isMobile ? '4px' : '6px',
+                    padding: isMobile ? '3px 0' : '5px 0',
+                    backgroundColor: low ? 'rgba(239, 68, 68, 0.1)' : 'rgba(34, 197, 94, 0.1)',
+                    borderRadius: isMobile ? '6px' : '8px',
+                    border: low ? '1px solid rgba(239, 68, 68, 0.3)' : '1px solid rgba(34, 197, 94, 0.25)',
                   }}
                 >
-                  <span style={{ fontSize: '16px' }}>⏱</span>
-                  <span style={{ fontSize: '15px', fontWeight: 800, color: low ? '#fca5a5' : '#86efac' }}>
+                  <span style={{ fontSize: isMobile ? '14px' : '16px' }}>⏱</span>
+                  <span style={{ fontSize: isMobile ? '13px' : '15px', fontWeight: 800, color: low ? '#fca5a5' : '#86efac' }}>
                     {timerRem}s
                   </span>
-                  {low && <span style={{ fontSize: '10px', color: '#fca5a5', animation: 'pulse 1s infinite' }}>hurry!</span>}
+                  {low && <span style={{ fontSize: isMobile ? '8px' : '10px', color: '#fca5a5', animation: 'pulse 1s infinite' }}>hurry!</span>}
                 </div>
               );
             })()}
