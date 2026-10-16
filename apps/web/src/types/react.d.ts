@@ -46,6 +46,13 @@ declare module 'react' {
     stopPropagation: () => void;
     preventDefault: () => void;
   }
+  export interface KeyboardEvent<T = any> {
+    key: string;
+    stopPropagation: () => void;
+    preventDefault: () => void;
+  }
+  export type FormEvent<T = any> = any;
+  export type FormEvent<T = any> = any;
 
   const React: {
     StrictMode: any;

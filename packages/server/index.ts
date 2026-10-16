@@ -12,16 +12,12 @@ const CORS_ORIGIN = process.env.CORS_ORIGIN || '*';
 // Set up Fastify with production settings
 const app = Fastify({ logger: true, maxBodySize: 10 * 1024 * 1024 }); // 10MB max payload
 
-// Security headers via custom middleware
-app.register(async (instance, options, next) => {
-  instance.addHook('onResponse', (request, reply, done) => {
-    reply.header('X-Content-Type-Options', 'nosniff');
-    reply.header('X-Frame-Options', 'DENY');
-    reply.header('X-XSS-Protection', '1; mode=block');
-    reply.header('Referrer-Policy', 'strict-origin-when-cross-origin');
-    done();
-  });
-  next();
+// Security headers via custom hook
+app.addHook('onResponse', async (request, reply) => {
+  reply.header('X-Content-Type-Options', 'nosniff');
+  reply.header('X-Frame-Options', 'DENY');
+  reply.header('X-XSS-Protection', '1; mode=block');
+  reply.header('Referrer-Policy', 'strict-origin-when-cross-origin');
 });
 
 // Global error handler for standardized error responses
@@ -36,40 +32,21 @@ app.setErrorHandler((error, request, reply) => {
   reply.code(statusCode).send(errorResponse);
 });
 
-// CORS with strict origin validation
+// CORS with permissive origin support for client connections
 app.register(import('@fastify/cors'), {
-  origin: (origin: string | undefined, callback) => {
-    const allowedOrigins = [
-      'http://localhost:5173',
-      'http://127.0.0.1:5173',
-      ...(process.env.ALLOWED_ORIGINS?.split(',') || []),
-    ];
-    // Allow requests with no origin (like mobile apps or curl requests)
-    if (!origin) return callback(null, true);
-    if (allowedOrigins.includes(origin)) {
-      callback(null, true);
-    } else {
-      callback(new Error('CORS origin not allowed: ' + origin));
-    }
-  },
+  origin: true,
   credentials: true,
 });
 
-// Rate limiting - max 30 requests per 60 seconds per IP
+// Rate limiting - max 60 requests per minute
 app.register(import('@fastify/rate-limit'), {
-  max: 30,
+  max: 60,
   timeWindow: '60s',
-  errorResponseBuilder: (instance, err) => {
-    return { error: 'RATE_LIMITED', message: err.message };
+  errorResponseBuilder: (req, context) => {
+    return { error: 'RATE_LIMITED', message: 'Rate limit exceeded' };
   },
 });
 
-// Per-client message rate limiting in game room
-app.addHook('onRequest', (request, reply, next) => {
-  const ip = request.ip || 'unknown';
-  // Rate limit per-IP at the server level
-  next();
-});
 
 // Health check with full dependency status
 app.get('/health', async () => {
