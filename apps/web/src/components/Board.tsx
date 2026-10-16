@@ -29,7 +29,6 @@ function getGridPosition(tileId: TileId): { row: number; col: number; isCorner: 
 
 export const Board: React.FC<BoardProps> = ({ gameState }) => {
   const { selectedTile, setSelectedTile, myPlayerId, dispatchAction } = useGameStore();
-  const [showDeed, setShowDeed] = useState<TileId | null>(null);
   const [editingTileId, setEditingTileId] = useState<TileId | null>(null);
   const [editNameInput, setEditNameInput] = useState('');
 
@@ -78,52 +77,80 @@ export const Board: React.FC<BoardProps> = ({ gameState }) => {
         @media (max-width: 640px) {
           .board-responsive-container {
             padding: 3px !important;
-            gap: 1px !important;
-            grid-template-columns: minmax(34px, 1fr) repeat(9, minmax(18px, 1fr)) minmax(34px, 1fr) !important;
-            grid-template-rows: minmax(34px, 1fr) repeat(9, minmax(18px, 1fr)) minmax(34px, 1fr) !important;
+            gap: 1.5px !important;
+            grid-template-columns: minmax(36px, 1.35fr) repeat(9, minmax(18px, 1fr)) minmax(36px, 1.35fr) !important;
+            grid-template-rows: minmax(36px, 1.35fr) repeat(9, minmax(18px, 1fr)) minmax(36px, 1.35fr) !important;
             aspect-ratio: 1 / 1 !important;
             width: 100% !important;
             max-width: 100vw !important;
             box-sizing: border-box !important;
+            border-radius: 12px !important;
           }
           .board-responsive-container .animated-landmark {
-            font-size: 10px !important;
+            font-size: 11px !important;
           }
           .tile-city-name, .tile-label-name, .tile-flag-badge {
             display: none !important;
           }
           .tile-price-pill {
-            font-size: 6.5px !important;
-            padding: 0 1px !important;
+            font-size: 6px !important;
+            padding: 0 2px !important;
+            line-height: 1.1 !important;
+          }
+          .corner-jail-desktop {
+            display: none !important;
+          }
+          .corner-jail-mobile {
+            display: flex !important;
           }
           .board-center-console {
-            padding: 4px 3px !important;
-          }
-          .board-event-log {
-            min-height: 48px !important;
-            max-height: 80px !important;
-            padding: 3px 5px !important;
-            font-size: 9px !important;
-          }
-        }
-        @media (max-width: 420px) {
-          .board-responsive-container {
-            padding: 2px !important;
-            gap: 1px !important;
-            grid-template-columns: minmax(28px, 1fr) repeat(9, minmax(15px, 1fr)) minmax(28px, 1fr) !important;
-            grid-template-rows: minmax(28px, 1fr) repeat(9, minmax(15px, 1fr)) minmax(28px, 1fr) !important;
-          }
-          .board-responsive-container .animated-landmark {
-            font-size: 8px !important;
-          }
-          .tile-price-pill {
-            font-size: 5.5px !important;
-          }
-          .board-center-console {
-            padding: 2px !important;
+            padding: 6px !important;
+            justify-content: center !important;
           }
           .board-event-log {
             display: none !important;
+          }
+          .board-player-peg {
+            width: 12px !important;
+            height: 12px !important;
+            font-size: 7.5px !important;
+          }
+          .board-pegs-container {
+            gap: 1px !important;
+            bottom: 1px !important;
+            right: 1px !important;
+          }
+          .dice-face-box {
+            width: 38px !important;
+            height: 38px !important;
+          }
+          .corner-start-circle {
+            width: 18px !important;
+            height: 18px !important;
+            font-size: 10px !important;
+          }
+        }
+        @media (max-width: 380px) {
+          .board-responsive-container {
+            padding: 2px !important;
+            gap: 1px !important;
+            grid-template-columns: minmax(30px, 1.3fr) repeat(9, minmax(14px, 1fr)) minmax(30px, 1.3fr) !important;
+            grid-template-rows: minmax(30px, 1.3fr) repeat(9, minmax(14px, 1fr)) minmax(30px, 1.3fr) !important;
+          }
+          .board-responsive-container .animated-landmark {
+            font-size: 9.5px !important;
+          }
+          .tile-price-pill {
+            font-size: 5px !important;
+          }
+          .board-player-peg {
+            width: 10px !important;
+            height: 10px !important;
+            font-size: 6.5px !important;
+          }
+          .dice-face-box {
+            width: 32px !important;
+            height: 32px !important;
           }
         }
       `}</style>
@@ -165,12 +192,21 @@ export const Board: React.FC<BoardProps> = ({ gameState }) => {
           return (
             <div
               key={tile.id}
-              onClick={() => { setSelectedTile(tile.id); if (tile.type === 'property') { setShowDeed(tile.id); } }}
+              onClick={() => setSelectedTile(tile.id)}
               style={{
                 gridRow: row,
                 gridColumn: col,
                 backgroundColor: isSelected ? '#332356' : '#1e1837',
-                border: isSelected ? '2px solid #a78bfa' : '1px solid rgba(255, 255, 255, 0.08)',
+                border: isSelected
+                  ? '2px solid #a78bfa'
+                  : ownerColor
+                  ? `1.5px solid ${ownerColor}`
+                  : '1px solid rgba(255, 255, 255, 0.08)',
+                boxShadow: isSelected
+                  ? '0 0 10px rgba(167, 139, 250, 0.5)'
+                  : ownerColor
+                  ? `inset 0 0 4px ${ownerColor}50`
+                  : 'none',
                 borderRadius: isCorner ? '6px' : '4px',
                 display: 'flex',
                 flexDirection: stripePos === 'top' ? 'column' : stripePos === 'bottom' ? 'column-reverse' : stripePos === 'left' ? 'row' : 'row-reverse',
@@ -230,6 +266,7 @@ export const Board: React.FC<BoardProps> = ({ gameState }) => {
                           START
                         </span>
                         <div
+                          className="corner-start-circle"
                           style={{
                             width: '26px',
                             height: '26px',
@@ -253,56 +290,80 @@ export const Board: React.FC<BoardProps> = ({ gameState }) => {
 
                     {/* IN PRISON (Corner 10) with Prison Cell Bars & Pass Through Alley */}
                     {tile.id === 10 && (
-                      <div style={{ display: 'flex', width: '100%', height: '100%', position: 'relative' }}>
+                      <>
+                        {/* Mobile Clean View */}
                         <div
+                          className="corner-jail-mobile"
                           style={{
-                            flex: 1,
-                            display: 'flex',
+                            display: 'none',
                             flexDirection: 'column',
-                            justifyContent: 'center',
                             alignItems: 'center',
-                            padding: '1px',
-                            borderRight: '1px dashed rgba(255,255,255,0.2)',
+                            justifyContent: 'center',
+                            height: '100%',
+                            width: '100%',
                           }}
                         >
-                          <span style={{ fontSize: '7.5px', color: '#94a3b8', fontWeight: 700, textTransform: 'uppercase' }}>
-                            Pass
+                          <span style={{ fontSize: '14px' }}>⚖️</span>
+                          <span style={{ fontSize: '7.5px', color: '#f87171', fontWeight: 900, textTransform: 'uppercase', marginTop: '1px' }}>
+                            JAIL
                           </span>
-                          <span style={{ fontSize: '7px', color: '#64748b' }}>Through</span>
                         </div>
 
+                        {/* Desktop Detailed Split View */}
                         <div
-                          style={{
-                            flex: 1.2,
-                            backgroundColor: '#271f3b',
-                            borderRadius: '4px',
-                            border: '1px solid #4a3b69',
-                            display: 'flex',
-                            flexDirection: 'column',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            padding: '1px',
-                            position: 'relative',
-                            overflow: 'hidden',
-                          }}
+                          className="corner-jail-desktop"
+                          style={{ display: 'flex', width: '100%', height: '100%', position: 'relative' }}
                         >
                           <div
                             style={{
-                              position: 'absolute',
-                              top: 0,
-                              left: 0,
-                              right: 0,
-                              bottom: 0,
-                              backgroundImage: 'repeating-linear-gradient(90deg, transparent, transparent 4px, rgba(148, 163, 184, 0.45) 4px, rgba(148, 163, 184, 0.45) 6px)',
-                              pointerEvents: 'none',
+                              flex: 1,
+                              display: 'flex',
+                              flexDirection: 'column',
+                              justifyContent: 'center',
+                              alignItems: 'center',
+                              padding: '1px',
+                              borderRight: '1px dashed rgba(255,255,255,0.2)',
                             }}
-                          />
-                          <span style={{ fontSize: '13px', zIndex: 1 }}>⚖️</span>
-                          <span style={{ fontSize: '7.5px', color: '#f87171', fontWeight: 800, zIndex: 1, textTransform: 'uppercase' }}>
-                            In Jail
-                          </span>
+                          >
+                            <span style={{ fontSize: '7.5px', color: '#94a3b8', fontWeight: 700, textTransform: 'uppercase' }}>
+                              Pass
+                            </span>
+                            <span style={{ fontSize: '7px', color: '#64748b' }}>Through</span>
+                          </div>
+
+                          <div
+                            style={{
+                              flex: 1.2,
+                              backgroundColor: '#271f3b',
+                              borderRadius: '4px',
+                              border: '1px solid #4a3b69',
+                              display: 'flex',
+                              flexDirection: 'column',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              padding: '1px',
+                              position: 'relative',
+                              overflow: 'hidden',
+                            }}
+                          >
+                            <div
+                              style={{
+                                position: 'absolute',
+                                top: 0,
+                                left: 0,
+                                right: 0,
+                                bottom: 0,
+                                backgroundImage: 'repeating-linear-gradient(90deg, transparent, transparent 4px, rgba(148, 163, 184, 0.45) 4px, rgba(148, 163, 184, 0.45) 6px)',
+                                pointerEvents: 'none',
+                              }}
+                            />
+                            <span style={{ fontSize: '13px', zIndex: 1 }}>⚖️</span>
+                            <span style={{ fontSize: '7.5px', color: '#f87171', fontWeight: 800, zIndex: 1, textTransform: 'uppercase' }}>
+                              In Jail
+                            </span>
+                          </div>
                         </div>
-                      </div>
+                      </>
                     )}
 
                     {/* VACATION (Corner 20) with Vacation Cash on spot */}
@@ -510,7 +571,10 @@ export const Board: React.FC<BoardProps> = ({ gameState }) => {
                               ✏️ Edit
                             </button>
                           ) : tile.flag ? (
-                            <span style={{ fontSize: '12px', lineHeight: 1, filter: 'drop-shadow(0 1px 2px rgba(0,0,0,0.5))' }}>
+                            <span
+                              className="tile-flag-badge"
+                              style={{ fontSize: '12px', lineHeight: 1, filter: 'drop-shadow(0 1px 2px rgba(0,0,0,0.5))' }}
+                            >
                               {tile.flag}
                             </span>
                           ) : null}
@@ -558,6 +622,7 @@ export const Board: React.FC<BoardProps> = ({ gameState }) => {
               {/* Entertaining Animated Player Pegs */}
               {playersHere.length > 0 && (
                 <div
+                  className="board-pegs-container"
                   style={{
                     position: 'absolute',
                     bottom: '2px',
@@ -576,6 +641,7 @@ export const Board: React.FC<BoardProps> = ({ gameState }) => {
                     return (
                       <div
                         key={pId}
+                        className="board-player-peg"
                         style={{
                           width: '17px',
                           height: '17px',
@@ -678,9 +744,69 @@ export const Board: React.FC<BoardProps> = ({ gameState }) => {
                 marginBottom: '8px',
               }}
             >
-              <span>▶</span>
+              <span>🎲</span>
               <span>Roll Dice</span>
             </button>
+          )}
+
+          {/* Resolve Event Action Button in Center */}
+          {gameState.phase === 'resolveEvent' && gameState.turnPlayerId === myPlayerId && (
+            <button
+              onClick={() => {
+                const turnPlayer = gameState.players[gameState.turnPlayerId];
+                if (turnPlayer && turnPlayer.doublesStreak > 0 && !turnPlayer.inJail) {
+                  dispatchAction({ type: 'ACKNOWLEDGE_EVENT' });
+                } else {
+                  dispatchAction({ type: 'END_TURN' });
+                }
+              }}
+              style={{
+                padding: '9px 20px',
+                borderRadius: '8px',
+                border: 'none',
+                background:
+                  gameState.players[gameState.turnPlayerId]?.doublesStreak > 0 &&
+                  !gameState.players[gameState.turnPlayerId]?.inJail
+                    ? 'linear-gradient(135deg, #10b981 0%, #059669 100%)'
+                    : 'linear-gradient(135deg, #fcd581 0%, #f59e0b 100%)',
+                color:
+                  gameState.players[gameState.turnPlayerId]?.doublesStreak > 0 &&
+                  !gameState.players[gameState.turnPlayerId]?.inJail
+                    ? '#ffffff'
+                    : '#0f172a',
+                fontSize: '13px',
+                fontWeight: 800,
+                cursor: 'pointer',
+                boxShadow: '0 4px 16px rgba(0,0,0,0.4)',
+                marginBottom: '8px',
+              }}
+            >
+              {gameState.players[gameState.turnPlayerId]?.doublesStreak > 0 &&
+              !gameState.players[gameState.turnPlayerId]?.inJail
+                ? '🎲 Roll Again (Doubles!)'
+                : 'Next Player ➔'}
+            </button>
+          )}
+
+          {/* Turn indicator badge when not your turn */}
+          {gameState.turnPlayerId !== myPlayerId && gameState.phase !== 'gameOver' && (
+            <div
+              style={{
+                fontSize: '11px',
+                fontWeight: 600,
+                color: '#94a3b8',
+                backgroundColor: 'rgba(255, 255, 255, 0.05)',
+                padding: '4px 10px',
+                borderRadius: '12px',
+                marginBottom: '6px',
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '5px',
+              }}
+            >
+              <span>⏳</span>
+              <span>{gameState.players[gameState.turnPlayerId]?.name || 'Player'}'s turn</span>
+            </div>
           )}
 
           {/* Embedded Game Event Log Directly On The Board (Below Dice) */}
@@ -742,118 +868,6 @@ export const Board: React.FC<BoardProps> = ({ gameState }) => {
           </div>
         </div>
 
-        {/* Title Deed Card Modal */}
-        {showDeed !== null && (() => {
-          const tileDef = BOARD_DATA.tiles[showDeed];
-          const tState = gameState.tiles[showDeed];
-          const district = tileDef?.districtId ? getDistrictDef(tileDef.districtId) : null;
-          if (!tileDef || tileDef.type !== 'property') return null;
-          const buildCost = district?.buildCost ?? 50;
-
-          return (
-            <div
-              onClick={() => setShowDeed(null)}
-              style={{
-                position: 'fixed',
-                top: 0,
-                left: 0,
-                right: 0,
-                bottom: 0,
-                backgroundColor: 'rgba(0, 0, 0, 0.75)',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                zIndex: 1000,
-              }}
-            >
-              <div
-                onClick={(e: React.MouseEvent<HTMLDivElement>) => e.stopPropagation()}
-                style={{
-                  width: '280px',
-                  backgroundColor: '#1f1938',
-                  borderRadius: '12px',
-                  border: '1px solid rgba(255, 255, 255, 0.15)',
-                  boxShadow: '0 20px 40px rgba(0,0,0,0.8)',
-                  overflow: 'hidden',
-                  color: '#f8fafc',
-                }}
-              >
-                {/* Deed Header */}
-                <div
-                  style={{
-                    backgroundColor: district?.color ?? '#475569',
-                    padding: '16px 12px',
-                    textAlign: 'center',
-                    color: '#ffffff',
-                  }}
-                >
-                  <div style={{ fontSize: '10px', textTransform: 'uppercase', letterSpacing: '1px', opacity: 0.9 }}>
-                    TITLE DEED
-                  </div>
-                  <div style={{ fontSize: '18px', fontWeight: 800, marginTop: '2px' }}>
-                    {tileDef.name}
-                  </div>
-                  {tileDef.landmark && (
-                    <div style={{ fontSize: '20px', marginTop: '4px' }}>
-                      {tileDef.landmark} {tileDef.flag}
-                    </div>
-                  )}
-                </div>
-
-                {/* Rent Breakdown */}
-                <div style={{ padding: '16px', fontSize: '12px', display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                    <span>Base Rent</span>
-                    <strong>{formatCurrency(Math.round((tileDef.price ?? 60) / 8), gameState.boardKey)}</strong>
-                  </div>
-                  <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                    <span>With Full District (x2)</span>
-                    <strong>{formatCurrency(Math.round((tileDef.price ?? 60) / 4), gameState.boardKey)}</strong>
-                  </div>
-                  <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                    <span>With 1 House</span>
-                    <strong>{formatCurrency(Math.round(((tileDef.price ?? 60) / 8) * 5), gameState.boardKey)}</strong>
-                  </div>
-                  <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                    <span>With 2 Houses</span>
-                    <strong>{formatCurrency(Math.round(((tileDef.price ?? 60) / 8) * 15), gameState.boardKey)}</strong>
-                  </div>
-                  <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                    <span>With Hotel</span>
-                    <strong>{formatCurrency(Math.round(((tileDef.price ?? 60) / 8) * 40), gameState.boardKey)}</strong>
-                  </div>
-
-                  <div style={{ borderTop: '1px solid rgba(255,255,255,0.1)', marginTop: '8px', paddingTop: '8px' }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                      <span>Building Cost</span>
-                      <span>{formatCurrency(buildCost, gameState.boardKey)} each</span>
-                    </div>
-                    <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                      <span>Mortgage Value</span>
-                      <span>{formatCurrency(Math.round((tileDef.price ?? 60) / 2), gameState.boardKey)}</span>
-                    </div>
-                  </div>
-
-                  <button
-                    onClick={() => setShowDeed(null)}
-                    style={{
-                      marginTop: '12px',
-                      padding: '8px',
-                      borderRadius: '6px',
-                      border: 'none',
-                      backgroundColor: '#7c3aed',
-                      color: '#ffffff',
-                      fontWeight: 700,
-                      cursor: 'pointer',
-                    }}
-                  >
-                    Close
-                  </button>
-                </div>
-              </div>
-            </div>
-          );
-        })()}
 
         {/* Live On-Board Tile Renaming Modal */}
         {editingTileId !== null && (

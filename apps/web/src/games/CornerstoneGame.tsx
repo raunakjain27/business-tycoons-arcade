@@ -246,6 +246,43 @@ export const CornerstoneGame: React.FC = () => {
             </div>
           )}
 
+          {gameState.phase === 'resolveEvent' && (
+            <button
+              onClick={() => {
+                const turnPlayer = gameState.players[gameState.turnPlayerId];
+                if (turnPlayer && turnPlayer.doublesStreak > 0 && !turnPlayer.inJail) {
+                  dispatchAction({ type: 'ACKNOWLEDGE_EVENT' });
+                } else {
+                  dispatchAction({ type: 'END_TURN' });
+                }
+              }}
+              style={{
+                width: '100%',
+                padding: '13px',
+                borderRadius: '12px',
+                border: 'none',
+                background:
+                  gameState.players[gameState.turnPlayerId]?.doublesStreak > 0 &&
+                  !gameState.players[gameState.turnPlayerId]?.inJail
+                    ? 'linear-gradient(135deg, #10b981 0%, #059669 100%)'
+                    : 'linear-gradient(135deg, #fcd581 0%, #f59e0b 100%)',
+                color:
+                  gameState.players[gameState.turnPlayerId]?.doublesStreak > 0 &&
+                  !gameState.players[gameState.turnPlayerId]?.inJail
+                    ? '#ffffff'
+                    : '#0f172a',
+                fontSize: '14px',
+                fontWeight: 900,
+                cursor: 'pointer',
+              }}
+            >
+              {gameState.players[gameState.turnPlayerId]?.doublesStreak > 0 &&
+              !gameState.players[gameState.turnPlayerId]?.inJail
+                ? 'Roll Again (Doubles! 🎲)'
+                : 'Next Player Turn ➔'}
+            </button>
+          )}
+
           {gameState.phase === 'awaitEndTurn' && (
             <button
               onClick={() => dispatchAction({ type: 'END_TURN' })}

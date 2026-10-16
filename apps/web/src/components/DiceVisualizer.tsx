@@ -100,6 +100,7 @@ const DieFace: React.FC<{ value: number; animating: boolean }> = ({ value, anima
 
   return (
     <div
+      className="dice-face-box"
       style={{
         width: '46px',
         height: '46px',

@@ -24,6 +24,7 @@ export const Modals: React.FC<ModalsProps> = ({ gameState }) => {
   } = useGameStore();
 
   const myPlayer = gameState.players[myPlayerId];
+  const turnPlayer = gameState.players[gameState.turnPlayerId];
   const otherPlayers = gameState.turnOrder.filter(
     (id: string) => id !== myPlayerId && gameState.players[id]?.status === 'active'
   );
@@ -394,17 +395,24 @@ export const Modals: React.FC<ModalsProps> = ({ gameState }) => {
             <button
               onClick={dismissEventCard}
               style={{
-                padding: '10px 24px',
+                padding: '12px 28px',
                 borderRadius: '8px',
                 border: 'none',
-                backgroundColor: '#e94560',
+                background:
+                  turnPlayer && turnPlayer.doublesStreak > 0 && !turnPlayer.inJail
+                    ? 'linear-gradient(135deg, #10b981 0%, #059669 100%)'
+                    : 'linear-gradient(135deg, #e94560 0%, #c026d3 100%)',
                 color: '#ffffff',
-                fontWeight: 700,
+                fontWeight: 800,
+                fontSize: '14px',
                 cursor: 'pointer',
                 alignSelf: 'center',
+                boxShadow: '0 4px 14px rgba(0,0,0,0.4)',
               }}
             >
-              Acknowledge
+              {turnPlayer && turnPlayer.doublesStreak > 0 && !turnPlayer.inJail
+                ? 'Roll Again (Doubles! 🎲)'
+                : 'Continue (Next Player ➔)'}
             </button>
           </div>
         </div>

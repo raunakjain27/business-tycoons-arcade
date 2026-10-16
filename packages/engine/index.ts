@@ -413,6 +413,8 @@ function executeAction(
       return handleSpendInfluence(state, playerId, action.item, ctx, events);
     case 'RAISE_FUNDS_DONE':
       return handleRaiseFundsDone(state, playerId, events);
+    case 'ACKNOWLEDGE_EVENT':
+      return handleAcknowledgeEvent(state, playerId, events);
     case 'END_TURN':
       return handleEndTurn(state, playerId, events);
     case 'RESIGN':
@@ -1835,12 +1837,34 @@ function handleRaiseFundsDone(
   return { ok: true };
 }
 
+function handleAcknowledgeEvent(
+  state: GameState,
+  playerId: PlayerId,
+  events: GameEvent[]
+): ExecuteActionResult {
+  if (state.phase !== 'resolveEvent') {
+    return { ok: false, error: 'WRONG_PHASE', message: 'Not in event resolution phase' };
+  }
+  const player = state.players[playerId];
+  if (player && player.doublesStreak > 0 && !player.inJail) {
+    state.phase = 'awaitRoll';
+    events.push({
+      type: 'extra_turn_doubles',
+      playerId,
+      reason: `${player.name} rolled doubles and gets another turn!`,
+    });
+  } else {
+    advanceTurn(state, events);
+  }
+  return { ok: true };
+}
+
 function handleEndTurn(
   state: GameState,
   playerId: PlayerId,
   events: GameEvent[]
 ): ExecuteActionResult {
-  if (state.phase !== 'awaitEndTurn') {
+  if (state.phase !== 'awaitEndTurn' && state.phase !== 'resolveEvent') {
     return { ok: false, error: 'WRONG_PHASE', message: 'Cannot end turn now' };
   }
   if (state.pendingDebt !== null && state.players[playerId].cash < 0) {

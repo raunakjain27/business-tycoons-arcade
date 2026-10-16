@@ -183,6 +183,7 @@ export type Action =
   | { type: 'USE_ABILITY'; target?: PlayerId | TileId }
   | { type: 'SPEND_INFLUENCE'; item: 'lawyer' | 'rezone' | 'waiver' | 'lobby' | 'wildcard' }
   | { type: 'RAISE_FUNDS_DONE' }
+  | { type: 'ACKNOWLEDGE_EVENT' }
   | { type: 'END_TURN' }
   | { type: 'RESIGN' };
 

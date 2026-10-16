@@ -139,9 +139,20 @@ export const useGameStore = create<GameStoreState>((set, get) => ({
   setSelectedTile: (tileId: TileId | null) => set({ selectedTile: tileId }),
   setShowTradeModal: (show: boolean) => set({ showTradeModal: show }),
   setShowInfluenceModal: (show: boolean) => set({ showInfluenceModal: show }),
-  setShowAbilityModal: (show: boolean) => set({ showAbilityModal: show }),
-  dismissEventCard: () => set({ activeEventCard: null }),
-  clearError: () => set({ errorMessage: null }),
+  dismissEventCard: () => {
+    set({ activeEventCard: null });
+    const state = get().gameState;
+    if (state && state.phase !== 'gameOver') {
+      const player = state.players[state.turnPlayerId];
+      if (player && player.doublesStreak > 0 && !player.inJail) {
+        if (state.phase === 'resolveEvent') {
+          get().dispatchAction({ type: 'ACKNOWLEDGE_EVENT' });
+        }
+      } else if (state.phase === 'resolveEvent' || state.phase === 'awaitEndTurn') {
+        get().dispatchAction({ type: 'END_TURN' });
+      }
+    }
+  },
   setTurnTimerActive: (active: boolean) => set({ turnTimerActive: active }),
   setTurnTimerRemaining: (remaining: number | null) => set({ turnTimerRemaining: remaining }),
 
@@ -303,17 +314,6 @@ export const useGameStore = create<GameStoreState>((set, get) => ({
           type: 'general',
         },
       });
-      // For human players, automatically end the turn after the card resolves
-      // so the dice can pass to the next player (no delay — snappier flow)
-      if (gameState.turnPlayerId === myPlayerId) {
-        // Defer just enough for the UI to render the card text
-        Promise.resolve().then(() => {
-          const freshState = get().gameState;
-          if (freshState && freshState.phase !== 'gameOver') {
-            get().dispatchAction({ type: 'END_TURN' });
-          }
-        });
-      }
     }
 
     // Start/re-start turn timer for human player

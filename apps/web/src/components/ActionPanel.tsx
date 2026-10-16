@@ -681,8 +681,7 @@ export const ActionPanel: React.FC<ActionPanelProps> = ({ gameState }) => {
             <p style={{ fontSize: '13px', color: '#cbd5e1', marginTop: '6px' }}>
               A mystery fortune or city event was drawn and executed.
             </p>
-          </div>
-          {isMyTurn && (
+          </div>          {isMyTurn && (
             <button
               onClick={() => dispatchAction({ type: 'END_TURN' })}
               style={{
@@ -692,10 +691,11 @@ export const ActionPanel: React.FC<ActionPanelProps> = ({ gameState }) => {
                 fontWeight: 800,
               }}
             >
-              Continue Turn ➔
+              End Turn & Pass Dice ➡️
             </button>
           )}
-        </div>
+         </div>
+
       )}
 
       {/* PHASE 6: Await Debt Settlement */}

@@ -149,7 +149,10 @@ export function applyLocalAction(
 
   switch (action.type) {
     case 'ROLL': {
-      if (state.phase !== 'awaitRoll') {
+      if (
+        state.phase !== 'awaitRoll' &&
+        !(state.phase === 'resolveEvent' && player.doublesStreak > 0 && !player.inJail)
+      ) {
         return { state: currentState, events: [], error: 'Cannot roll in current phase' };
       }
 
@@ -315,7 +318,7 @@ export function applyLocalAction(
           reason: `Auction opened for ${def.name} starting at $10!`,
         });
       } else {
-        state.phase = 'awaitEndTurn';
+        state.phase = player.doublesStreak > 0 && !player.inJail ? 'awaitRoll' : 'awaitEndTurn';
       }
       break;
     }
@@ -841,8 +844,26 @@ export function applyLocalAction(
       break;
     }
 
+    case 'ACKNOWLEDGE_EVENT': {
+      if (state.phase !== 'resolveEvent') {
+        return { state: currentState, events: [], error: 'Not in event resolution phase' };
+      }
+
+      if (player.doublesStreak > 0 && !player.inJail) {
+        state.phase = 'awaitRoll';
+        events.push({
+          type: 'EXTRA_TURN_DOUBLES',
+          playerId: player.id,
+          reason: `${player.name} rolled doubles and gets their next chance!`,
+        });
+      } else {
+        advanceTurn(state, events);
+      }
+      break;
+    }
+
     case 'END_TURN': {
-      if (state.phase !== 'awaitEndTurn') {
+      if (state.phase !== 'awaitEndTurn' && state.phase !== 'resolveEvent') {
         return { state: currentState, events: [], error: 'Cannot end turn yet' };
       }
 
@@ -976,14 +997,14 @@ function movePlayer(
               };
               state.phase = 'awaitDebtSettlement';
             } else {
-              state.phase = 'awaitEndTurn';
+              state.phase = player.doublesStreak > 0 && !player.inJail ? 'awaitRoll' : 'awaitEndTurn';
             }
           } else {
-            state.phase = 'awaitEndTurn';
+            state.phase = player.doublesStreak > 0 && !player.inJail ? 'awaitRoll' : 'awaitEndTurn';
           }
         }
       } else {
-        state.phase = 'awaitEndTurn';
+        state.phase = player.doublesStreak > 0 && !player.inJail ? 'awaitRoll' : 'awaitEndTurn';
       }
       break;
 
@@ -1006,7 +1027,7 @@ function movePlayer(
         };
         state.phase = 'awaitDebtSettlement';
       } else {
-        state.phase = 'awaitEndTurn';
+        state.phase = player.doublesStreak > 0 && !player.inJail ? 'awaitRoll' : 'awaitEndTurn';
       }
       break;
     }
@@ -1029,7 +1050,7 @@ function movePlayer(
           reason: `${player.name} is on Vacation enjoying a relaxing break.`,
         });
       }
-      state.phase = 'awaitEndTurn';
+      state.phase = player.doublesStreak > 0 && !player.inJail ? 'awaitRoll' : 'awaitEndTurn';
       break;
     }
 
@@ -1042,7 +1063,7 @@ function movePlayer(
         amount: 2,
         reason: `${player.name} attended the Summit and gained +2 Influence points!`,
       });
-      state.phase = 'awaitEndTurn';
+      state.phase = player.doublesStreak > 0 && !player.inJail ? 'awaitRoll' : 'awaitEndTurn';
       break;
     }
 
@@ -1052,7 +1073,7 @@ function movePlayer(
     }
 
     default:
-      state.phase = 'awaitEndTurn';
+      state.phase = player.doublesStreak > 0 && !player.inJail ? 'awaitRoll' : 'awaitEndTurn';
   }
 }
 
@@ -1302,7 +1323,10 @@ export function botStep(state: GameState, botId: PlayerId): { action: Action; de
     }
 
     case 'resolveEvent':
-      return { action: { type: 'END_TURN' }, delayMs: 500 };
+      if (bot.doublesStreak > 0 && !bot.inJail) {
+        return { action: { type: 'ACKNOWLEDGE_EVENT' }, delayMs: 600 };
+      }
+      return { action: { type: 'END_TURN' }, delayMs: 600 };
 
     case 'awaitDebtSettlement': {
       // Mortgage first unmortgaged property

@@ -98,6 +98,10 @@ export const endTurnActionSchema = z.object({
   type: z.literal('END_TURN'),
 });
 
+export const acknowledgeEventActionSchema = z.object({
+  type: z.literal('ACKNOWLEDGE_EVENT'),
+});
+
 export const resignActionSchema = z.object({
   type: z.literal('RESIGN'),
 });
@@ -121,6 +125,7 @@ export const actionSchema = z.discriminatedUnion('type', [
   useAbilityActionSchema,
   spendInfluenceActionSchema,
   raiseFundsDoneActionSchema,
+  acknowledgeEventActionSchema,
   endTurnActionSchema,
   resignActionSchema,
 ]);
