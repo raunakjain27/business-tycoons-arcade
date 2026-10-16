@@ -5,8 +5,8 @@ services:
     runtime: node
     plan: free
     region: oregon
-    buildCommand: pnpm install --no-frozen-lockfile
-    startCommand: pnpm exec tsx packages/server/index.ts
+    buildCommand: pnpm install --prod=false --no-frozen-lockfile
+    startCommand: ./node_modules/.bin/tsx packages/server/index.ts
     envVars:
       - key: NODE_ENV
         value: production
