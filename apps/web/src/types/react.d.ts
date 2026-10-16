@@ -52,7 +52,6 @@ declare module 'react' {
     preventDefault: () => void;
   }
   export type FormEvent<T = any> = any;
-  export type FormEvent<T = any> = any;
 
   const React: {
     StrictMode: any;

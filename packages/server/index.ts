@@ -32,20 +32,17 @@ app.setErrorHandler((error, request, reply) => {
   reply.code(statusCode).send(errorResponse);
 });
 
-// CORS with permissive origin support for client connections
-app.register(import('@fastify/cors'), {
-  origin: true,
-  credentials: true,
+// Native CORS handling
+app.addHook('onRequest', async (request, reply) => {
+  reply.header('Access-Control-Allow-Origin', '*');
+  reply.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+  reply.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With');
+  
+  if (request.method === 'OPTIONS') {
+    reply.status(204).send();
+  }
 });
 
-// Rate limiting - max 60 requests per minute
-app.register(import('@fastify/rate-limit'), {
-  max: 60,
-  timeWindow: '60s',
-  errorResponseBuilder: (req, context) => {
-    return { error: 'RATE_LIMITED', message: 'Rate limit exceeded' };
-  },
-});
 
 
 // Health check with full dependency status
