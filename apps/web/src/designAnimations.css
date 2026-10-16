@@ -144,6 +144,17 @@ button, [role="button"], a {
     scroll-snap-align: start !important;
     padding: 10px !important;
   }
+
+  /* Dashboard mobile layout: stack headline and actions */
+  .dashboard-header-strip {
+    grid-template-columns: 1fr !important;
+    gap: 16px !important;
+  }
+  .dashboard-actions-rail {
+    width: 100% !important;
+    flex-wrap: wrap !important;
+    justify-content: flex-start !important;
+  }
 }
 
 @media (min-width: 769px) {

@@ -59,26 +59,51 @@ export const OnboardingModal: React.FC<OnboardingModalProps> = ({ isOpen, onClos
         alignItems: 'center',
         justifyContent: 'center',
         zIndex: 2500,
-        padding: '16px',
+        padding: '12px',
         animation: 'fadeIn 0.25s cubic-bezier(0.16, 1, 0.3, 1)',
+        boxSizing: 'border-box',
       }}
     >
-      <div
-        style={{
-          width: '100%',
-          maxWidth: '560px',
-          background: 'linear-gradient(180deg, #1f143a 0%, #0d071c 100%)',
-          borderRadius: '32px',
-          border: '1px solid rgba(255, 255, 255, 0.16)',
-          padding: '40px 36px',
-          boxShadow: '0 30px 100px rgba(0,0,0,0.95), 0 0 60px rgba(139, 92, 246, 0.35)',
-          display: 'flex',
-          flexDirection: 'column',
-          gap: '24px',
-          color: '#ffffff',
-          position: 'relative',
-        }}
-      >
+      <style>{`
+        .onboarding-modal-card {
+          width: 100%;
+          max-width: 540px;
+          max-height: 92vh;
+          overflow-y: auto;
+          box-sizing: border-box;
+          background: linear-gradient(180deg, #1f143a 0%, #0d071c 100%);
+          border-radius: 28px;
+          border: 1px solid rgba(255, 255, 255, 0.16);
+          padding: 32px 28px;
+          box-shadow: 0 30px 100px rgba(0,0,0,0.95), 0 0 60px rgba(139, 92, 246, 0.35);
+          display: flex;
+          flex-direction: column;
+          gap: 20px;
+          color: #ffffff;
+          position: relative;
+        }
+        @media (max-width: 640px) {
+          .onboarding-modal-card {
+            padding: 22px 16px !important;
+            border-radius: 20px !important;
+            gap: 16px !important;
+            max-height: 94vh !important;
+          }
+          .onboarding-title {
+            font-size: 21px !important;
+          }
+          .onboarding-subtitle {
+            font-size: 13px !important;
+          }
+          .onboarding-features-grid {
+            grid-template-columns: 1fr !important;
+          }
+          .onboarding-avatar-grid {
+            grid-template-columns: repeat(4, 1fr) !important;
+          }
+        }
+      `}</style>
+      <div className="onboarding-modal-card">
         {/* Step Indicator Header */}
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
@@ -109,14 +134,14 @@ export const OnboardingModal: React.FC<OnboardingModalProps> = ({ isOpen, onClos
           <div style={{ textAlign: 'center', display: 'flex', flexDirection: 'column', gap: '18px' }}>
             <div
               style={{
-                width: '84px',
-                height: '84px',
-                borderRadius: '26px',
+                width: '74px',
+                height: '74px',
+                borderRadius: '22px',
                 background: 'linear-gradient(135deg, #7c3aed 0%, #ec4899 100%)',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                fontSize: '44px',
+                fontSize: '38px',
                 margin: '0 auto',
                 boxShadow: '0 12px 35px rgba(236, 72, 153, 0.45)',
               }}
@@ -125,10 +150,10 @@ export const OnboardingModal: React.FC<OnboardingModalProps> = ({ isOpen, onClos
             </div>
 
             <div>
-              <h2 style={{ margin: 0, fontSize: '28px', fontWeight: 900, letterSpacing: '-0.5px' }}>
+              <h2 className="onboarding-title" style={{ margin: 0, fontSize: '26px', fontWeight: 900, letterSpacing: '-0.5px' }}>
                 Welcome to Business Tycoons Arcade
               </h2>
-              <p style={{ margin: '8px 0 0 0', fontSize: '14.5px', color: '#cbd5e1', lineHeight: 1.6 }}>
+              <p className="onboarding-subtitle" style={{ margin: '8px 0 0 0', fontSize: '14px', color: '#cbd5e1', lineHeight: 1.5 }}>
                 Play 7 real-time games with friends or smart bots, enjoy live turn-gated voice rooms, and compete in multiplayer tournaments — <strong>with 100% complete anonymity</strong>.
               </p>
             </div>
@@ -254,7 +279,7 @@ export const OnboardingModal: React.FC<OnboardingModalProps> = ({ isOpen, onClos
               <label style={{ fontSize: '13px', fontWeight: 800, color: '#38bdf8', display: 'block', marginBottom: '8px' }}>
                 Choose Your Avatar
               </label>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(6, 1fr)', gap: '10px' }}>
+              <div className="onboarding-avatar-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(6, 1fr)', gap: '10px' }}>
                 {AVATARS.map((av) => (
                   <button
                     key={av.icon}
@@ -331,7 +356,7 @@ export const OnboardingModal: React.FC<OnboardingModalProps> = ({ isOpen, onClos
               </p>
             </div>
 
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '10px', textAlign: 'left', fontSize: '13px' }}>
+            <div className="onboarding-features-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '10px', textAlign: 'left', fontSize: '13px' }}>
               <div style={{ background: 'rgba(255,255,255,0.04)', padding: '14px', borderRadius: '14px', border: '1px solid rgba(255,255,255,0.08)' }}>
                 <strong>🏙️ Business Tycoons:</strong> Full property trading, 18+ boards, and auctions.
               </div>

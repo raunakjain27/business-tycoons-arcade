@@ -51,7 +51,7 @@ export const GameRoomLobby: React.FC<GameRoomLobbyProps> = ({
     addPlayer(gameId, '', true);
   };
 
-  const canStart = room.players.length >= room.minPlayers;
+  const canStart = room.allowBots || room.players.length >= room.minPlayers;
 
   return (
     <div

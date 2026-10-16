@@ -76,22 +76,29 @@ export const Dashboard: React.FC = () => {
 
   return (
     <div
+      className="dashboard-container"
       style={{
         maxWidth: '1440px',
         margin: '0 auto',
         display: 'flex',
         flexDirection: 'column',
-        gap: '28px',
+        gap: '24px',
         padding: '0 8px 24px',
+        width: '100%',
+        boxSizing: 'border-box',
+        overflowX: 'hidden',
       }}
     >
       {/* Top strip: headline + account + quick join */}
       <div
+        className="dashboard-header-strip"
         style={{
           display: 'grid',
           gridTemplateColumns: '1fr auto',
           gap: '20px',
           alignItems: 'start',
+          width: '100%',
+          boxSizing: 'border-box',
         }}
       >
         {/* Headline */}
@@ -127,12 +134,12 @@ export const Dashboard: React.FC = () => {
 
           <h1
             style={{
-              fontSize: '32px',
+              fontSize: 'clamp(22px, 4vw, 32px)',
               fontWeight: 900,
               color: '#ffffff',
               margin: '0 0 6px 0',
               letterSpacing: '-0.4px',
-              lineHeight: 1.1,
+              lineHeight: 1.15,
             }}
           >
             Choose a game to play
@@ -146,11 +153,13 @@ export const Dashboard: React.FC = () => {
 
         {/* Account + quick actions rail */}
         <div
+          className="dashboard-actions-rail"
           style={{
             display: 'flex',
             gap: '12px',
             alignItems: 'stretch',
             flexShrink: 0,
+            flexWrap: 'wrap',
           }}
         >
           {/* Account card */}
@@ -489,6 +498,8 @@ export const Dashboard: React.FC = () => {
           return (
             <div
               key={game.id}
+              data-game-id={game.id}
+              className="arcade-game-card"
               onClick={() => setActiveGame(game.id)}
               style={{
                 background: 'rgba(255, 255, 255, 0.03)',

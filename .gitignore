@@ -8,3 +8,4 @@ dist/
 .env.local
 tsconfig.tsbuildinfo
 .turbo/
+.arcade_database.json
