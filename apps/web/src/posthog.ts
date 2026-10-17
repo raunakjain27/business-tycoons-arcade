@@ -4,7 +4,7 @@ import posthog from 'posthog-js';
 const POSTHOG_KEY =
   (import.meta.env.VITE_POSTHOG_KEY as string | undefined) ||
   (typeof window !== 'undefined' ? (window as any).__POSTHOG_KEY__ : '') ||
-  '';
+  'phc_vRgXwVCYu9NcTSQUKgxPGZdMVzprguRN7VqeEVWmTmBT';
 
 const POSTHOG_HOST =
   (import.meta.env.VITE_POSTHOG_HOST as string | undefined) ||
@@ -35,11 +35,11 @@ export function initPostHog(): void {
         maskAllInputs: false,
       },
       loaded: (ph) => {
-        if (import.meta.env.DEV) {
-          console.log('⚡ PostHog loaded and active:', ph);
-        }
+        (window as any).posthog = ph;
+        console.log('⚡ PostHog live & connected to project phc_vRgXw...!');
       },
     });
+    (window as any).posthog = posthog;
     isInitialized = true;
   } catch (err) {
     console.warn('[PostHog Init Warning]', err);
