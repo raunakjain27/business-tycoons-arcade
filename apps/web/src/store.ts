@@ -143,6 +143,10 @@ export const useGameStore = create<GameStoreState>((set, get) => ({
     set({ activeEventCard: null });
     const state = get().gameState;
     if (state && state.phase !== 'gameOver') {
+      if (state.phase === 'awaitBuyDecision') {
+        // Destination tile was an unowned property — stay in awaitBuyDecision so player can buy or auction!
+        return;
+      }
       const player = state.players[state.turnPlayerId];
       if (player && player.doublesStreak > 0 && !player.inJail) {
         if (state.phase === 'resolveEvent') {
@@ -307,13 +311,15 @@ export const useGameStore = create<GameStoreState>((set, get) => ({
     // Check if event card was drawn
     const eventLog = result.events.find(e => e.type === 'EVENT_CARD_DRAWN');
     if (eventLog && eventLog.card) {
-      set({
-        activeEventCard: {
-          id: 99,
-          text: eventLog.card,
-          type: 'general',
-        },
-      });
+      if (eventLog.playerId === myPlayerId) {
+        set({
+          activeEventCard: {
+            id: 99,
+            text: eventLog.card,
+            type: 'general',
+          },
+        });
+      }
     }
 
     // Start/re-start turn timer for human player
@@ -375,3 +381,7 @@ export const useGameStore = create<GameStoreState>((set, get) => ({
     }
   },
 }));
+
+if (typeof window !== 'undefined') {
+  (window as any).useGameStore = useGameStore;
+}

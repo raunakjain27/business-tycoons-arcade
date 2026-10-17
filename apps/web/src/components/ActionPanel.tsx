@@ -683,15 +683,33 @@ export const ActionPanel: React.FC<ActionPanelProps> = ({ gameState }) => {
             </p>
           </div>          {isMyTurn && (
             <button
-              onClick={() => dispatchAction({ type: 'END_TURN' })}
+              onClick={() => {
+                const turnPlayer = gameState.players[gameState.turnPlayerId];
+                if (turnPlayer && turnPlayer.doublesStreak > 0 && !turnPlayer.inJail) {
+                  dispatchAction({ type: 'ACKNOWLEDGE_EVENT' });
+                } else {
+                  dispatchAction({ type: 'END_TURN' });
+                }
+              }}
               style={{
                 ...primaryButtonStyle,
-                background: 'linear-gradient(135deg, #fcd581 0%, #f59e0b 100%)',
-                color: '#0f172a',
+                background:
+                  gameState.players[gameState.turnPlayerId]?.doublesStreak > 0 &&
+                  !gameState.players[gameState.turnPlayerId]?.inJail
+                    ? 'linear-gradient(135deg, #10b981 0%, #059669 100%)'
+                    : 'linear-gradient(135deg, #fcd581 0%, #f59e0b 100%)',
+                color:
+                  gameState.players[gameState.turnPlayerId]?.doublesStreak > 0 &&
+                  !gameState.players[gameState.turnPlayerId]?.inJail
+                    ? '#ffffff'
+                    : '#0f172a',
                 fontWeight: 800,
               }}
             >
-              End Turn & Pass Dice ➡️
+              {gameState.players[gameState.turnPlayerId]?.doublesStreak > 0 &&
+              !gameState.players[gameState.turnPlayerId]?.inJail
+                ? '🎲 Roll Again (Doubles!)'
+                : 'End Turn & Pass Dice ➡️'}
             </button>
           )}
          </div>

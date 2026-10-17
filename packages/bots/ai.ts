@@ -99,6 +99,16 @@ export class BotAI {
         }
         break;
 
+      case 'resolveEvent':
+        if (isTurn) {
+          if (player.doublesStreak > 0 && !player.inJail) {
+            actions.push({ type: 'ACKNOWLEDGE_EVENT' });
+          } else {
+            actions.push({ type: 'END_TURN' });
+          }
+        }
+        break;
+
       case 'awaitEndTurn':
         if (isTurn) {
           for (const [tileIdStr, tState] of Object.entries(state.tiles)) {

@@ -846,6 +846,10 @@ export function applyLocalAction(
 
     case 'ACKNOWLEDGE_EVENT': {
       if (state.phase !== 'resolveEvent') {
+        if (state.phase === 'awaitEndTurn') {
+          advanceTurn(state, events);
+          break;
+        }
         return { state: currentState, events: [], error: 'Not in event resolution phase' };
       }
 
@@ -1104,10 +1108,67 @@ function resolveEventCard(
     case 'income':
       player.cash += card.amount ?? 50;
       break;
-    case 'tax':
-      player.cash -= card.amount ?? 50;
-      state.communityFund += card.amount ?? 50;
+    case 'tax': {
+      const taxAmt = card.amount ?? 50;
+      player.cash -= taxAmt;
+      state.communityFund += taxAmt;
       break;
+    }
+    case 'taxPerTile': {
+      const amt = card.amount ?? 15;
+      const ownedCount = Object.values(state.tiles).filter(t => t.ownerId === player.id).length;
+      const totalTax = ownedCount * amt;
+      player.cash -= totalTax;
+      state.communityFund += totalTax;
+      events.push({
+        type: 'TAX_PAID',
+        playerId: player.id,
+        amount: totalTax,
+        reason: `${player.name} paid $${totalTax} ($${amt}/property across ${ownedCount} properties) to the Community Fund.`,
+      });
+      break;
+    }
+    case 'repairCost': {
+      const perHouse = card.perHouse ?? 40;
+      const perTower = card.perTower ?? 115;
+      let totalRepair = 0;
+      for (const t of Object.values(state.tiles)) {
+        if (t.ownerId === player.id) {
+          if (t.tier === 1) totalRepair += perHouse;
+          else if (t.tier === 2) totalRepair += perHouse * 2;
+          else if (t.tier >= 3) totalRepair += perTower;
+        }
+      }
+      player.cash -= totalRepair;
+      state.communityFund += totalRepair;
+      events.push({
+        type: 'TAX_PAID',
+        playerId: player.id,
+        amount: totalRepair,
+        reason: `${player.name} paid $${totalRepair} for property repairs into the Community Fund.`,
+      });
+      break;
+    }
+    case 'incomePerHouse': {
+      const perHouse = card.amount ?? (card as any).perHouse ?? 25;
+      let houseCount = 0;
+      for (const t of Object.values(state.tiles)) {
+        if (t.ownerId === player.id) {
+          if (t.tier === 1) houseCount += 1;
+          else if (t.tier === 2) houseCount += 2;
+          else if (t.tier >= 3) houseCount += 4;
+        }
+      }
+      const dividend = houseCount * perHouse;
+      player.cash += dividend;
+      events.push({
+        type: 'COMMUNITY_FUND_COLLECTED',
+        playerId: player.id,
+        amount: dividend,
+        reason: `${player.name} collected $${dividend} in property dividends across ${houseCount} buildings.`,
+      });
+      break;
+    }
     case 'collectFromAll': {
       const amt = card.amount ?? 50;
       let totalCollected = 0;
@@ -1132,8 +1193,60 @@ function resolveEventCard(
     }
     case 'moveRelative': {
       const steps = (card as any).steps ?? 0;
-      if (steps > 0) {
-        movePlayer(state, player, steps, events);
+      if (steps !== 0) {
+        if (steps > 0) {
+          movePlayer(state, player, steps, events);
+        } else {
+          // Backward movement: e.g. -2 or -3
+          const oldPos = player.position;
+          let newPos = (oldPos + steps) % 40;
+          if (newPos < 0) newPos += 40;
+          player.position = newPos as TileId;
+          player.lastLandedTile = newPos as TileId;
+          events.push({
+            type: 'PLAYER_MOVED',
+            playerId: player.id,
+            amount: Math.abs(steps),
+            reason: `${player.name} stepped backward ${Math.abs(steps)} spaces to ${getTileDef(newPos as TileId).name}.`,
+          });
+          const destDef = getTileDef(newPos as TileId);
+          if (destDef.type === 'property' || destDef.type === 'hub' || destDef.type === 'utility') {
+            const tState = state.tiles[newPos];
+            if (tState && tState.ownerId === null) {
+              state.phase = 'awaitBuyDecision';
+            } else if (tState && tState.ownerId !== null && tState.ownerId !== player.id) {
+              const owner = state.players[tState.ownerId];
+              const rent = computeRent(state, newPos as TileId, state.lastDice ?? [3, 4]);
+              if (rent > 0) {
+                player.cash -= rent;
+                if (owner) owner.cash += rent;
+                events.push({
+                  type: 'RENT_PAID',
+                  playerId: player.id,
+                  amount: rent,
+                  fromPlayerId: tState.ownerId,
+                  reason: `${player.name} paid $${rent} rent to ${owner?.name ?? 'owner'} for ${destDef.name}.`,
+                });
+              }
+              state.phase = player.doublesStreak > 0 && !player.inJail ? 'awaitRoll' : 'awaitEndTurn';
+            } else {
+              state.phase = player.doublesStreak > 0 && !player.inJail ? 'awaitRoll' : 'awaitEndTurn';
+            }
+          } else if (destDef.type === 'tax') {
+            const tax = destDef.taxAmount ?? 150;
+            player.cash -= tax;
+            state.communityFund += tax;
+            events.push({
+              type: 'TAX_PAID',
+              playerId: player.id,
+              amount: tax,
+              reason: `${player.name} paid $${tax} ${destDef.name}.`,
+            });
+            state.phase = player.doublesStreak > 0 && !player.inJail ? 'awaitRoll' : 'awaitEndTurn';
+          } else {
+            state.phase = player.doublesStreak > 0 && !player.inJail ? 'awaitRoll' : 'awaitEndTurn';
+          }
+        }
       }
       break;
     }
@@ -1151,12 +1264,26 @@ function resolveEventCard(
     }
     case 'move':
       if (card.targetTile !== undefined) {
-        const delta = ((card.targetTile - player.position) % 40 + 40) % 40;
-        if (delta === 0 && card.targetTile !== player.position) {
-          // targetTile wraps fully around the ring
-          movePlayer(state, player, 40, events);
+        if (card.targetTile === 10) {
+          player.lastPositionBeforeJail = player.position;
+          player.position = 10;
+          player.inJail = true;
+          player.doublesStreak = 0;
+          events.push({
+            type: 'GO_TO_JAIL',
+            playerId: player.id,
+            tileId: 10,
+            reason: `${player.name} was sent directly to the Audit Office!`,
+          });
+          state.phase = 'awaitEndTurn';
         } else {
-          movePlayer(state, player, delta, events);
+          const delta = ((card.targetTile - player.position) % 40 + 40) % 40;
+          if (delta === 0 && card.targetTile !== player.position) {
+            // targetTile wraps fully around the ring
+            movePlayer(state, player, 40, events);
+          } else {
+            movePlayer(state, player, delta, events);
+          }
         }
       }
       break;
@@ -1184,6 +1311,10 @@ function resolveEventCard(
       amount: Math.abs(player.cash),
     };
     state.phase = 'awaitDebtSettlement';
+  } else if (state.phase === 'awaitBuyDecision') {
+    // Preserve awaitBuyDecision if movement landed the player on an unowned property!
+  } else if (player.inJail) {
+    state.phase = 'awaitEndTurn';
   } else {
     state.phase = 'resolveEvent';
   }

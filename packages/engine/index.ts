@@ -1843,6 +1843,10 @@ function handleAcknowledgeEvent(
   events: GameEvent[]
 ): ExecuteActionResult {
   if (state.phase !== 'resolveEvent') {
+    if (state.phase === 'awaitEndTurn') {
+      advanceTurn(state, events);
+      return { ok: true };
+    }
     return { ok: false, error: 'WRONG_PHASE', message: 'Not in event resolution phase' };
   }
   const player = state.players[playerId];

@@ -399,7 +399,9 @@ export const Modals: React.FC<ModalsProps> = ({ gameState }) => {
                 borderRadius: '8px',
                 border: 'none',
                 background:
-                  turnPlayer && turnPlayer.doublesStreak > 0 && !turnPlayer.inJail
+                  gameState.phase === 'awaitBuyDecision'
+                    ? 'linear-gradient(135deg, #38bdf8 0%, #2563eb 100%)'
+                    : turnPlayer && turnPlayer.doublesStreak > 0 && !turnPlayer.inJail
                     ? 'linear-gradient(135deg, #10b981 0%, #059669 100%)'
                     : 'linear-gradient(135deg, #e94560 0%, #c026d3 100%)',
                 color: '#ffffff',
@@ -410,7 +412,9 @@ export const Modals: React.FC<ModalsProps> = ({ gameState }) => {
                 boxShadow: '0 4px 14px rgba(0,0,0,0.4)',
               }}
             >
-              {turnPlayer && turnPlayer.doublesStreak > 0 && !turnPlayer.inJail
+              {gameState.phase === 'awaitBuyDecision'
+                ? 'View Property ➔'
+                : turnPlayer && turnPlayer.doublesStreak > 0 && !turnPlayer.inJail
                 ? 'Roll Again (Doubles! 🎲)'
                 : 'Continue (Next Player ➔)'}
             </button>
