@@ -1847,6 +1847,9 @@ function handleAcknowledgeEvent(
       advanceTurn(state, events);
       return { ok: true };
     }
+    if (state.phase === 'awaitRoll') {
+      return { ok: true };
+    }
     return { ok: false, error: 'WRONG_PHASE', message: 'Not in event resolution phase' };
   }
   const player = state.players[playerId];

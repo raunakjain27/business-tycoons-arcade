@@ -850,6 +850,9 @@ export function applyLocalAction(
           advanceTurn(state, events);
           break;
         }
+        if (state.phase === 'awaitRoll') {
+          break;
+        }
         return { state: currentState, events: [], error: 'Not in event resolution phase' };
       }
 

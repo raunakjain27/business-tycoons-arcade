@@ -28,7 +28,7 @@ function getGridPosition(tileId: TileId): { row: number; col: number; isCorner: 
 }
 
 export const Board: React.FC<BoardProps> = ({ gameState }) => {
-  const { selectedTile, setSelectedTile, myPlayerId, dispatchAction } = useGameStore();
+  const { selectedTile, setSelectedTile, myPlayerId, dispatchAction, dismissEventCard } = useGameStore();
   const [editingTileId, setEditingTileId] = useState<TileId | null>(null);
   const [editNameInput, setEditNameInput] = useState('');
 
@@ -752,14 +752,7 @@ export const Board: React.FC<BoardProps> = ({ gameState }) => {
           {/* Resolve Event Action Button in Center */}
           {gameState.phase === 'resolveEvent' && gameState.turnPlayerId === myPlayerId && (
             <button
-              onClick={() => {
-                const turnPlayer = gameState.players[gameState.turnPlayerId];
-                if (turnPlayer && turnPlayer.doublesStreak > 0 && !turnPlayer.inJail) {
-                  dispatchAction({ type: 'ACKNOWLEDGE_EVENT' });
-                } else {
-                  dispatchAction({ type: 'END_TURN' });
-                }
-              }}
+              onClick={dismissEventCard}
               style={{
                 padding: '9px 20px',
                 borderRadius: '8px',
@@ -785,6 +778,67 @@ export const Board: React.FC<BoardProps> = ({ gameState }) => {
               !gameState.players[gameState.turnPlayerId]?.inJail
                 ? '🎲 Roll Again (Doubles!)'
                 : 'Next Player ➔'}
+            </button>
+          )}
+
+          {/* Buy Decision Action Buttons in Center */}
+          {gameState.phase === 'awaitBuyDecision' && gameState.turnPlayerId === myPlayerId && (
+            <div style={{ display: 'flex', gap: '8px', marginBottom: '8px' }}>
+              <button
+                onClick={() => dispatchAction({ type: 'BUY' })}
+                style={{
+                  padding: '9px 18px',
+                  borderRadius: '8px',
+                  border: 'none',
+                  background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+                  color: '#ffffff',
+                  fontSize: '13px',
+                  fontWeight: 800,
+                  cursor: 'pointer',
+                  boxShadow: '0 4px 14px rgba(16, 185, 129, 0.4)',
+                }}
+              >
+                Buy Property
+              </button>
+              <button
+                onClick={() => dispatchAction({ type: 'DECLINE_BUY' })}
+                style={{
+                  padding: '9px 16px',
+                  borderRadius: '8px',
+                  border: '1px solid rgba(255,255,255,0.2)',
+                  backgroundColor: 'rgba(239, 68, 68, 0.25)',
+                  color: '#fca5a5',
+                  fontSize: '13px',
+                  fontWeight: 700,
+                  cursor: 'pointer',
+                }}
+              >
+                Pass / Auction
+              </button>
+            </div>
+          )}
+
+          {/* End Turn Action Button in Center */}
+          {gameState.phase === 'awaitEndTurn' && gameState.turnPlayerId === myPlayerId && (
+            <button
+              onClick={() => dispatchAction({ type: 'END_TURN' })}
+              style={{
+                padding: '9px 22px',
+                borderRadius: '8px',
+                border: 'none',
+                background: 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)',
+                color: '#ffffff',
+                fontSize: '13px',
+                fontWeight: 800,
+                cursor: 'pointer',
+                boxShadow: '0 4px 16px rgba(59, 130, 246, 0.4)',
+                marginBottom: '8px',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px',
+              }}
+            >
+              <span>End Turn ➔</span>
             </button>
           )}
 

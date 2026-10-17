@@ -22,6 +22,7 @@ export const CornerstoneGame: React.FC = () => {
     connectOnline,
     myPlayerId,
     dispatchAction,
+    dismissEventCard,
     turnTimerRemaining,
   } = useGameStore();
 
@@ -248,14 +249,7 @@ export const CornerstoneGame: React.FC = () => {
 
           {gameState.phase === 'resolveEvent' && (
             <button
-              onClick={() => {
-                const turnPlayer = gameState.players[gameState.turnPlayerId];
-                if (turnPlayer && turnPlayer.doublesStreak > 0 && !turnPlayer.inJail) {
-                  dispatchAction({ type: 'ACKNOWLEDGE_EVENT' });
-                } else {
-                  dispatchAction({ type: 'END_TURN' });
-                }
-              }}
+              onClick={dismissEventCard}
               style={{
                 width: '100%',
                 padding: '13px',

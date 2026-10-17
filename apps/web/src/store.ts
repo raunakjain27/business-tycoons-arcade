@@ -74,7 +74,7 @@ export interface GameStoreState {
   ) => void;
   connectOnline: (roomName?: string, name?: string, roleId?: string, turnTimerSec?: number) => Promise<void>;
   disconnect: () => void;
-  dispatchAction: (action: Action) => void;
+  dispatchAction: (action: Action, actingPlayerId?: PlayerId) => void;
 
   // Bot step scheduler
   triggerBotTurnIfNeeded: () => void;
@@ -276,7 +276,7 @@ export const useGameStore = create<GameStoreState>((set, get) => ({
     });
   },
 
-  dispatchAction: (action: Action) => {
+  dispatchAction: (action: Action, actingPlayerId?: PlayerId) => {
     const { gameMode, gameState, myPlayerId } = get();
 
     if (gameMode === 'online') {
@@ -292,13 +292,26 @@ export const useGameStore = create<GameStoreState>((set, get) => ({
     // Local mode handling
     if (!gameState) return;
 
+    // Auto-clear activeEventCard whenever a turn progression or resolution action occurs
+    if (
+      action.type === 'ACKNOWLEDGE_EVENT' ||
+      action.type === 'END_TURN' ||
+      action.type === 'ROLL' ||
+      action.type === 'BUY' ||
+      action.type === 'DECLINE_BUY'
+    ) {
+      set({ activeEventCard: null });
+    }
+
     // In auction or trade responses, caller might specify actor
     const actorId =
-      action.type === 'BID' || action.type === 'PASS_BID'
-        ? myPlayerId
-        : action.type === 'RESPOND_TRADE'
-        ? myPlayerId
-        : gameState.turnPlayerId;
+      actingPlayerId ?? (
+        action.type === 'BID' || action.type === 'PASS_BID'
+          ? myPlayerId
+          : action.type === 'RESPOND_TRADE'
+          ? myPlayerId
+          : gameState.turnPlayerId
+      );
 
     const result = applyLocalAction(gameState, actorId, action);
     if (result.error) {
@@ -322,9 +335,9 @@ export const useGameStore = create<GameStoreState>((set, get) => ({
       }
     }
 
-    // Start/re-start turn timer for human player
-    if (gameMode === 'local' && gameState && gameState.turnPlayerId === myPlayerId) {
-      const sec = gameState.rules?.turnTimerSec ?? 30;
+    // Start/re-start turn timer for human player only when it is genuinely their active turn
+    if (gameMode === 'local' && result.state && result.state.turnPlayerId === myPlayerId && result.state.phase !== 'gameOver') {
+      const sec = result.state.rules?.turnTimerSec ?? 30;
       set({
         turnTimerSec: sec,
         turnTimerActive: true,
@@ -346,15 +359,23 @@ export const useGameStore = create<GameStoreState>((set, get) => ({
         }
         set({ turnTimerRemaining: Math.max(0, rem - 1) });
         if (rem <= 1) {
-          // Timer expired — auto-end turn
+          // Timer expired — auto-act safely based on current phase
           set({ turnTimerActive: false, turnTimerRemaining: null });
           if ((get() as any)._timerInterval) clearInterval((get() as any)._timerInterval);
           const fs = get().gameState;
-          if (fs && fs.phase !== 'gameOver') {
-            get().dispatchAction({ type: 'END_TURN' });
+          if (fs && fs.phase !== 'gameOver' && fs.turnPlayerId === myPlayerId) {
+            if (fs.phase === 'awaitRoll') {
+              get().dispatchAction({ type: 'ROLL' });
+            } else if (fs.phase === 'resolveEvent' || fs.phase === 'awaitEndTurn') {
+              get().dismissEventCard();
+            }
           }
         }
       }, 1000);
+    } else if (result.state && result.state.turnPlayerId !== myPlayerId) {
+      // Clear human turn timer when it is not human's turn
+      set({ turnTimerActive: false, turnTimerRemaining: null });
+      if ((get() as any)._timerInterval) clearInterval((get() as any)._timerInterval);
     }
 
     // Check if a bot should now take its turn
@@ -374,7 +395,7 @@ export const useGameStore = create<GameStoreState>((set, get) => ({
           // Verify turn didn't change before timer fired
           const freshState = get().gameState;
           if (freshState && freshState.turnPlayerId === currentId) {
-            dispatchAction(step.action);
+            dispatchAction(step.action, currentId);
           }
         }, step.delayMs);
       }

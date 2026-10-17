@@ -22,6 +22,7 @@ export const ActionPanel: React.FC<ActionPanelProps> = ({ gameState }) => {
     initLocalGame,
     connectOnline,
     dispatchAction,
+    dismissEventCard,
     setShowTradeModal,
     setShowInfluenceModal,
     setShowAbilityModal,
@@ -683,14 +684,7 @@ export const ActionPanel: React.FC<ActionPanelProps> = ({ gameState }) => {
             </p>
           </div>          {isMyTurn && (
             <button
-              onClick={() => {
-                const turnPlayer = gameState.players[gameState.turnPlayerId];
-                if (turnPlayer && turnPlayer.doublesStreak > 0 && !turnPlayer.inJail) {
-                  dispatchAction({ type: 'ACKNOWLEDGE_EVENT' });
-                } else {
-                  dispatchAction({ type: 'END_TURN' });
-                }
-              }}
+              onClick={dismissEventCard}
               style={{
                 ...primaryButtonStyle,
                 background:
