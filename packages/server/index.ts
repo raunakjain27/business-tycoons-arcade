@@ -143,7 +143,12 @@ app.post('/api/telemetry', async (request) => {
 });
 
 // 7. Serve Web Arcade Static Client & SPA Fallback
-const DIST_PATH = path.resolve(process.cwd(), 'apps/web/dist');
+import { execSync } from 'node:child_process';
+import { fileURLToPath } from 'node:url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
 const MIME_TYPES: Record<string, string> = {
   '.html': 'text/html; charset=utf-8',
   '.js': 'application/javascript; charset=utf-8',
@@ -155,28 +160,73 @@ const MIME_TYPES: Record<string, string> = {
   '.map': 'application/json',
 };
 
+function resolveDistPath(): string | null {
+  const candidates = [
+    path.resolve(process.cwd(), 'apps/web/dist'),
+    path.resolve(__dirname, '../../apps/web/dist'),
+    path.resolve(__dirname, '../web/dist'),
+    path.resolve(process.cwd(), 'dist'),
+  ];
+  for (const c of candidates) {
+    if (fs.existsSync(path.join(c, 'index.html'))) {
+      return c;
+    }
+  }
+  // If not found, attempt to build it on the fly
+  try {
+    console.log('[SERVER] apps/web/dist not found, building client on startup...');
+    execSync('npm run build', { stdio: 'inherit', cwd: process.cwd() });
+    for (const c of candidates) {
+      if (fs.existsSync(path.join(c, 'index.html'))) {
+        return c;
+      }
+    }
+  } catch (err) {
+    console.warn('[SERVER] Could not auto-build apps/web/dist:', err);
+  }
+  return candidates[0];
+}
+
+const DIST_PATH = resolveDistPath();
+
+function serveStaticFile(reqPath: string, reply: any) {
+  if (!DIST_PATH || !fs.existsSync(DIST_PATH)) {
+    return reply.status(503).send('Web client is initializing. Please refresh in a moment.');
+  }
+
+  const rawPath = reqPath.split('?')[0];
+  const filePath = path.join(DIST_PATH, rawPath === '/' ? 'index.html' : rawPath);
+  if (fs.existsSync(filePath) && fs.statSync(filePath).isFile()) {
+    const ext = path.extname(filePath);
+    reply.type(MIME_TYPES[ext] || 'application/octet-stream');
+    return reply.send(fs.createReadStream(filePath));
+  }
+
+  const indexPath = path.join(DIST_PATH, 'index.html');
+  if (fs.existsSync(indexPath)) {
+    reply.type('text/html; charset=utf-8');
+    return reply.send(fs.createReadStream(indexPath));
+  }
+
+  return reply.status(404).send('404 Not Found');
+}
+
+app.get('/', async (request, reply) => {
+  return serveStaticFile('/', reply);
+});
+
+app.get('/*', async (request, reply) => {
+  if (request.url.startsWith('/api') || request.url.startsWith('/health')) {
+    return reply.status(404).send({ error: 'NOT_FOUND', message: 'API route not found' });
+  }
+  return serveStaticFile(request.url, reply);
+});
+
 app.setNotFoundHandler((request, reply) => {
   if (request.url.startsWith('/api') || request.url.startsWith('/health')) {
     return reply.status(404).send({ error: 'NOT_FOUND', message: 'API route not found' });
   }
-
-  if (fs.existsSync(DIST_PATH)) {
-    const rawPath = request.url.split('?')[0];
-    const filePath = path.join(DIST_PATH, rawPath === '/' ? 'index.html' : rawPath);
-    if (fs.existsSync(filePath) && fs.statSync(filePath).isFile()) {
-      const ext = path.extname(filePath);
-      reply.type(MIME_TYPES[ext] || 'application/octet-stream');
-      return reply.send(fs.createReadStream(filePath));
-    }
-
-    const indexPath = path.join(DIST_PATH, 'index.html');
-    if (fs.existsSync(indexPath)) {
-      reply.type('text/html; charset=utf-8');
-      return reply.send(fs.createReadStream(indexPath));
-    }
-  }
-
-  reply.status(404).send('404 Not Found');
+  return serveStaticFile(request.url, reply);
 });
 
 // Create Colyseus server with WebSocket transport
