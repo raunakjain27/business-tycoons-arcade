@@ -28,7 +28,7 @@ function getGridPosition(tileId: TileId): { row: number; col: number; isCorner: 
 }
 
 export const Board: React.FC<BoardProps> = ({ gameState }) => {
-  const { selectedTile, setSelectedTile, myPlayerId, dispatchAction, dismissEventCard } = useGameStore();
+  const { selectedTile, setSelectedTile, myPlayerId, dispatchAction, dismissEventCard, initLocalGame } = useGameStore();
   const [editingTileId, setEditingTileId] = useState<TileId | null>(null);
   const [editNameInput, setEditNameInput] = useState('');
 
@@ -840,6 +840,132 @@ export const Board: React.FC<BoardProps> = ({ gameState }) => {
             >
               <span>End Turn ➔</span>
             </button>
+          )}
+
+          {/* Jail Choices in Center */}
+          {gameState.phase === 'awaitJailChoice' && gameState.turnPlayerId === myPlayerId && (
+            <div style={{ display: 'flex', gap: '8px', marginBottom: '8px', flexWrap: 'wrap', justifyContent: 'center' }}>
+              <button
+                onClick={() => dispatchAction({ type: 'ROLL' })}
+                style={{
+                  padding: '9px 16px',
+                  borderRadius: '8px',
+                  border: 'none',
+                  background: 'linear-gradient(135deg, #7c3aed 0%, #ec4899 100%)',
+                  color: '#ffffff',
+                  fontSize: '13px',
+                  fontWeight: 800,
+                  cursor: 'pointer',
+                }}
+              >
+                🎲 Roll for Doubles
+              </button>
+              {gameState.players[myPlayerId]?.cash >= 50 && (
+                <button
+                  onClick={() => dispatchAction({ type: 'PAY_JAIL_FEE' })}
+                  style={{
+                    padding: '9px 14px',
+                    borderRadius: '8px',
+                    border: '1px solid #10b981',
+                    backgroundColor: 'rgba(16, 185, 129, 0.2)',
+                    color: '#6ee7b7',
+                    fontSize: '13px',
+                    fontWeight: 700,
+                    cursor: 'pointer',
+                  }}
+                >
+                  💵 Pay $50
+                </button>
+              )}
+              {gameState.players[myPlayerId]?.heldCards.includes('jail_card') && (
+                <button
+                  onClick={() => dispatchAction({ type: 'USE_JAIL_CARD' })}
+                  style={{
+                    padding: '9px 14px',
+                    borderRadius: '8px',
+                    border: '1px solid #eab308',
+                    backgroundColor: 'rgba(234, 179, 8, 0.2)',
+                    color: '#fde047',
+                    fontSize: '13px',
+                    fontWeight: 700,
+                    cursor: 'pointer',
+                  }}
+                >
+                  📜 Use Card
+                </button>
+              )}
+            </div>
+          )}
+
+          {/* Debt Settlement in Center */}
+          {gameState.phase === 'awaitDebtSettlement' && gameState.turnPlayerId === myPlayerId && (
+            <div style={{ display: 'flex', gap: '8px', marginBottom: '8px' }}>
+              <button
+                onClick={() => dispatchAction({ type: 'RAISE_FUNDS_DONE' })}
+                style={{
+                  padding: '9px 20px',
+                  borderRadius: '8px',
+                  border: 'none',
+                  background:
+                    gameState.players[myPlayerId]?.cash >= 0
+                      ? 'linear-gradient(135deg, #10b981 0%, #059669 100%)'
+                      : 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)',
+                  color: '#ffffff',
+                  fontSize: '13px',
+                  fontWeight: 800,
+                  cursor: 'pointer',
+                }}
+              >
+                {gameState.players[myPlayerId]?.cash >= 0 ? 'Clear Debt & Continue ➔' : 'Declare Bankruptcy'}
+              </button>
+            </div>
+          )}
+
+          {/* Live Auction Banner in Center */}
+          {gameState.phase === 'auction' && gameState.auction && (
+            <div
+              style={{
+                backgroundColor: 'rgba(234, 179, 8, 0.15)',
+                border: '1px solid #eab308',
+                borderRadius: '8px',
+                padding: '6px 14px',
+                marginBottom: '8px',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px',
+              }}
+            >
+              <span>🔨</span>
+              <span style={{ fontSize: '12px', fontWeight: 700, color: '#fef08a' }}>
+                Auction in progress: High Bid ${gameState.auction.highBid} (
+                {gameState.auction.highBidder
+                  ? gameState.players[gameState.auction.highBidder]?.name ?? 'Anonymous'
+                  : 'Starting'}
+                )
+              </span>
+            </div>
+          )}
+
+          {/* Game Over in Board Center */}
+          {gameState.phase === 'gameOver' && (
+            <div style={{ textAlign: 'center', marginBottom: '8px' }}>
+              <button
+                onClick={() => initLocalGame(4, gameState.players[myPlayerId]?.name || 'Player 1')}
+                style={{
+                  padding: '10px 24px',
+                  borderRadius: '10px',
+                  border: 'none',
+                  background: 'linear-gradient(135deg, #eab308 0%, #ca8a04 100%)',
+                  color: '#0f172a',
+                  fontSize: '14px',
+                  fontWeight: 900,
+                  cursor: 'pointer',
+                  boxShadow: '0 4px 16px rgba(234, 179, 8, 0.4)',
+                }}
+              >
+                👑 Match Concluded — Play Again ↺
+              </button>
+            </div>
           )}
 
           {/* Turn indicator badge when not your turn */}

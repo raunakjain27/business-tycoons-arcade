@@ -315,6 +315,17 @@ export const useGameStore = create<GameStoreState>((set, get) => ({
 
     const result = applyLocalAction(gameState, actorId, action);
     if (result.error) {
+      if (actorId !== myPlayerId) {
+        // Fallback for bot errors so game never deadlocks on bot turns
+        if (action.type !== 'END_TURN') {
+          const fallback = applyLocalAction(gameState, actorId, { type: 'END_TURN' });
+          if (!fallback.error) {
+            set({ gameState: fallback.state, errorMessage: null });
+            get().triggerBotTurnIfNeeded();
+            return;
+          }
+        }
+      }
       set({ errorMessage: result.error });
       return;
     }
@@ -385,6 +396,45 @@ export const useGameStore = create<GameStoreState>((set, get) => ({
   triggerBotTurnIfNeeded: () => {
     const { gameMode, gameState, myPlayerId, dispatchAction } = get();
     if (gameMode !== 'local' || !gameState || gameState.phase === 'gameOver') return;
+
+    // Handle auction phase: any bot that has not passed yet takes an auction action
+    if (gameState.phase === 'auction' && gameState.auction) {
+      const nextBotId = gameState.turnOrder.find(
+        id =>
+          id !== myPlayerId &&
+          gameState.players[id]?.status === 'active' &&
+          !gameState.auction!.passed.includes(id) &&
+          id !== gameState.auction!.highBidder
+      );
+      if (nextBotId) {
+        const step = botStep(gameState, nextBotId);
+        if (step) {
+          setTimeout(() => {
+            const freshState = get().gameState;
+            if (freshState && freshState.phase === 'auction' && freshState.auction) {
+              dispatchAction(step.action, nextBotId);
+            }
+          }, step.delayMs);
+        }
+      }
+      return;
+    }
+
+    // Respond to pending trades proposed to bots
+    const botWithTrade = gameState.turnOrder.find(
+      id => id !== myPlayerId && gameState.trades?.some(t => t.toId === id && t.status === 'pending')
+    );
+    if (botWithTrade) {
+      const step = botStep(gameState, botWithTrade);
+      if (step) {
+        setTimeout(() => {
+          const fresh = get().gameState;
+          if (fresh && fresh.trades?.some(t => t.toId === botWithTrade && t.status === 'pending')) {
+            dispatchAction(step.action, botWithTrade);
+          }
+        }, step.delayMs);
+      }
+    }
 
     // Check if current turn player is a bot
     const currentId = gameState.turnPlayerId;

@@ -371,8 +371,15 @@ export function applyLocalAction(
       const activePlayers = state.turnOrder.filter(id => state.players[id]?.status === 'active');
       const auctionTileDef = getTileDef(state.auction.tileId);
 
-      // Check if all players passed
-      if (state.auction.passed.length >= activePlayers.length) {
+      // Check if all players passed OR all other players passed when someone holds a high bid
+      const passedCount = state.auction.passed.length;
+      const isConcluded =
+        passedCount >= activePlayers.length ||
+        (Boolean(state.auction.highBidder) &&
+          passedCount >= activePlayers.length - 1 &&
+          !state.auction.passed.includes(state.auction.highBidder!));
+
+      if (isConcluded) {
         if (state.auction.highBidder) {
           const winner = state.players[state.auction.highBidder];
           const winningTile = state.tiles[state.auction.tileId];
@@ -1433,6 +1440,15 @@ export function botStep(state: GameState, botId: PlayerId): { action: Action; de
     return { action: { type: 'PASS_BID' }, delayMs: 600 };
   }
 
+  // Respond to pending trades proposed to this bot
+  const pendingTrade = state.trades.find(t => t.toId === botId && t.status === 'pending');
+  if (pendingTrade) {
+    return {
+      action: { type: 'RESPOND_TRADE', tradeId: pendingTrade.id, response: 'accept' },
+      delayMs: 800,
+    };
+  }
+
   if (state.turnPlayerId !== botId) return null;
 
   switch (state.phase) {
@@ -1474,7 +1490,7 @@ export function botStep(state: GameState, botId: PlayerId): { action: Action; de
     }
 
     case 'awaitEndTurn': {
-      // Attempt building if bot owns a full district and has ample cash
+      // Attempt building if bot owns a full district and has ample cash, respecting even-build
       for (const [idStr, tState] of Object.entries(state.tiles)) {
         const tileId = Number(idStr);
         const def = getTileDef(tileId);
@@ -1484,9 +1500,15 @@ export function botStep(state: GameState, botId: PlayerId): { action: Action; de
           def.districtId &&
           ownsFullDistrict(state, botId, def.districtId)
         ) {
-          const district = BOARD_DATA.districts[def.districtId];
-          if (district && bot.cash > district.buildCost + 300) {
-            return { action: { type: 'BUILD', tileId }, delayMs: 700 };
+          const districtTileIds = BOARD_DATA.tiles
+            .filter(t => t.districtId === def.districtId)
+            .map(t => t.id);
+          const minTier = Math.min(...districtTileIds.map(id => state.tiles[id]?.tier ?? 0));
+          if (tState.tier === minTier) {
+            const district = BOARD_DATA.districts[def.districtId];
+            if (district && bot.cash > district.buildCost + 300) {
+              return { action: { type: 'BUILD', tileId }, delayMs: 700 };
+            }
           }
         }
       }

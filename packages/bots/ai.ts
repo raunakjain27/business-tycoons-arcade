@@ -119,7 +119,8 @@ export class BotAI {
                 const dist = BOARD.districts[def.districtId];
                 if (dist && player.cash >= dist.buildCost) {
                   const ownsAll = dist.tileIds.every(id => state.tiles[id]?.ownerId === playerId && !state.tiles[id]?.mortgaged);
-                  if (ownsAll) {
+                  const minTier = Math.min(...dist.tileIds.map(id => state.tiles[id]?.tier ?? 0));
+                  if (ownsAll && tState.tier === minTier) {
                     actions.push({ type: 'BUILD', tileId });
                   }
                 }
