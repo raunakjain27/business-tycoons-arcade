@@ -5,7 +5,7 @@ services:
     runtime: node
     plan: free
     region: oregon
-    buildCommand: pnpm install --prod=false --no-frozen-lockfile
+    buildCommand: pnpm install --prod=false --no-frozen-lockfile && npm --prefix apps/web run build
     startCommand: node --import tsx packages/server/index.ts
     healthCheckPath: /health
     envVars:

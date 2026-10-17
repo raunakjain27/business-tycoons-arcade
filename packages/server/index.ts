@@ -1,8 +1,9 @@
-// Use Fastify + Colyseus
 import Fastify from 'fastify';
 import { Server as ColyseusServer } from '@colyseus/core';
 import { WebSocketTransport } from '@colyseus/ws-transport';
 import { GameRoom } from './game.room';
+import fs from 'node:fs';
+import path from 'node:path';
 
 // Environment config - required vars with validation
 const PORT = parseInt(process.env.PORT || '2567', 10);
@@ -139,6 +140,43 @@ app.post('/api/telemetry', async (request) => {
     console.warn('[CLIENT TELEMETRY ERROR]', body.error, body.context || '');
   }
   return { ok: true, received: true };
+});
+
+// 7. Serve Web Arcade Static Client & SPA Fallback
+const DIST_PATH = path.resolve(process.cwd(), 'apps/web/dist');
+const MIME_TYPES: Record<string, string> = {
+  '.html': 'text/html; charset=utf-8',
+  '.js': 'application/javascript; charset=utf-8',
+  '.css': 'text/css; charset=utf-8',
+  '.json': 'application/json; charset=utf-8',
+  '.png': 'image/png',
+  '.svg': 'image/svg+xml',
+  '.ico': 'image/x-icon',
+  '.map': 'application/json',
+};
+
+app.setNotFoundHandler((request, reply) => {
+  if (request.url.startsWith('/api') || request.url.startsWith('/health')) {
+    return reply.status(404).send({ error: 'NOT_FOUND', message: 'API route not found' });
+  }
+
+  if (fs.existsSync(DIST_PATH)) {
+    const rawPath = request.url.split('?')[0];
+    const filePath = path.join(DIST_PATH, rawPath === '/' ? 'index.html' : rawPath);
+    if (fs.existsSync(filePath) && fs.statSync(filePath).isFile()) {
+      const ext = path.extname(filePath);
+      reply.type(MIME_TYPES[ext] || 'application/octet-stream');
+      return reply.send(fs.createReadStream(filePath));
+    }
+
+    const indexPath = path.join(DIST_PATH, 'index.html');
+    if (fs.existsSync(indexPath)) {
+      reply.type('text/html; charset=utf-8');
+      return reply.send(fs.createReadStream(indexPath));
+    }
+  }
+
+  reply.status(404).send('404 Not Found');
 });
 
 // Create Colyseus server with WebSocket transport
