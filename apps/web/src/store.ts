@@ -139,6 +139,8 @@ export const useGameStore = create<GameStoreState>((set, get) => ({
   setSelectedTile: (tileId: TileId | null) => set({ selectedTile: tileId }),
   setShowTradeModal: (show: boolean) => set({ showTradeModal: show }),
   setShowInfluenceModal: (show: boolean) => set({ showInfluenceModal: show }),
+  setShowAbilityModal: (show: boolean) => set({ showAbilityModal: show }),
+  clearError: () => set({ errorMessage: null }),
   dismissEventCard: () => {
     set({ activeEventCard: null });
     const state = get().gameState;
