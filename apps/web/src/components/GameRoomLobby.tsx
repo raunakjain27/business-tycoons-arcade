@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useGameRoomStore, RoomPlayer } from '../gameRoomStore';
 import { useHubStore } from '../hubStore';
+import { trackEvent } from '../posthog';
 
 interface GameRoomLobbyProps {
   gameId: string;
@@ -445,7 +446,15 @@ export const GameRoomLobby: React.FC<GameRoomLobbyProps> = ({
           </button>
 
           <button
-            onClick={onStart}
+            onClick={() => {
+              trackEvent('match_started', {
+                gameId,
+                roomCode: room.roomCode,
+                playersCount: room.players.length,
+                allowBots: room.allowBots,
+              });
+              onStart();
+            }}
             disabled={!canStart}
             style={{
               padding: '14px 36px',

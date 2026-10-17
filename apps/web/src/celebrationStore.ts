@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { soundFx } from './soundEffects';
 import { useUserStore } from './userStore';
+import { trackEvent } from './posthog';
 
 export interface VictoryData {
   gameTitle: string;
@@ -35,6 +36,15 @@ export const useCelebrationStore = create<CelebrationStoreState>((set) => ({
     if (data.xpAwarded > 0) {
       useUserStore.getState().addXp(data.xpAwarded);
     }
+
+    trackEvent('game_victory_celebration', {
+      gameTitle: data.gameTitle,
+      winnerName: data.winnerName,
+      winnerAvatar: data.winnerAvatar,
+      coinsAwarded: data.coinsAwarded,
+      xpAwarded: data.xpAwarded,
+      reason: data.reason,
+    });
 
     set({ isOpen: true, data });
   },

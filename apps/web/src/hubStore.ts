@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import { trackEvent } from './posthog';
 
 export type GameId = 
   | 'cornerstone'
@@ -176,7 +177,10 @@ export const useHubStore = create<HubStoreState>((set) => ({
   searchQuery: '',
   selectedCategory: 'All',
 
-  setActiveGame: (game: GameId) => set({ activeGame: game, view: 'game' }),
+  setActiveGame: (game: GameId) => {
+    trackEvent('game_selected', { gameId: game });
+    set({ activeGame: game, view: 'game' });
+  },
   setView: (view: 'dashboard' | 'game') => set({ view }),
   setSearchQuery: (query: string) => set({ searchQuery: query }),
   setSelectedCategory: (cat: string) => set({ selectedCategory: cat }),

@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import { identifyUser, trackEvent } from './posthog';
 
 export interface UserAccount {
   id: string;
@@ -192,6 +193,8 @@ export const useUserStore = create<UserStoreState>((set, get) => ({
     const user = { ...get().user, username: name };
     localStorage.setItem(STORAGE_KEY, JSON.stringify(user));
     set({ user });
+    identifyUser(user.id, { username: name });
+    trackEvent('user_updated_nickname', { username: name });
     syncUserWithCloud(user).catch(() => {});
   },
 
@@ -199,6 +202,8 @@ export const useUserStore = create<UserStoreState>((set, get) => ({
     const user = { ...get().user, avatar };
     localStorage.setItem(STORAGE_KEY, JSON.stringify(user));
     set({ user });
+    identifyUser(user.id, { avatar });
+    trackEvent('user_updated_avatar', { avatar });
     syncUserWithCloud(user).catch(() => {});
   },
 
@@ -206,6 +211,7 @@ export const useUserStore = create<UserStoreState>((set, get) => ({
     const user = { ...get().user, friendNames: names };
     localStorage.setItem(STORAGE_KEY, JSON.stringify(user));
     set({ user });
+    trackEvent('custom_friends_updated', { count: names.length });
     syncUserWithCloud(user).catch(() => {});
   },
 
@@ -213,6 +219,7 @@ export const useUserStore = create<UserStoreState>((set, get) => ({
     const user = { ...get().user, coins: get().user.coins + amount };
     localStorage.setItem(STORAGE_KEY, JSON.stringify(user));
     set({ user });
+    trackEvent('coins_added', { amount, totalCoins: user.coins });
     syncUserWithCloud(user).catch(() => {});
   },
 
@@ -221,6 +228,7 @@ export const useUserStore = create<UserStoreState>((set, get) => ({
     const user = { ...get().user, gamesWon: (get().user.gamesWon || 0) + 1, coins: get().user.coins + 100 };
     localStorage.setItem(STORAGE_KEY, JSON.stringify(user));
     set({ user });
+    trackEvent('game_win_recorded', { gamesWon: user.gamesWon, level: user.level });
     syncUserWithCloud(user).catch(() => {});
   },
 
@@ -245,6 +253,7 @@ export const useUserStore = create<UserStoreState>((set, get) => ({
     };
     localStorage.setItem(STORAGE_KEY, JSON.stringify(updatedUser));
     set({ user: updatedUser });
+    trackEvent('daily_reward_claimed', { reward: totalReward, streak: newStreak });
     syncUserWithCloud(updatedUser).catch(() => {});
     return { success: true, reward: totalReward, streak: newStreak };
   },
@@ -261,6 +270,8 @@ export const useUserStore = create<UserStoreState>((set, get) => ({
     };
     localStorage.setItem(STORAGE_KEY, JSON.stringify(user));
     set({ user });
+    identifyUser(user.id, { isVip: true });
+    trackEvent('vip_pass_unlocked', { bonusCoins: 1000 });
     syncUserWithCloud(user).catch(() => {});
   },
 
@@ -268,12 +279,14 @@ export const useUserStore = create<UserStoreState>((set, get) => ({
     const user = { ...get().user, activeSoundPack: id };
     localStorage.setItem(STORAGE_KEY, JSON.stringify(user));
     set({ user });
+    trackEvent('sound_pack_changed', { soundPack: id });
   },
 
   setActiveCelebration: (id: string) => {
     const user = { ...get().user, activeCelebration: id };
     localStorage.setItem(STORAGE_KEY, JSON.stringify(user));
     set({ user });
+    trackEvent('celebration_changed', { celebration: id });
   },
 
   unlockItem: (type: 'board' | 'peg' | 'sound' | 'celebration', id: string, cost: number) => {
@@ -289,6 +302,7 @@ export const useUserStore = create<UserStoreState>((set, get) => ({
     };
     localStorage.setItem(STORAGE_KEY, JSON.stringify(updatedUser));
     set({ user: updatedUser });
+    trackEvent('store_item_unlocked', { type, id, cost, remainingCoins: updatedUser.coins });
     syncUserWithCloud(updatedUser).catch(() => {});
     return true;
   },
@@ -298,6 +312,15 @@ export const useUserStore = create<UserStoreState>((set, get) => ({
 if (typeof window !== 'undefined') {
   setTimeout(() => {
     const currentUser = useUserStore.getState().user;
+    identifyUser(currentUser.id, {
+      username: currentUser.username,
+      avatar: currentUser.avatar,
+      isVip: currentUser.isVip,
+      level: currentUser.level,
+      coins: currentUser.coins,
+      dailyStreak: currentUser.dailyStreak,
+      gamesWon: currentUser.gamesWon,
+    });
     syncUserWithCloud(currentUser).then((synced) => {
       if (synced) {
         useUserStore.setState({ user: synced });
