@@ -3,6 +3,7 @@ import React, { useEffect, useState } from 'react';
 interface DiceVisualizerProps {
   dice: [number, number] | null;
   isRolling?: boolean;
+  version?: number;
 }
 
 const DIE_PIPS: Record<number, number[][]> = {
@@ -14,7 +15,7 @@ const DIE_PIPS: Record<number, number[][]> = {
   6: [[25, 25], [75, 25], [25, 50], [75, 50], [25, 75], [75, 75]],
 };
 
-export const DiceVisualizer: React.FC<DiceVisualizerProps> = ({ dice, isRolling = false }) => {
+export const DiceVisualizer: React.FC<DiceVisualizerProps> = ({ dice, isRolling = false, version }) => {
   const [displayDice, setDisplayDice] = useState<[number, number]>(dice ?? [1, 1]);
   const [animating, setAnimating] = useState(false);
 
@@ -43,7 +44,7 @@ export const DiceVisualizer: React.FC<DiceVisualizerProps> = ({ dice, isRolling 
         clearTimeout(timeout);
       };
     }
-  }, [dice?.[0], dice?.[1]]);
+  }, [dice?.[0], dice?.[1], version]);
 
   const isSingle = (dice && dice[1] === 0) || (displayDice[1] === 0);
   const isDoubles = !isSingle && displayDice[0] === displayDice[1];

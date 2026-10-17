@@ -210,13 +210,15 @@ export const Modals: React.FC<ModalsProps> = ({ gameState }) => {
 
                 <button
                   onClick={() => {
+                    const safeGive = Math.max(0, Math.min(giveCash || 0, myPlayer?.cash ?? 0));
+                    const safeWant = Math.max(0, wantCash || 0);
                     dispatchAction({
                       type: 'PROPOSE_TRADE',
                       offer: {
                         fromId: myPlayerId,
                         toId: tradeToId,
-                        give: { tileIds: giveTiles, cash: giveCash, influence: 0, cards: [], rentContracts: [] },
-                        want: { tileIds: wantTiles, cash: wantCash, influence: 0, cards: [], rentContracts: [] },
+                        give: { tileIds: giveTiles, cash: safeGive, influence: 0, cards: [], rentContracts: [] },
+                        want: { tileIds: wantTiles, cash: safeWant, influence: 0, cards: [], rentContracts: [] },
                       },
                     });
                     setShowTradeModal(false);
@@ -423,7 +425,7 @@ export const Modals: React.FC<ModalsProps> = ({ gameState }) => {
       )}
 
       {/* 5. TILE INSPECTOR MODAL (When clicking any tile) */}
-      {selectedTile !== null && !showTradeModal && !showInfluenceModal && !showAbilityModal && (
+      {selectedTile !== null && !showTradeModal && !showInfluenceModal && !showAbilityModal && !activeEventCard && (
         <div style={backdropStyle} onClick={() => setSelectedTile(null)}>
           <div style={modalContainerStyle} onClick={(e: any) => e.stopPropagation()}>
             {(() => {

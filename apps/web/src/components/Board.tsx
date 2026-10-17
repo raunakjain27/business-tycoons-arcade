@@ -720,7 +720,7 @@ export const Board: React.FC<BoardProps> = ({ gameState }) => {
         >
           {/* Top of Center: Dice Visualizer moved up */}
           <div style={{ marginTop: '2px', marginBottom: '6px' }}>
-            <DiceVisualizer dice={gameState.lastDice} />
+            <DiceVisualizer dice={gameState.lastDice} version={gameState.version} />
           </div>
 
           {/* Roll Action Button in Center */}

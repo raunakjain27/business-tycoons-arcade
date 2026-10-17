@@ -326,11 +326,28 @@ export const useGameStore = create<GameStoreState>((set, get) => ({
           }
         }
       }
+
+      // Silently ignore benign out-of-phase race condition clicks (e.g. user rapid double-clicks)
+      const benignErrors = [
+        'Not in roll phase',
+        'Not in buy decision phase',
+        'Not in event resolution phase',
+        'Cannot end turn yet',
+      ];
+      if (benignErrors.includes(result.error) && gameState.turnPlayerId !== myPlayerId) {
+        return;
+      }
+
       set({ errorMessage: result.error });
+      if ((get() as any)._errorTimeout) clearTimeout((get() as any)._errorTimeout);
+      ;(get() as any)._errorTimeout = setTimeout(() => {
+        set({ errorMessage: null });
+      }, 3500);
       return;
     }
 
     set({ gameState: result.state, errorMessage: null });
+    if ((get() as any)._errorTimeout) clearTimeout((get() as any)._errorTimeout);
 
     // Check if event card was drawn
     const eventLog = result.events.find(e => e.type === 'EVENT_CARD_DRAWN');
