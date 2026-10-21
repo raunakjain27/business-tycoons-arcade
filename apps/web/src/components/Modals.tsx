@@ -68,28 +68,31 @@ export const Modals: React.FC<ModalsProps> = ({ gameState }) => {
     left: 0,
     right: 0,
     bottom: 0,
-    backgroundColor: 'rgba(10, 15, 30, 0.78)',
-    backdropFilter: 'blur(6px)',
+    backgroundColor: 'rgba(5, 8, 15, 0.85)',
+    backdropFilter: 'blur(16px)',
+    WebkitBackdropFilter: 'blur(16px)',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
     zIndex: 1000,
     padding: '16px',
+    animation: 'fadeIn 0.2s ease',
   };
 
   const modalContainerStyle: React.CSSProperties = {
-    backgroundColor: '#161326',
-    borderRadius: '16px',
-    border: '1px solid rgba(255, 255, 255, 0.14)',
-    boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.85), 0 0 35px rgba(124, 58, 237, 0.25)',
+    backgroundColor: 'rgba(14, 19, 32, 0.96)',
+    borderRadius: '18px',
+    border: '1px solid rgba(255, 255, 255, 0.1)',
+    boxShadow: '0 30px 70px -10px rgba(0, 0, 0, 0.85), 0 0 40px rgba(139, 92, 246, 0.18)',
     maxWidth: '560px',
     width: '100%',
-    padding: '22px',
+    padding: '24px',
     display: 'flex',
     flexDirection: 'column',
     gap: '16px',
     maxHeight: '92vh',
     overflowY: 'auto',
+    animation: 'slideUp 0.25s cubic-bezier(0.16, 1, 0.3, 1)',
   };
 
   return (
@@ -654,16 +657,17 @@ export const Modals: React.FC<ModalsProps> = ({ gameState }) => {
             return (
               <div
                 style={{
-                  backgroundColor: '#1b172a',
-                  borderRadius: '16px',
-                  border: '2px solid rgba(255, 255, 255, 0.16)',
-                  boxShadow: '0 30px 60px rgba(0, 0, 0, 0.9), 0 0 40px rgba(124, 58, 237, 0.3)',
-                  maxWidth: '430px',
+                  backgroundColor: 'rgba(14, 19, 32, 0.98)',
+                  borderRadius: '18px',
+                  border: '1px solid rgba(255, 255, 255, 0.12)',
+                  boxShadow: '0 30px 70px rgba(0, 0, 0, 0.9), 0 0 40px rgba(139, 92, 246, 0.25)',
+                  maxWidth: '440px',
                   width: '100%',
                   overflow: 'hidden',
                   display: 'flex',
                   flexDirection: 'column',
                   maxHeight: '90vh',
+                  animation: 'slideUp 0.25s cubic-bezier(0.16, 1, 0.3, 1)',
                 }}
                 onClick={(e: any) => e.stopPropagation()}
               >

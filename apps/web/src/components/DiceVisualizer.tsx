@@ -103,17 +103,17 @@ const DieFace: React.FC<{ value: number; animating: boolean }> = ({ value, anima
     <div
       className="dice-face-box"
       style={{
-        width: '46px',
-        height: '46px',
-        backgroundColor: '#f8fafc',
-        borderRadius: '10px',
+        width: '48px',
+        height: '48px',
+        background: 'linear-gradient(145deg, #ffffff 0%, #f1f5f9 100%)',
+        borderRadius: '12px',
         position: 'relative',
         boxShadow: animating
-          ? '0 12px 20px -3px rgba(0,0,0,0.5), inset 0 -3px 0 #cbd5e1, 0 0 16px rgba(255,255,255,0.4)'
-          : '0 8px 16px -2px rgba(0,0,0,0.4), inset 0 -3px 0 #cbd5e1',
-        border: '1px solid #e2e8f0',
+          ? '0 16px 28px -4px rgba(0,0,0,0.65), inset 0 1px 0 #ffffff, inset 0 -3px 0 #94a3b8, 0 0 20px rgba(255,255,255,0.5)'
+          : '0 10px 22px -3px rgba(0,0,0,0.5), inset 0 1px 0 #ffffff, inset 0 -3px 0 #cbd5e1',
+        border: '1px solid rgba(255, 255, 255, 0.85)',
         animation: animating ? 'diceTumble 0.15s infinite' : 'none',
-        transition: 'transform 0.15s ease',
+        transition: 'transform 0.15s cubic-bezier(0.16, 1, 0.3, 1)',
       }}
     >
       <svg width="100%" height="100%" viewBox="0 0 100 100">
