@@ -43,18 +43,17 @@ export const VoiceRoomBar: React.FC<VoiceRoomBarProps> = ({ gameTitle, turnRestr
 
   return (
     <div
+      className="glass-panel"
       style={{
-        background: 'rgba(15, 11, 26, 0.75)',
-        backdropFilter: 'blur(16px)',
-        border: '1px solid rgba(255, 255, 255, 0.1)',
-        borderRadius: '16px',
-        padding: '10px 18px',
+        padding: '6px 16px',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'space-between',
         flexWrap: 'wrap',
-        gap: '12px',
-        boxShadow: '0 8px 24px rgba(0, 0, 0, 0.4)',
+        gap: '8px',
+        minHeight: '40px',
+        borderRadius: '12px',
+        marginBottom: '6px',
       }}
     >
       {/* Left: Status & Turn Indicator */}

@@ -1,13 +1,34 @@
 /*
-  Cornerstone shared keyframe library.
-  Imported once via main.tsx so every component can use the names from
-  DESIGN_SYSTEM.keyframes without defining them inline.
+  Cornerstone / Business Tycoons Modern Gaming Design System
+  Deep slate canvas, frosted glass panels, neon accent glows, tactile controls.
 */
 
+:root {
+  --bg-space: #07090e;
+  --bg-surface: #0e121b;
+  --bg-elevated: #151a26;
+  --bg-glass: rgba(18, 23, 36, 0.75);
+  --bg-glass-card: rgba(22, 28, 45, 0.65);
+  --border-subtle: rgba(255, 255, 255, 0.07);
+  --border-light: rgba(255, 255, 255, 0.12);
+  --border-glow: rgba(139, 92, 246, 0.4);
+
+  --accent-purple: #8b5cf6;
+  --accent-cyan: #06b6d4;
+  --accent-emerald: #10b981;
+  --accent-amber: #f59e0b;
+  --accent-rose: #f43f5e;
+
+  --text-main: #f8fafc;
+  --text-muted: #94a3b8;
+  --text-dim: #64748b;
+}
+
+/* Animations */
 @keyframes fadeInUp {
   from {
     opacity: 0;
-    transform: translateY(12px);
+    transform: translateY(10px);
   }
   to {
     opacity: 1;
@@ -16,79 +37,162 @@
 }
 
 @keyframes fadeIn {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
+  from { opacity: 0; }
+  to { opacity: 1; }
 }
 
-@keyframes pulse {
+@keyframes pulseGlow {
   0%, 100% {
-    opacity: 1;
+    box-shadow: 0 0 15px rgba(139, 92, 246, 0.35), inset 0 0 10px rgba(139, 92, 246, 0.2);
   }
   50% {
-    opacity: 0.55;
+    box-shadow: 0 0 25px rgba(139, 92, 246, 0.6), inset 0 0 15px rgba(139, 92, 246, 0.35);
   }
 }
 
-@keyframes pulseFast {
-  0%, 100% {
-    opacity: 1;
-  }
-  50% {
-    opacity: 0.4;
-  }
+@keyframes turnRingPulse {
+  0% { transform: scale(1); opacity: 0.9; }
+  50% { transform: scale(1.04); opacity: 0.5; }
+  100% { transform: scale(1); opacity: 0.9; }
 }
 
-@keyframes bounce {
-  0%, 100% {
-    transform: translateY(0);
-  }
-  45% {
-    transform: translateY(-8px);
-  }
-  65% {
-    transform: translateY(-3px);
-  }
+@keyframes bouncePeg {
+  0%, 100% { transform: translateY(0) scale(1); }
+  50% { transform: translateY(-4px) scale(1.1); }
 }
 
-@keyframes shimmer {
-  0% {
-    background-position: -200% 0;
-  }
-  100% {
-    background-position: 200% 0;
-  }
+@keyframes floatPeg {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-2px); }
 }
 
-@keyframes pop {
-  0% {
-    transform: scale(0.85);
-    opacity: 0.4;
-  }
-  100% {
-    transform: scale(1);
-    opacity: 1;
-  }
+@keyframes floatEmote {
+  0% { transform: translate(-50%, 0) scale(0.6); opacity: 0; }
+  20% { transform: translate(-50%, -10px) scale(1.2); opacity: 1; }
+  75% { transform: translate(-50%, -24px) scale(1); opacity: 0.9; }
+  100% { transform: translate(-50%, -36px) scale(0.7); opacity: 0; }
 }
 
-@keyframes slideUp {
-  from {
-    opacity: 0;
-    transform: translateY(16px) scale(0.98);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0) scale(1);
-  }
+@keyframes jackpotShimmer {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
 }
 
-/* -------------------------------------------------------------------------- */
-/* Mobile Viewport & Touch Optimization for Production                        */
-/* -------------------------------------------------------------------------- */
+/* Core Glassmorphism & UI Panels */
+.glass-panel {
+  background: var(--bg-glass);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  border: 1px solid var(--border-subtle);
+  border-radius: 16px;
+  box-shadow: 0 12px 36px -4px rgba(0, 0, 0, 0.45), 0 0 0 1px rgba(255, 255, 255, 0.03);
+}
 
+.glass-card {
+  background: var(--bg-glass-card);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border: 1px solid var(--border-subtle);
+  border-radius: 12px;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.glass-card:hover {
+  border-color: var(--border-light);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px -2px rgba(0, 0, 0, 0.5);
+}
+
+.glass-pill {
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  backdrop-filter: blur(8px);
+  border-radius: 9999px;
+  padding: 4px 12px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-main);
+}
+
+/* Tactile Gaming Buttons */
+.btn-primary-glow {
+  background: linear-gradient(135deg, #8b5cf6 0%, #ec4899 100%);
+  color: #ffffff;
+  border: none;
+  font-weight: 800;
+  border-radius: 12px;
+  cursor: pointer;
+  box-shadow: 0 4px 18px rgba(139, 92, 246, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.3);
+  transition: all 0.15s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.btn-primary-glow:hover {
+  transform: translateY(-1.5px);
+  box-shadow: 0 6px 24px rgba(236, 72, 153, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.4);
+}
+
+.btn-primary-glow:active {
+  transform: translateY(0.5px) scale(0.98);
+}
+
+.btn-tactile-secondary {
+  background: rgba(255, 255, 255, 0.07);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: #e2e8f0;
+  font-weight: 700;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.btn-tactile-secondary:hover {
+  background: rgba(255, 255, 255, 0.12);
+  border-color: rgba(255, 255, 255, 0.25);
+  transform: translateY(-1px);
+}
+
+.btn-tactile-secondary:active {
+  transform: translateY(0);
+}
+
+.btn-danger-action {
+  background: rgba(239, 68, 68, 0.15);
+  border: 1px solid rgba(239, 68, 68, 0.35);
+  color: #fca5a5;
+  font-weight: 700;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.btn-danger-action:hover {
+  background: rgba(239, 68, 68, 0.28);
+  border-color: rgba(239, 68, 68, 0.6);
+  color: #ffffff;
+}
+
+/* Custom Scrollbars */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.3);
+}
+
+/* Responsive Touch & Mobile Handling */
 button, [role="button"], a {
   touch-action: manipulation;
   -webkit-tap-highlight-color: transparent;
@@ -118,19 +222,16 @@ button, [role="button"], a {
     padding: 8px 12px !important;
   }
 
-  /* Make modal dialogs full-width on mobile */
   .modal-container {
     width: 95% !important;
     max-height: 94vh !important;
     border-radius: 18px !important;
   }
 
-  /* Compact controls */
   input, select, button {
-    font-size: 15px !important;
+    font-size: 14px !important;
   }
 
-  /* Horizontal swipeable player dashboard on mobile */
   .player-dashboard-grid {
     display: flex !important;
     overflow-x: auto !important;
@@ -143,17 +244,6 @@ button, [role="button"], a {
     flex: 0 0 210px !important;
     scroll-snap-align: start !important;
     padding: 10px !important;
-  }
-
-  /* Dashboard mobile layout: stack headline and actions */
-  .dashboard-header-strip {
-    grid-template-columns: 1fr !important;
-    gap: 16px !important;
-  }
-  .dashboard-actions-rail {
-    width: 100% !important;
-    flex-wrap: wrap !important;
-    justify-content: flex-start !important;
   }
 }
 
@@ -169,13 +259,20 @@ button, [role="button"], a {
   }
 }
 
-@media (max-width: 480px) {
-  header {
-    padding: 10px 12px !important;
+@media (min-width: 1024px) {
+  .game-arena-grid {
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr) 360px !important;
+    gap: 20px !important;
+    align-items: start !important;
   }
+}
 
-  main {
-    padding: 8px !important;
+@media (max-width: 1023px) {
+  .game-arena-grid {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 16px !important;
   }
 }
 

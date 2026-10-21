@@ -277,42 +277,40 @@ export const ActionPanel: React.FC<ActionPanelProps> = ({ gameState }) => {
   // Helper button styling
   const primaryButtonStyle: React.CSSProperties = {
     padding: isMobile ? '10px 16px' : '12px 20px',
-    borderRadius: '8px',
+    borderRadius: '10px',
     border: 'none',
-    background: 'linear-gradient(135deg, #f472b6 0%, #a78bfa 100%)',
+    background: 'linear-gradient(135deg, #8b5cf6 0%, #ec4899 100%)',
     color: '#ffffff',
-    fontWeight: 700,
-    fontSize: isMobile ? '12px' : '14px',
+    fontWeight: 800,
+    fontSize: isMobile ? '12.5px' : '14px',
     cursor: 'pointer',
-    boxShadow: '0 4px 12px rgba(167, 139, 250, 0.35)',
-    transition: 'transform 0.1s',
+    boxShadow: '0 4px 18px rgba(139, 92, 246, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.3)',
+    transition: 'all 0.15s cubic-bezier(0.16, 1, 0.3, 1)',
   };
 
   const secondaryButtonStyle: React.CSSProperties = {
     padding: isMobile ? '8px 12px' : '10px 16px',
-    borderRadius: '8px',
-    background: 'rgba(31, 26, 48, 0.9)',
-    color: '#cbd5e1',
+    borderRadius: '10px',
+    background: 'rgba(255, 255, 255, 0.06)',
+    color: '#e2e8f0',
     border: '1px solid rgba(255, 255, 255, 0.12)',
-    fontWeight: 600,
-    fontSize: isMobile ? '11px' : '13px',
+    fontWeight: 700,
+    fontSize: isMobile ? '11.5px' : '13px',
     cursor: 'pointer',
+    transition: 'all 0.15s ease',
   };
 
   return (
     <div
+      className="glass-panel"
       style={{
-        background: 'linear-gradient(145deg, rgba(26, 22, 37, 0.95) 0%, rgba(15, 11, 26, 0.95) 100%)',
-        backdropFilter: 'blur(16px) saturate(180%)',
-        borderRadius: '20px',
-        border: '1px solid rgba(255, 255, 255, 0.12)',
-        padding: isMobile ? '16px' : '22px',
+        padding: isMobile ? '16px' : '20px',
         display: 'flex',
-        flexDirection: isMobile ? 'column' : 'column',
+        flexDirection: 'column',
         gap: isMobile ? '12px' : '16px',
-        width: isMobile ? '100%' : '500px',
-        minHeight: isMobile ? '280px' : '360px',
-        boxShadow: '0 20px 40px -15px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.1)',
+        width: '100%',
+        boxSizing: 'border-box',
+        minHeight: isMobile ? '260px' : '320px',
       }}
     >
       {/* Turn Header Banner */}

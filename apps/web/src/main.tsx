@@ -99,477 +99,330 @@ export function App() {
         flexDirection: 'column',
       }}
     >
-      {/* 1. Top Global Navigation Header */}
+      {/* 1. Top Global Navigation Header - Sleek Glassmorphic Gaming Bar */}
       <header
         style={{
-          background: 'rgba(15, 11, 26, 0.95)',
-          backdropFilter: 'blur(12px) saturate(180%)',
+          background: 'rgba(10, 14, 26, 0.85)',
+          backdropFilter: 'blur(20px) saturate(180%)',
+          WebkitBackdropFilter: 'blur(20px) saturate(180%)',
           borderBottom: '1px solid rgba(255, 255, 255, 0.08)',
-          padding: '12px 16px',
+          padding: '10px 20px',
           display: 'flex',
           justifyContent: 'space-between',
           alignItems: 'center',
-          boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.05)',
-          flexWrap: 'wrap',
-          gap: '8px',
+          boxShadow: '0 4px 20px rgba(0, 0, 0, 0.4)',
           position: 'sticky',
           top: 0,
           zIndex: 50,
+          minHeight: '56px',
         }}
       >
-        <div className="desktop-header-brand" style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+        {/* Left: Brand & Match Breadcrumb */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
           <div
             onClick={() => setView('dashboard')}
             style={{
-              width: '34px',
-              height: '34px',
-              borderRadius: '8px',
-              background: 'linear-gradient(135deg, #f472b6 0%, #a78bfa 100%)',
               display: 'flex',
               alignItems: 'center',
-              justifyContent: 'center',
-              fontWeight: 900,
-              fontSize: '15px',
-              color: '#ffffff',
-              boxShadow: '0 0 10px #e9456088',
+              gap: '10px',
               cursor: 'pointer',
             }}
           >
-            BT
-          </div>
-          <div>
-            <h1
-              onClick={() => setView('dashboard')}
-              style={{ fontSize: '18px', fontWeight: 800, letterSpacing: '0.5px', margin: 0, color: '#f8fafc', cursor: 'pointer' }}
-            >
-              BUSINESS TYCOONS & ARCADE
-            </h1>
-            <span style={{ fontSize: '11px', color: '#94a3b8' }}>Board Games & Party Platform</span>
-          </div>
-        </div>
-
-        {/* Mobile Header Bar (Only visible on screens <= 768px) */}
-        <div className="mobile-header-bar" style={{ display: 'none', width: '100%', justifyContent: 'space-between', alignItems: 'center' }}>
-          <div onClick={() => setView('dashboard')} style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
             <div
               style={{
-                width: '30px',
-                height: '30px',
-                borderRadius: '8px',
-                background: 'linear-gradient(135deg, #f472b6 0%, #a78bfa 100%)',
+                width: '36px',
+                height: '36px',
+                borderRadius: '10px',
+                background: 'linear-gradient(135deg, #8b5cf6 0%, #ec4899 100%)',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
                 fontWeight: 900,
-                fontSize: '14px',
+                fontSize: '16px',
                 color: '#ffffff',
+                boxShadow: '0 0 16px rgba(139, 92, 246, 0.5)',
+                transition: 'transform 0.15s ease',
               }}
+              onMouseEnter={(e: any) => (e.currentTarget.style.transform = 'scale(1.05)')}
+              onMouseLeave={(e: any) => (e.currentTarget.style.transform = 'scale(1)')}
             >
               BT
             </div>
             <div>
-              <div style={{ fontSize: '14px', fontWeight: 900, color: '#f8fafc', lineHeight: 1.1 }}>TYCOONS ARCADE</div>
-              <div style={{ fontSize: '9px', color: '#a78bfa' }}>
-                {view === 'dashboard' ? '🕹️ Arcade Hub' : activeGame.toUpperCase()}
+              <div
+                style={{
+                  fontSize: '16px',
+                  fontWeight: 900,
+                  letterSpacing: '0.5px',
+                  color: '#ffffff',
+                  lineHeight: 1.1,
+                }}
+              >
+                BUSINESS TYCOONS
+              </div>
+              <div style={{ fontSize: '10.5px', color: '#94a3b8', fontWeight: 600 }}>
+                {view === 'dashboard' ? 'Arcade Hub & Party Platform' : `Playing: ${activeGame === 'cornerstone' ? 'Monopoly' : activeGame.toUpperCase()}`}
               </div>
             </div>
           </div>
 
-          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-            {/* Coins Badge */}
+          {/* Active Match Pills (Desktop) */}
+          {view === 'game' && activeGame === 'cornerstone' && gameState && (
             <div
-              onClick={() => useUserStore.getState().setShowStoreModal(true)}
+              className="desktop-header-controls"
               style={{
                 display: 'flex',
                 alignItems: 'center',
-                gap: '3px',
-                background: 'rgba(251, 191, 36, 0.15)',
-                border: '1px solid rgba(251, 191, 36, 0.35)',
-                padding: '3px 8px',
-                borderRadius: '12px',
-                fontSize: '11px',
-                fontWeight: 800,
-                color: '#fbbf24',
-                cursor: 'pointer',
+                gap: '8px',
+                marginLeft: '12px',
+                paddingLeft: '14px',
+                borderLeft: '1px solid rgba(255, 255, 255, 0.1)',
               }}
             >
-              <span>🪙</span>
-              <span>{user.coins || 1500}</span>
+              <div
+                className="glass-pill"
+                style={{
+                  background: 'rgba(139, 92, 246, 0.15)',
+                  border: '1px solid rgba(139, 92, 246, 0.35)',
+                  color: '#c4b5fd',
+                  fontSize: '11px',
+                  padding: '3px 10px',
+                }}
+              >
+                <span>Round</span>
+                <strong style={{ color: '#ffffff' }}>{gameState.round}</strong>
+              </div>
+
+              <div
+                className="glass-pill"
+                style={{
+                  background: gameMode === 'online' ? 'rgba(56, 189, 248, 0.15)' : 'rgba(16, 185, 129, 0.15)',
+                  border: `1px solid ${gameMode === 'online' ? 'rgba(56, 189, 248, 0.35)' : 'rgba(16, 185, 129, 0.35)'}`,
+                  color: gameMode === 'online' ? '#7dd3fc' : '#6ee7b7',
+                  fontSize: '11px',
+                  padding: '3px 10px',
+                  textTransform: 'uppercase',
+                }}
+              >
+                <span>{gameMode}</span>
+              </div>
             </div>
-
-            {/* Profile Avatar */}
-            <button
-              onClick={() => setShowAccountModal(true)}
-              style={{
-                padding: '4px 7px',
-                borderRadius: '12px',
-                border: user.isVip ? '1.5px solid #f59e0b' : '1px solid rgba(255, 255, 255, 0.2)',
-                backgroundColor: 'rgba(255, 255, 255, 0.08)',
-                color: '#ffffff',
-                fontSize: '14px',
-                cursor: 'pointer',
-              }}
-            >
-              {user.avatar || '👑'}
-            </button>
-
-            {/* Mobile Hamburger Menu Button */}
-            <button
-              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              style={{
-                padding: '5px 10px',
-                borderRadius: '8px',
-                border: '1px solid rgba(255, 255, 255, 0.2)',
-                background: mobileMenuOpen ? '#7c3aed' : 'rgba(255, 255, 255, 0.08)',
-                color: '#ffffff',
-                fontSize: '13px',
-                fontWeight: 800,
-                cursor: 'pointer',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '4px',
-              }}
-            >
-              {mobileMenuOpen ? '✕' : '☰'}
-            </button>
-          </div>
+          )}
         </div>
 
-        {/* Global Controls & Status */}
-        <div className="desktop-header-controls" style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
-          {/* Dashboard / Arcade Hub Toggle Button */}
+        {/* Mobile Header Bar */}
+        <div className="mobile-header-bar" style={{ display: 'none', alignItems: 'center', gap: '8px' }}>
+          <div
+            onClick={() => useUserStore.getState().setShowStoreModal(true)}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '4px',
+              background: 'rgba(245, 158, 11, 0.15)',
+              border: '1px solid rgba(245, 158, 11, 0.35)',
+              padding: '3px 8px',
+              borderRadius: '20px',
+              fontSize: '11px',
+              fontWeight: 800,
+              color: '#fbbf24',
+            }}
+          >
+            <span>🪙</span>
+            <span>{user.coins}</span>
+          </div>
+
           <button
-            onClick={() => setView(view === 'dashboard' ? 'game' : 'dashboard')}
+            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+            style={{
+              padding: '6px 10px',
+              borderRadius: '8px',
+              border: '1px solid rgba(255, 255, 255, 0.15)',
+              background: mobileMenuOpen ? '#7c3aed' : 'rgba(255, 255, 255, 0.08)',
+              color: '#ffffff',
+              fontSize: '14px',
+            }}
+          >
+            {mobileMenuOpen ? '✕' : '☰'}
+          </button>
+        </div>
+
+        {/* Right: Unified Sleek Action Cluster (Desktop) */}
+        <div
+          className="desktop-header-controls"
+          style={{ display: 'flex', alignItems: 'center', gap: '10px' }}
+        >
+          {/* Hub / Game Toggle Pill */}
+          <button
+            onClick={() => {
+              soundFx.playClick();
+              setView(view === 'dashboard' ? 'game' : 'dashboard');
+            }}
+            className={view === 'dashboard' ? 'btn-primary-glow' : 'btn-tactile-secondary'}
             style={{
               padding: '6px 14px',
-              borderRadius: '8px',
-              border: view === 'dashboard' ? '1px solid #c084fc' : '1px solid rgba(255, 255, 255, 0.15)',
-              background: view === 'dashboard' ? 'linear-gradient(135deg, #7c3aed 0%, #ec4899 100%)' : 'rgba(255, 255, 255, 0.06)',
-              color: '#ffffff',
               fontSize: '12px',
-              fontWeight: 700,
-              cursor: 'pointer',
               display: 'flex',
               alignItems: 'center',
               gap: '6px',
-              boxShadow: view === 'dashboard' ? '0 0 12px rgba(236,72,153,0.4)' : 'none',
             }}
           >
-            <span>🎮</span>
-            <span>{view === 'dashboard' ? 'Return to Game' : 'Games Dashboard'}</span>
+            <span>{view === 'dashboard' ? '🎮 Return to Match' : '🕹️ Arcade Hub'}</span>
           </button>
 
-          {view === 'game' && activeGame === 'cornerstone' && (
-            <div style={{ display: 'flex', gap: '10px', fontSize: '12px', alignItems: 'center' }}>
-              <span style={{ color: '#94a3b8' }}>
-                Mode:{' '}
-                <strong style={{ color: gameMode === 'online' ? '#38bdf8' : '#10b981', textTransform: 'uppercase' }}>
-                  {gameMode}
-                </strong>
-              </span>
-              {gameState && (
-                <>
-                  <span style={{ color: '#94a3b8' }}>
-                    Round: <strong style={{ color: '#ffffff' }}>{gameState.round}</strong>
-                  </span>
-                  <span style={{ color: '#94a3b8' }}>
-                    Phase:{' '}
-                    <strong style={{ color: '#e94560', textTransform: 'uppercase' }}>
-                      {gameState.phase}
-                    </strong>
-                  </span>
-                </>
-              )}
-              <span style={{ color: '#94a3b8' }}>
-                Board:
-                <select
-                  value={boardKey}
-                  onChange={(e: React.ChangeEvent<HTMLSelectElement>) => {
-                    setBoardKey(e.target.value as string);
-                    if (!gameState) {
-                      initLocalGame(3, 'Player 1', 'Tycoon');
-                    }
-                  }}
-                  style={{
-                    marginLeft: '4px',
-                    padding: '2px 6px',
-                    borderRadius: '4px',
-                    backgroundColor: '#0f3460',
-                    color: '#ffffff',
-                    border: '1px solid #243356',
-                    fontSize: '11px',
-                  }}
-                >
-                  {AVAILABLE_BOARDS.map((b) => (
-                    <option key={b} value={b}>
-                      {b.toUpperCase()}
-                    </option>
-                  ))}
-                </select>
-              </span>
-            </div>
-          )}
-
-          {/* Level & XP & Coins Badge */}
+          {/* Coins Counter */}
           <div
+            onClick={() => {
+              soundFx.playClick();
+              useUserStore.getState().setShowStoreModal(true);
+            }}
             style={{
               display: 'flex',
               alignItems: 'center',
-              gap: '8px',
-              background: 'rgba(255, 255, 255, 0.05)',
-              border: '1px solid rgba(255, 255, 255, 0.1)',
+              gap: '5px',
+              background: 'rgba(245, 158, 11, 0.12)',
+              border: '1px solid rgba(245, 158, 11, 0.3)',
+              padding: '5px 12px',
               borderRadius: '20px',
-              padding: '4px 12px',
+              fontSize: '12px',
+              fontWeight: 800,
+              color: '#fbbf24',
+              cursor: 'pointer',
+              transition: 'all 0.15s ease',
             }}
+            title="Click to open In-Game Store"
           >
-            <span style={{ fontSize: '11px', fontWeight: 800, color: '#a78bfa' }}>
-              Lv.{user.level || 1}
-            </span>
-            <div style={{ width: '42px', height: '6px', borderRadius: '3px', background: 'rgba(255, 255, 255, 0.15)', overflow: 'hidden' }}>
-              <div
-                style={{
-                  width: `${Math.min(100, Math.round(((user.xp || 0) / (user.maxXp || 300)) * 100))}%`,
-                  height: '100%',
-                  background: 'linear-gradient(90deg, #a78bfa, #ec4899)',
-                  borderRadius: '3px',
-                }}
-              />
-            </div>
-            <span style={{ fontSize: '12px', fontWeight: 800, color: '#fbbf24', display: 'flex', alignItems: 'center', gap: '3px' }}>
-              🪙 {user.coins}
-            </span>
+            <span>🪙</span>
+            <span>{user.coins}</span>
           </div>
 
-          {/* Daily Streak Chest Button */}
+          {/* Daily Streak Reward */}
           <button
             onClick={() => {
               soundFx.playClick();
               useUserStore.getState().setShowDailyModal(true);
             }}
+            className="btn-tactile-secondary"
             style={{
-              padding: '6px 12px',
-              borderRadius: '20px',
-              border: '1.5px solid #f59e0b',
-              background: 'linear-gradient(135deg, rgba(245, 158, 11, 0.25) 0%, rgba(236, 72, 153, 0.25) 100%)',
-              color: '#fbbf24',
+              padding: '5px 12px',
               fontSize: '12px',
-              fontWeight: 800,
-              cursor: 'pointer',
               display: 'flex',
               alignItems: 'center',
               gap: '5px',
-              boxShadow: '0 0 10px rgba(245, 158, 11, 0.3)',
+              borderColor: 'rgba(245, 158, 11, 0.4)',
+              color: '#fef08a',
             }}
           >
             <span>🎁</span>
             <span>Daily</span>
-            {user.lastClaimDate !== new Date().toISOString().slice(0, 10) && (
-              <span style={{ width: '7px', height: '7px', borderRadius: '50%', background: '#ef4444' }} />
-            )}
           </button>
 
-          {/* How to Play Rules Button */}
+          {/* Rules Guide Modal */}
           <button
             onClick={() => {
               soundFx.playClick();
               useUserStore.getState().openRulesModal(activeGame);
             }}
+            className="btn-tactile-secondary"
             style={{
-              padding: '6px 12px',
-              borderRadius: '20px',
-              border: '1px solid rgba(255, 255, 255, 0.18)',
-              background: 'rgba(255, 255, 255, 0.08)',
-              color: '#cbd5e1',
+              padding: '5px 10px',
               fontSize: '12px',
-              fontWeight: 700,
-              cursor: 'pointer',
               display: 'flex',
               alignItems: 'center',
-              gap: '5px',
+              gap: '4px',
             }}
+            title="How to Play"
           >
             <span>❓</span>
             <span>Rules</span>
           </button>
 
-          {/* Hall of Fame / Trophy Room Button */}
+          {/* Hall of Fame / Trophy */}
           <button
             onClick={() => {
               soundFx.playClick();
               useTrophyStore.getState().setShowLeaderboardModal(true);
             }}
+            className="btn-tactile-secondary"
             style={{
-              padding: '6px 12px',
-              borderRadius: '20px',
-              border: '1.5px solid rgba(245, 158, 11, 0.4)',
-              background: 'linear-gradient(135deg, rgba(245, 158, 11, 0.18) 0%, rgba(236, 72, 153, 0.18) 100%)',
-              color: '#fbbf24',
+              padding: '5px 10px',
               fontSize: '12px',
-              fontWeight: 800,
-              cursor: 'pointer',
               display: 'flex',
               alignItems: 'center',
-              gap: '5px',
-              boxShadow: '0 0 10px rgba(245, 158, 11, 0.25)',
+              gap: '4px',
             }}
+            title="Trophy Hall & Leaderboard"
           >
             <span>🏆</span>
-            <span>Trophies</span>
           </button>
 
-          {/* Sound FX Mute/Unmute Toggle Button */}
+          {/* Sound FX Toggle */}
           <button
             onClick={() => {
               const next = soundFx.toggleMute();
               setIsMuted(next);
               if (!next) soundFx.playClick();
             }}
-            title={isMuted ? 'Unmute Sound Effects' : 'Mute Sound Effects'}
+            className="btn-tactile-secondary"
             style={{
               width: '32px',
               height: '32px',
               borderRadius: '50%',
-              border: '1px solid rgba(255, 255, 255, 0.2)',
-              background: isMuted ? 'rgba(239, 68, 68, 0.2)' : 'rgba(16, 185, 129, 0.2)',
-              color: '#ffffff',
-              fontSize: '15px',
-              cursor: 'pointer',
+              padding: 0,
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              boxShadow: isMuted ? 'none' : '0 0 10px rgba(16, 185, 129, 0.3)',
+              fontSize: '13px',
             }}
+            title={isMuted ? 'Unmute Sounds' : 'Mute Sounds'}
           >
             {isMuted ? '🔇' : '🔊'}
           </button>
 
-          {/* In-App Store Button */}
+          {/* Settings */}
           <button
-            onClick={() => useUserStore.getState().setShowStoreModal(true)}
+            onClick={() => {
+              soundFx.playClick();
+              setShowSettings(true);
+            }}
+            className="btn-tactile-secondary"
             style={{
-              padding: '6px 14px',
+              width: '32px',
+              height: '32px',
+              borderRadius: '50%',
+              padding: 0,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              fontSize: '13px',
+            }}
+            title="Settings & Board Selection"
+          >
+            ⚙️
+          </button>
+
+          {/* Profile Badge */}
+          <button
+            onClick={() => {
+              soundFx.playClick();
+              setShowAccountModal(true);
+            }}
+            style={{
+              padding: '4px 10px 4px 6px',
               borderRadius: '20px',
-              border: '1px solid rgba(236, 72, 153, 0.4)',
-              background: 'linear-gradient(135deg, rgba(124, 58, 237, 0.3) 0%, rgba(236, 72, 153, 0.3) 100%)',
-              color: '#f472b6',
-              fontSize: '12.5px',
+              border: user.isVip ? '1.5px solid #f59e0b' : '1px solid rgba(255, 255, 255, 0.18)',
+              background: 'rgba(255, 255, 255, 0.06)',
+              color: '#ffffff',
+              fontSize: '12px',
               fontWeight: 800,
               cursor: 'pointer',
               display: 'flex',
               alignItems: 'center',
               gap: '6px',
-              boxShadow: '0 2px 10px rgba(236, 72, 153, 0.2)',
             }}
           >
-            <span>🛍️</span>
-            <span>Store</span>
-          </button>
-
-          {/* User Account & Profile */}
-          <button
-            onClick={() => setShowAccountModal(true)}
-            style={{
-              padding: '6px 14px',
-              borderRadius: '20px',
-              border: user.isVip ? '1.5px solid #f59e0b' : '1px solid rgba(255, 255, 255, 0.25)',
-              backgroundColor: user.isVip ? 'rgba(245, 158, 11, 0.2)' : 'rgba(255, 255, 255, 0.1)',
-              color: user.isVip ? '#fbbf24' : '#ffffff',
-              fontSize: '13px',
-              fontWeight: 800,
-              cursor: 'pointer',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '8px',
-              boxShadow: user.isVip ? '0 0 15px rgba(245, 158, 11, 0.3)' : '0 2px 8px rgba(0,0,0,0.2)',
-            }}
-          >
-            <span style={{ fontSize: '16px' }}>{user.avatar || '👑'}</span>
+            <span style={{ fontSize: '15px' }}>{user.avatar || '👑'}</span>
             <span>{user.username}</span>
-            {user.isVip && (
-              <span style={{ fontSize: '10px', background: '#f59e0b', color: '#000', padding: '1px 5px', borderRadius: '4px', fontWeight: 900 }}>
-                VIP
-              </span>
-            )}
           </button>
-
-          {view === 'game' && activeGame === 'cornerstone' && (
-            <>
-              <button
-                onClick={() => {
-                  disconnect();
-                  // Reset game state to lobby so ActionPanel shows the multiplayer lobby
-                  useGameStore.setState({ gameState: null, gameMode: 'online' });
-                }}
-                style={{
-                  padding: '6px 14px',
-                  borderRadius: '20px',
-                  border: '1px solid #38bdf8',
-                  background: 'linear-gradient(135deg, rgba(56, 189, 248, 0.25) 0%, rgba(37, 99, 235, 0.25) 100%)',
-                  color: '#38bdf8',
-                  fontSize: '12.5px',
-                  fontWeight: 800,
-                  cursor: 'pointer',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '6px',
-                  boxShadow: '0 0 12px rgba(56, 189, 248, 0.3)',
-                }}
-              >
-                <span>🌐</span>
-                <span>{gameMode === 'online' && roomCode ? `Room: ${roomCode}` : 'Multiplayer Lobby'}</span>
-              </button>
-
-              <button
-                onClick={() => setShowSettings(true)}
-                style={{
-                  padding: '6px 12px',
-                  borderRadius: '6px',
-                  border: '1px solid rgba(255, 255, 255, 0.2)',
-                  backgroundColor: 'rgba(255, 255, 255, 0.08)',
-                  color: '#ffffff',
-                  fontSize: '12px',
-                  fontWeight: 600,
-                  cursor: 'pointer',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '4px',
-                }}
-              >
-                ⚙️ Settings
-              </button>
-
-              <button
-                onClick={() => disconnect()}
-                style={{
-                  padding: '6px 12px',
-                  borderRadius: '6px',
-                  border: '1px solid #243356',
-                  backgroundColor: '#0f3460',
-                  color: '#ffffff',
-                  fontSize: '12px',
-                  fontWeight: 600,
-                  cursor: 'pointer',
-                }}
-              >
-                Lobby
-              </button>
-              <button
-                onClick={() => initLocalGame(4, user.username || 'My Daddy', 'Tycoon')}
-                style={{
-                  padding: '6px 12px',
-                  borderRadius: '6px',
-                  border: 'none',
-                  backgroundColor: '#e94560',
-                  color: '#ffffff',
-                  fontSize: '12px',
-                  fontWeight: 600,
-                  cursor: 'pointer',
-                }}
-              >
-                Restart
-              </button>
-            </>
-          )}
         </div>
 
         {/* Mobile Menu Drawer (Toggled by hamburger on mobile) */}

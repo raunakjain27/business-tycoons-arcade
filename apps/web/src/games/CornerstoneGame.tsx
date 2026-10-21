@@ -110,50 +110,63 @@ export const CornerstoneGame: React.FC = () => {
   }
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '20px', width: '100%' }}>
-      {/* Live Voice Bar */}
+    <div style={{ width: '100%', maxWidth: '1600px', margin: '0 auto' }}>
+      {/* Live Voice Status Dock */}
       <VoiceRoomBar gameTitle="Business Tycoons Match" />
 
-      {/* Top Row: Board (Left) + Action Panel (Right) */}
+      {/* 2-Column Responsive Command Center Arena */}
       <div
+        className="game-arena-grid"
         style={{
-          display: 'flex',
-          flexDirection: 'row',
-          gap: '20px',
-          alignItems: 'flex-start',
-          flexWrap: 'wrap',
+          width: '100%',
+          marginTop: '4px',
         }}
       >
-        {/* Board */}
-        <div style={{ flex: '1 1 540px', minWidth: 0, display: 'flex', justifyContent: 'center' }}>
-          <div style={{ width: '100%', maxWidth: '860px' }}>
-            {gameState ? <Board gameState={gameState} /> : (
-              <div style={{ padding: '60px', textAlign: 'center', color: '#94a3b8' }}>
+        {/* Left Column: Board + Player Cards underneath */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', minWidth: 0 }}>
+          {/* Hero Board */}
+          <div style={{ width: '100%', display: 'flex', justifyContent: 'center' }}>
+            {gameState ? (
+              <Board gameState={gameState} />
+            ) : (
+              <div
+                className="glass-panel"
+                style={{ padding: '60px', textAlign: 'center', color: '#94a3b8', width: '100%' }}
+              >
                 Connecting to Business Tycoon board...
               </div>
             )}
           </div>
+
+          {/* Player Cards (Directly below Board for seamless visibility) */}
+          {gameState && (
+            <div>
+              <PlayerDashboard gameState={gameState} />
+            </div>
+          )}
         </div>
 
-        {/* Action Panel */}
-        <div style={{ flex: '0 1 340px', minWidth: 0, width: '100%' }}>
+        {/* Right Column: Action Command Deck + Game Activity Feed */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', minWidth: 0 }}>
+          {/* Action & Turn Controls Panel */}
           <ActionPanel gameState={gameState} />
+
+          {/* Live Activity Stream */}
+          {gameState && (
+            <div className="glass-panel" style={{ padding: '14px', borderRadius: '16px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '10px' }}>
+                <span style={{ fontSize: '13px' }}>📜</span>
+                <span style={{ fontSize: '12px', fontWeight: 800, color: '#f8fafc', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                  Live Match Feed
+                </span>
+              </div>
+              <div style={{ maxHeight: '280px', overflowY: 'auto' }}>
+                <GameLog events={gameState.log} />
+              </div>
+            </div>
+          )}
         </div>
       </div>
-
-      {/* Middle Row: Player Dashboard */}
-      {gameState && (
-        <div>
-          <PlayerDashboard gameState={gameState} />
-        </div>
-      )}
-
-      {/* Bottom Row: Game Log */}
-      {gameState && (
-        <div>
-          <GameLog events={gameState.log} />
-        </div>
-      )}
 
       {/* Modals & Overlays */}
       {gameState && <Modals gameState={gameState} />}

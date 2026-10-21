@@ -244,20 +244,20 @@ export const Board: React.FC<BoardProps> = ({ gameState }) => {
         className="board-responsive-container"
         style={{
           display: 'grid',
-          gridTemplateColumns: 'minmax(84px, 1.4fr) repeat(9, minmax(56px, 1fr)) minmax(84px, 1.4fr)',
-          gridTemplateRows: 'minmax(84px, 1.4fr) repeat(9, minmax(56px, 1fr)) minmax(84px, 1.4fr)',
-          gap: '2px',
-          backgroundColor: '#151026',
-          padding: '12px',
-          borderRadius: '16px',
-          border: '1px solid rgba(255, 255, 255, 0.12)',
-          boxShadow: '0 25px 60px rgba(0, 0, 0, 0.85), 0 0 50px rgba(124, 58, 237, 0.18)',
+          gridTemplateColumns: 'minmax(72px, 1.35fr) repeat(9, minmax(42px, 1fr)) minmax(72px, 1.35fr)',
+          gridTemplateRows: 'minmax(72px, 1.35fr) repeat(9, minmax(42px, 1fr)) minmax(72px, 1.35fr)',
+          gap: '2.5px',
+          background: 'radial-gradient(ellipse at center, #0f1526 0%, #080c16 100%)',
+          padding: '10px',
+          borderRadius: '18px',
+          border: '1px solid rgba(255, 255, 255, 0.09)',
+          boxShadow: '0 24px 64px -12px rgba(0, 0, 0, 0.7), 0 0 40px rgba(139, 92, 246, 0.12)',
           width: '100%',
-          maxWidth: '860px',
+          maxWidth: 'min(820px, calc(100vh - 170px))',
           aspectRatio: '1 / 1',
           userSelect: 'none',
           margin: '0 auto',
-          fontFamily: 'system-ui, -apple-system, sans-serif',
+          fontFamily: "'Outfit', system-ui, -apple-system, sans-serif",
           boxSizing: 'border-box',
         }}
       >
@@ -283,24 +283,28 @@ export const Board: React.FC<BoardProps> = ({ gameState }) => {
               style={{
                 gridRow: row,
                 gridColumn: col,
-                backgroundColor: isSelected ? '#332356' : '#1e1837',
+                backgroundColor: isSelected
+                  ? 'rgba(49, 39, 84, 0.95)'
+                  : ownerColor
+                  ? 'rgba(18, 24, 42, 0.95)'
+                  : 'rgba(14, 18, 30, 0.95)',
                 border: isSelected
-                  ? '2px solid #a78bfa'
+                  ? '2px solid #8b5cf6'
                   : ownerColor
                   ? `1.5px solid ${ownerColor}`
-                  : '1px solid rgba(255, 255, 255, 0.08)',
+                  : '1px solid rgba(255, 255, 255, 0.07)',
                 boxShadow: isSelected
-                  ? '0 0 10px rgba(167, 139, 250, 0.5)'
+                  ? '0 0 16px rgba(139, 92, 246, 0.65)'
                   : ownerColor
-                  ? `inset 0 0 4px ${ownerColor}50`
+                  ? `inset 0 0 8px ${ownerColor}40`
                   : 'none',
-                borderRadius: isCorner ? '6px' : '4px',
+                borderRadius: isCorner ? '8px' : '5px',
                 display: 'flex',
                 flexDirection: stripePos === 'top' ? 'column' : stripePos === 'bottom' ? 'column-reverse' : stripePos === 'left' ? 'row' : 'row-reverse',
                 position: 'relative',
                 overflow: 'visible',
                 cursor: 'pointer',
-                transition: 'all 0.12s ease',
+                transition: 'all 0.15s cubic-bezier(0.16, 1, 0.3, 1)',
                 padding: '0px',
               }}
               title={`${tile.name}${tile.price ? ` - ${formatCurrency(tile.price, gameState.boardKey)}` : ''}`}
@@ -849,16 +853,19 @@ export const Board: React.FC<BoardProps> = ({ gameState }) => {
           style={{
             gridRow: '2 / 11',
             gridColumn: '2 / 11',
-            backgroundColor: '#161127',
-            borderRadius: '12px',
+            background: 'radial-gradient(circle at center, rgba(18, 24, 42, 0.95) 0%, rgba(9, 13, 24, 0.98) 100%)',
+            border: '1px solid rgba(255, 255, 255, 0.07)',
+            borderRadius: '16px',
             display: 'flex',
             flexDirection: 'column',
             alignItems: 'center',
-            justifyContent: 'flex-start',
-            padding: '12px',
+            justifyContent: 'center',
+            padding: '16px 12px',
             textAlign: 'center',
             position: 'relative',
             overflow: 'hidden',
+            boxShadow: 'inset 0 0 35px rgba(0, 0, 0, 0.55)',
+            gap: '8px',
           }}
         >
           {/* Top of Center: Dice Visualizer moved up */}
@@ -1195,63 +1202,36 @@ export const Board: React.FC<BoardProps> = ({ gameState }) => {
             </div>
           )}
 
-          {/* Embedded Game Event Log Directly On The Board (Below Dice) */}
-          <div
-            className="board-event-log"
-            style={{
-              width: '100%',
-              flex: 1,
-              minHeight: '130px',
-              maxHeight: '210px',
-              backgroundColor: 'rgba(0, 0, 0, 0.45)',
-              borderRadius: '8px',
-              border: '1px solid rgba(255, 255, 255, 0.08)',
-              padding: '8px 10px',
-              display: 'flex',
-              flexDirection: 'column',
-              textAlign: 'left',
-              marginTop: '2px',
-            }}
-          >
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
-              <span style={{ fontSize: '10.5px', fontWeight: 800, color: '#c084fc', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-                📜 Board Event Log
-              </span>
-              <span style={{ fontSize: '9.5px', color: '#64748b' }}>
-                Room: {gameState.id.toLowerCase().replace('local-', '')}
-              </span>
-            </div>
-
-            <div
-              style={{
-                flex: 1,
-                overflowY: 'auto',
-                display: 'flex',
-                flexDirection: 'column',
-                gap: '3px',
-                paddingRight: '4px',
-              }}
-            >
-              {gameState.log.slice(-15).reverse().map((e, idx) => (
-                <div
-                  key={idx}
-                  style={{
-                    fontSize: '10.5px',
-                    color: idx === 0 ? '#f8fafc' : '#94a3b8',
-                    fontWeight: idx === 0 ? 600 : 400,
-                    lineHeight: 1.25,
-                    borderBottom: '1px solid rgba(255,255,255,0.03)',
-                    paddingBottom: '2px',
-                  }}
-                >
-                  <span style={{ marginRight: '4px' }}>
-                    {e.type.includes('DICE') ? '🎲' : e.type.includes('RENT') ? '💵' : e.type.includes('JAIL') ? '⚖️' : '🔹'}
-                  </span>
-                  <span>{e.reason || e.type}</span>
-                </div>
-              ))}
-            </div>
-          </div>
+          {/* Sleek Latest Action Ticker Pill */}
+          {gameState.log.length > 0 && (() => {
+            const lastEvent = gameState.log[gameState.log.length - 1];
+            return (
+              <div
+                style={{
+                  background: 'rgba(0, 0, 0, 0.45)',
+                  border: '1px solid rgba(255, 255, 255, 0.08)',
+                  borderRadius: '20px',
+                  padding: '4px 14px',
+                  fontSize: '11px',
+                  color: '#cbd5e1',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                  marginTop: '8px',
+                  maxWidth: '85%',
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis',
+                  whiteSpace: 'nowrap',
+                  backdropFilter: 'blur(8px)',
+                }}
+              >
+                <span>{lastEvent.type.includes('DICE') ? '🎲' : lastEvent.type.includes('RENT') ? '💵' : lastEvent.type.includes('JAIL') ? '⚖️' : '⚡'}</span>
+                <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                  {lastEvent.reason || lastEvent.type}
+                </span>
+              </div>
+            );
+          })()}
         </div>
 
 

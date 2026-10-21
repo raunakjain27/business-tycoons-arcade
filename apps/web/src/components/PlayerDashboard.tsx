@@ -9,7 +9,8 @@ interface PlayerDashboardProps {
 
 export const PlayerDashboard: React.FC<PlayerDashboardProps> = ({ gameState }) => {
   const { myPlayerId } = useGameStore();
-  const isMobile = navigator.maxTouchPoints > 1 || window.innerWidth < 768;
+  const isMobile = typeof window !== 'undefined' && (navigator.maxTouchPoints > 1 || window.innerWidth < 768);
+
   // Find owned tiles per player
   const tilesByOwner: Record<string, TileId[]> = {};
   for (const [idStr, tState] of Object.entries(gameState.tiles) as [string, TileState][]) {
@@ -23,10 +24,11 @@ export const PlayerDashboard: React.FC<PlayerDashboardProps> = ({ gameState }) =
     <div
       className="player-dashboard-grid"
       style={{
-        display: 'grid',          gridTemplateColumns: 'repeat(auto-fit, minmax(isMobile ? 160px : 220px, 1fr))',
-            gap: isMobile ? '8px' : '12px',
-            width: '100%',
-          }}
+        display: 'grid',
+        gridTemplateColumns: isMobile ? 'repeat(auto-fit, minmax(180px, 1fr))' : 'repeat(auto-fit, minmax(230px, 1fr))',
+        gap: '12px',
+        width: '100%',
+      }}
     >
       {gameState.turnOrder.map((pId: string, idx: number) => {
         const player = gameState.players[pId];
@@ -36,33 +38,37 @@ export const PlayerDashboard: React.FC<PlayerDashboardProps> = ({ gameState }) =
         const isMe = myPlayerId === pId;
         const isBankrupt = player.status === 'bankrupt';
         const playerColor = PLAYER_COLORS[idx % PLAYER_COLORS.length] ?? '#3b82f6';
-    const isCompact = isMobile ? 'compact' : '';
         const ownedTiles = tilesByOwner[pId] ?? [];
 
         return (
           <div
             key={pId}
             style={{
-              background: isCurrentTurn ? 'linear-gradient(135deg, #1f1a30 0%, #161522 100%)' : 'rgba(26, 22, 37, 0.9)',
+              background: isCurrentTurn
+                ? `linear-gradient(135deg, rgba(26, 32, 54, 0.95) 0%, rgba(16, 20, 36, 0.95) 100%)`
+                : 'rgba(16, 21, 35, 0.8)',
+              backdropFilter: 'blur(16px)',
+              WebkitBackdropFilter: 'blur(16px)',
               border: isCurrentTurn
-                ? `2px solid ${playerColor}`
+                ? `1.5px solid ${playerColor}`
                 : isMe
-                ? '2px solid #a78bfa'
-                : '1px solid rgba(255, 255, 255, 0.08)',
-              borderRadius: '12px',
-              padding: isMobile ? '10px' : '14px',
+                ? '1px solid rgba(139, 92, 246, 0.5)'
+                : '1px solid rgba(255, 255, 255, 0.07)',
+              borderRadius: '14px',
+              padding: '12px 14px',
               display: 'flex',
               flexDirection: 'column',
-              gap: isMobile ? '8px' : '10px',
-              boxShadow: isCurrentTurn ? `0 6px 16px -2px ${playerColor}40, 0 2px 4px -1px rgba(0,0,0,0.5)` : '0 3px 4px -1px rgba(0,0,0,0.3)',
-              opacity: isBankrupt ? 0.45 : 1,
-              transition: 'all 0.2s ease',
+              gap: '10px',
+              boxShadow: isCurrentTurn
+                ? `0 8px 24px -4px ${playerColor}40, 0 0 16px ${playerColor}25`
+                : '0 4px 16px rgba(0, 0, 0, 0.3)',
+              opacity: isBankrupt ? 0.4 : 1,
+              transition: 'all 0.2s cubic-bezier(0.16, 1, 0.3, 1)',
               position: 'relative',
               overflow: 'hidden',
-              backdropFilter: 'blur(12px)',
             }}
           >
-            {/* Active Turn Top Glow Bar */}
+            {/* Active Turn Neon Bar */}
             {isCurrentTurn && (
               <div
                 style={{
@@ -72,55 +78,101 @@ export const PlayerDashboard: React.FC<PlayerDashboardProps> = ({ gameState }) =
                   right: 0,
                   height: '3px',
                   backgroundColor: playerColor,
-                  boxShadow: `0 0 8px ${playerColor}`,
+                  boxShadow: `0 0 12px ${playerColor}`,
                 }}
               />
             )}
 
-            {/* Header: Name, Role, Badges */}
+            {/* Header: Avatar, Name, Role Tag */}
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                 <div
                   style={{
-                    width: '14px',
-                    height: '14px',
+                    width: '28px',
+                    height: '28px',
                     borderRadius: '50%',
                     backgroundColor: playerColor,
-                    boxShadow: `0 0 6px ${playerColor}`,
-                  }}
-                />
-                <span style={{ fontSize: '15px', fontWeight: 700, color: '#f8fafc' }}>
-                  {player.name}
-                  {isMe && <span style={{ fontSize: '11px', color: '#38bdf8', marginLeft: '4px' }}>(You)</span>}
-                </span>
-              </div>
-
-              {player.roleId && (
-                <span
-                  style={{
-                    fontSize: '10px',
-                    fontWeight: 700,
-                    padding: '2px 6px',
-                    borderRadius: '4px',
-                    backgroundColor: '#0f3460',
-                    color: '#93c5fd',
-                    textTransform: 'uppercase',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    fontSize: '13px',
+                    boxShadow: isCurrentTurn ? `0 0 10px ${playerColor}` : 'none',
+                    border: '1.5px solid rgba(255, 255, 255, 0.2)',
                   }}
                 >
-                  {player.roleId}
-                </span>
-              )}
-            </div>
+                  {idx === 0 ? '👑' : idx === 1 ? '🤖' : idx === 2 ? '⚡' : '🎩'}
+                </div>
+                <div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                    <span style={{ fontSize: '13.5px', fontWeight: 800, color: '#f8fafc', lineHeight: 1.1 }}>
+                      {player.name}
+                    </span>
+                    {isMe && (
+                      <span
+                        style={{
+                          fontSize: '9.5px',
+                          color: '#38bdf8',
+                          background: 'rgba(56, 189, 248, 0.15)',
+                          padding: '1px 5px',
+                          borderRadius: '8px',
+                          fontWeight: 700,
+                        }}
+                      >
+                        YOU
+                      </span>
+                    )}
+                  </div>
+                  <span style={{ fontSize: '10.5px', color: '#94a3b8', fontWeight: 600 }}>
+                    {player.roleId || 'Tycoon'}
+                  </span>
+                </div>
+              </div>
 
-            {/* Metrics: Cash & Influence */}
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <div>
-                <span style={{ fontSize: '10px', color: '#94a3b8', textTransform: 'uppercase' }}>Cash</span>
+              {/* Turn Indicator or Timer */}
+              {isCurrentTurn ? (
                 <div
                   style={{
-                    fontSize: '18px',
+                    fontSize: '10px',
                     fontWeight: 800,
+                    padding: '3px 8px',
+                    borderRadius: '12px',
+                    background: `${playerColor}25`,
+                    color: playerColor,
+                    border: `1px solid ${playerColor}55`,
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '4px',
+                  }}
+                >
+                  <span style={{ width: '6px', height: '6px', borderRadius: '50%', backgroundColor: playerColor }} />
+                  <span>ACTIVE</span>
+                </div>
+              ) : null}
+            </div>
+
+            {/* Cash & Influence Display */}
+            <div
+              style={{
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'flex-end',
+                background: 'rgba(0, 0, 0, 0.25)',
+                padding: '8px 10px',
+                borderRadius: '8px',
+                border: '1px solid rgba(255, 255, 255, 0.04)',
+              }}
+            >
+              <div>
+                <span style={{ fontSize: '9.5px', color: '#64748b', textTransform: 'uppercase', fontWeight: 700, letterSpacing: '0.5px' }}>
+                  Balance
+                </span>
+                <div
+                  style={{
+                    fontSize: '17px',
+                    fontWeight: 900,
                     color: player.cash >= 0 ? '#10b981' : '#ef4444',
+                    letterSpacing: '-0.3px',
+                    lineHeight: 1.1,
                   }}
                 >
                   {formatCurrency(player.cash, gameState.boardKey)}
@@ -128,47 +180,28 @@ export const PlayerDashboard: React.FC<PlayerDashboardProps> = ({ gameState }) =
               </div>
 
               <div style={{ textAlign: 'right' }}>
-                <span style={{ fontSize: '10px', color: '#94a3b8', textTransform: 'uppercase' }}>Influence</span>
-                <div style={{ fontSize: '16px', fontWeight: 700, color: '#f59e0b' }}>
+                <span style={{ fontSize: '9.5px', color: '#64748b', textTransform: 'uppercase', fontWeight: 700, letterSpacing: '0.5px' }}>
+                  Influence
+                </span>
+                <div style={{ fontSize: '14px', fontWeight: 800, color: '#f59e0b', lineHeight: 1.1 }}>
                   ★ {player.influence}
                 </div>
               </div>
             </div>
 
-            {/* Turn Timer for current player */}
-            {isCurrentTurn && (() => {
-              const timerActive = useGameStore.getState().turnTimerActive;
-              const timerRem = useGameStore.getState().turnTimerRemaining;
-              if (!timerActive || timerRem === null) return null;
-              const low = timerRem <= 5;
-              return (
-                <div
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    gap: isMobile ? '4px' : '6px',
-                    padding: isMobile ? '3px 0' : '5px 0',
-                    backgroundColor: low ? 'rgba(239, 68, 68, 0.1)' : 'rgba(34, 197, 94, 0.1)',
-                    borderRadius: isMobile ? '6px' : '8px',
-                    border: low ? '1px solid rgba(239, 68, 68, 0.3)' : '1px solid rgba(34, 197, 94, 0.25)',
-                  }}
-                >
-                  <span style={{ fontSize: isMobile ? '14px' : '16px' }}>⏱</span>
-                  <span style={{ fontSize: isMobile ? '13px' : '15px', fontWeight: 800, color: low ? '#fca5a5' : '#86efac' }}>
-                    {timerRem}s
-                  </span>
-                  {low && <span style={{ fontSize: isMobile ? '8px' : '10px', color: '#fca5a5', animation: 'pulse 1s infinite' }}>hurry!</span>}
-                </div>
-              );
-            })()}
-
-            {/* Properties Owned Strip */}
+            {/* Property Portfolio Chips */}
             <div>
-              <div style={{ fontSize: '10px', color: '#94a3b8', marginBottom: '4px' }}>
-                Properties ({ownedTiles.length}):
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '5px' }}>
+                <span style={{ fontSize: '10px', color: '#94a3b8', fontWeight: 600 }}>
+                  Properties ({ownedTiles.length})
+                </span>
+                {ownedTiles.length > 0 && (
+                  <span style={{ fontSize: '9.5px', color: '#64748b' }}>
+                    {ownedTiles.length} owned
+                  </span>
+                )}
               </div>
-              <div style={{ display: 'flex', gap: '4px', flexWrap: 'wrap', minHeight: '16px' }}>
+              <div style={{ display: 'flex', gap: '3px', flexWrap: 'wrap', minHeight: '18px', alignItems: 'center' }}>
                 {ownedTiles.length > 0 ? (
                   ownedTiles.map(tId => {
                     const def = getTileDef(tId);
@@ -178,33 +211,37 @@ export const PlayerDashboard: React.FC<PlayerDashboardProps> = ({ gameState }) =
                       <div
                         key={tId}
                         style={{
-                          width: '10px',
-                          height: '10px',
+                          width: '14px',
+                          height: '8px',
                           borderRadius: '2px',
                           backgroundColor: color,
-                          boxShadow: `0 0 3px ${color}`,
+                          boxShadow: `0 0 5px ${color}88`,
+                          cursor: 'pointer',
                         }}
                         title={`${def.name} (${def.districtId ?? def.type})`}
                       />
                     );
                   })
                 ) : (
-                  <span style={{ fontSize: '11px', color: '#64748b' }}>None</span>
+                  <span style={{ fontSize: '11px', color: '#475569', fontStyle: 'italic' }}>
+                    No properties acquired
+                  </span>
                 )}
               </div>
             </div>
 
-            {/* Status Badges */}
-            <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
+            {/* Badges: Audit / Bankrupt / Waiver */}
+            <div style={{ display: 'flex', gap: '6px', alignItems: 'center', flexWrap: 'wrap' }}>
               {player.inJail && (
                 <span
                   style={{
-                    fontSize: '10px',
-                    fontWeight: 700,
-                    backgroundColor: '#7f1d1d',
+                    fontSize: '9.5px',
+                    fontWeight: 800,
+                    backgroundColor: 'rgba(239, 68, 68, 0.2)',
                     color: '#fca5a5',
-                    padding: '2px 6px',
-                    borderRadius: '4px',
+                    border: '1px solid rgba(239, 68, 68, 0.4)',
+                    padding: '2px 7px',
+                    borderRadius: '6px',
                   }}
                 >
                   ⚖️ In Audit ({player.jailTurns}/3)
@@ -213,12 +250,13 @@ export const PlayerDashboard: React.FC<PlayerDashboardProps> = ({ gameState }) =
               {isBankrupt && (
                 <span
                   style={{
-                    fontSize: '10px',
-                    fontWeight: 700,
-                    backgroundColor: '#374151',
-                    color: '#9ca3af',
-                    padding: '2px 6px',
-                    borderRadius: '4px',
+                    fontSize: '9.5px',
+                    fontWeight: 800,
+                    backgroundColor: 'rgba(100, 116, 139, 0.2)',
+                    color: '#cbd5e1',
+                    border: '1px solid rgba(100, 116, 139, 0.4)',
+                    padding: '2px 7px',
+                    borderRadius: '6px',
                   }}
                 >
                   Bankrupt
@@ -227,15 +265,16 @@ export const PlayerDashboard: React.FC<PlayerDashboardProps> = ({ gameState }) =
               {player.hasRentWaiver && (
                 <span
                   style={{
-                    fontSize: '10px',
-                    fontWeight: 700,
-                    backgroundColor: '#065f46',
+                    fontSize: '9.5px',
+                    fontWeight: 800,
+                    backgroundColor: 'rgba(16, 185, 129, 0.2)',
                     color: '#6ee7b7',
-                    padding: '2px 6px',
-                    borderRadius: '4px',
+                    border: '1px solid rgba(16, 185, 129, 0.4)',
+                    padding: '2px 7px',
+                    borderRadius: '6px',
                   }}
                 >
-                  Waiver Active
+                  🛡️ Waiver Active
                 </span>
               )}
             </div>
