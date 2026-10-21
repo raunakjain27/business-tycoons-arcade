@@ -38,6 +38,10 @@ export const Board: React.FC<BoardProps> = ({ gameState }) => {
     initLocalGame,
     activeEmotes,
     sendEmote,
+    autoRoll,
+    turboSpeed,
+    toggleAutoRoll,
+    toggleTurboSpeed,
   } = useGameStore();
 
   const [editingTileId, setEditingTileId] = useState<TileId | null>(null);
@@ -87,6 +91,31 @@ export const Board: React.FC<BoardProps> = ({ gameState }) => {
       }
     }
   }, [gameState.players]);
+
+  // Richup-style Auto-Roll: Automatically rolls dice during player's roll phase
+  useEffect(() => {
+    if (!autoRoll) return;
+    if (gameState.phase === 'awaitRoll' && gameState.turnPlayerId === myPlayerId) {
+      const timer = setTimeout(() => {
+        soundFx.playClick();
+        soundFx.playDiceRoll();
+        dispatchAction({ type: 'ROLL' });
+      }, 550);
+      return () => clearTimeout(timer);
+    }
+  }, [autoRoll, gameState.phase, gameState.turnPlayerId, myPlayerId, dispatchAction]);
+
+  // Turbo Speed mode: Automatically dismisses resolved event cards
+  useEffect(() => {
+    if (!turboSpeed) return;
+    if (gameState.phase === 'resolveEvent' && gameState.turnPlayerId === myPlayerId) {
+      const timer = setTimeout(() => {
+        soundFx.playClick();
+        dismissEventCard();
+      }, 1600);
+      return () => clearTimeout(timer);
+    }
+  }, [turboSpeed, gameState.phase, gameState.turnPlayerId, myPlayerId, dismissEventCard]);
 
   // Global Spacebar and Escape key shortcuts
   useEffect(() => {
@@ -937,6 +966,53 @@ export const Board: React.FC<BoardProps> = ({ gameState }) => {
             ))}
           </div>
 
+          {/* Richup-grade Auto-Roll & Turbo Speed Controls */}
+          <div style={{ display: 'flex', gap: '8px', marginBottom: '8px', flexWrap: 'wrap', justifyContent: 'center' }}>
+            <button
+              onClick={() => {
+                soundFx.playClick();
+                toggleAutoRoll();
+              }}
+              className={`arcade-btn ${autoRoll ? 'arcade-btn-green' : 'arcade-btn-secondary'}`}
+              style={{
+                padding: '4px 10px',
+                fontSize: '10.5px',
+                borderRadius: '8px',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '5px',
+                fontFamily: 'Orbitron, sans-serif',
+                letterSpacing: '0.5px',
+              }}
+              title="Automatically roll dice when it is your turn"
+            >
+              <span>⚡</span>
+              <span>AUTO-ROLL: {autoRoll ? 'ON' : 'OFF'}</span>
+            </button>
+
+            <button
+              onClick={() => {
+                soundFx.playClick();
+                toggleTurboSpeed();
+              }}
+              className={`arcade-btn ${turboSpeed ? 'arcade-btn-cyan' : 'arcade-btn-secondary'}`}
+              style={{
+                padding: '4px 10px',
+                fontSize: '10.5px',
+                borderRadius: '8px',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '5px',
+                fontFamily: 'Orbitron, sans-serif',
+                letterSpacing: '0.5px',
+              }}
+              title="Automatically dismiss resolved events to speed up gameplay"
+            >
+              <span>⏩</span>
+              <span>TURBO: {turboSpeed ? 'ON' : 'OFF'}</span>
+            </button>
+          </div>
+
           {/* Roll Action Button in Center */}
           {gameState.phase === 'awaitRoll' && gameState.turnPlayerId === myPlayerId && (
             <button
@@ -954,7 +1030,7 @@ export const Board: React.FC<BoardProps> = ({ gameState }) => {
               }}
             >
               <span>🎲</span>
-              <span>ROLL DICE</span>
+              <span>{autoRoll ? '⚡ AUTO-ROLLING...' : 'ROLL DICE'}</span>
             </button>
           )}
 

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useGameRoomStore } from '../gameRoomStore';
+import { useGameRoomStore, DEFAULT_HOUSE_RULES } from '../gameRoomStore';
 import { useHubStore } from '../hubStore';
 import { soundFx } from '../soundEffects';
 import { trackEvent } from '../posthog';
@@ -22,16 +22,20 @@ export const GameRoomLobby: React.FC<GameRoomLobbyProps> = ({
   maxPlayers = 8,
   onStart,
 }) => {
-  const { setView } = useHubStore();
+  const { setView, setShowPublicRoomsModal } = useHubStore();
   const {
     getOrCreateRoom,
     toggleAllowBots,
     addPlayer,
     removePlayer,
     generateNewRoomCode,
+    setHouseRules,
+    setIsPrivate,
   } = useGameRoomStore();
 
   const room = getOrCreateRoom(gameId, 'You (Host)', maxPlayers, minPlayers);
+  const houseRules = room.houseRules || DEFAULT_HOUSE_RULES;
+  const [showHouseRules, setShowHouseRules] = useState(true);
   const [newPlayerName, setNewPlayerName] = useState('');
   const [copied, setCopied] = useState(false);
 
@@ -83,23 +87,43 @@ export const GameRoomLobby: React.FC<GameRoomLobbyProps> = ({
           gap: '12px',
         }}
       >
-        <button
-          onClick={() => {
-            soundFx.playClick();
-            setView('dashboard');
-          }}
-          className="arcade-btn arcade-btn-secondary"
-          style={{
-            padding: '8px 16px',
-            fontSize: '12px',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '8px',
-          }}
-        >
-          <span>◀</span>
-          <span>CYBER ARCADE HUB</span>
-        </button>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <button
+            onClick={() => {
+              soundFx.playClick();
+              setView('dashboard');
+            }}
+            className="arcade-btn arcade-btn-secondary"
+            style={{
+              padding: '8px 16px',
+              fontSize: '12px',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px',
+            }}
+          >
+            <span>◀</span>
+            <span>CYBER ARCADE HUB</span>
+          </button>
+
+          <button
+            onClick={() => {
+              soundFx.playClick();
+              setShowPublicRoomsModal(true);
+            }}
+            className="arcade-btn arcade-btn-cyan"
+            style={{
+              padding: '8px 16px',
+              fontSize: '12px',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px',
+            }}
+          >
+            <span>🌐</span>
+            <span>ALL ROOMS BROWSER</span>
+          </button>
+        </div>
 
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
           <span
@@ -331,6 +355,409 @@ export const GameRoomLobby: React.FC<GameRoomLobbyProps> = ({
           >
             {room.allowBots ? '🤖 DISABLE AI BOTS' : '🤖 ENABLE AI BOTS'}
           </button>
+        </div>
+
+        {/* 3b. Richup Custom House Rules & Arena Config */}
+        <div
+          style={{
+            borderRadius: '18px',
+            background: 'linear-gradient(135deg, rgba(10, 16, 32, 0.95) 0%, rgba(6, 10, 22, 0.98) 100%)',
+            border: '1.5px solid rgba(0, 240, 255, 0.3)',
+            boxShadow: '0 8px 30px rgba(0, 0, 0, 0.5), inset 0 0 20px rgba(0, 240, 255, 0.05)',
+            padding: '20px 24px',
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '16px',
+          }}
+        >
+          <div
+            style={{
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              cursor: 'pointer',
+              userSelect: 'none',
+            }}
+            onClick={() => {
+              soundFx.playClick();
+              setShowHouseRules(!showHouseRules);
+            }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+              <div
+                style={{
+                  width: '38px',
+                  height: '38px',
+                  borderRadius: '10px',
+                  background: 'linear-gradient(135deg, rgba(0, 240, 255, 0.2), rgba(255, 0, 119, 0.2))',
+                  border: '1px solid rgba(0, 240, 255, 0.4)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  fontSize: '18px',
+                }}
+              >
+                ⚙️
+              </div>
+              <div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <span
+                    style={{
+                      fontSize: '15px',
+                      fontWeight: 900,
+                      color: '#ffffff',
+                      fontFamily: 'Space Grotesk, sans-serif',
+                      letterSpacing: '-0.2px',
+                    }}
+                  >
+                    RICHUP HOUSE RULES & CONFIG
+                  </span>
+                  <span className="neon-pill neon-pill-gold" style={{ fontSize: '10px' }}>
+                    CUSTOMIZABLE
+                  </span>
+                </div>
+                <p style={{ margin: '2px 0 0 0', fontSize: '12px', color: '#94a3b8' }}>
+                  Configure starting bankroll, payday bonuses, turn timer, and vacation jackpot rules.
+                </p>
+              </div>
+            </div>
+
+            <button
+              className="arcade-btn arcade-btn-secondary"
+              style={{ padding: '6px 12px', fontSize: '11px' }}
+            >
+              {showHouseRules ? '▲ COLLAPSE' : '▼ EXPAND RULES'}
+            </button>
+          </div>
+
+          {showHouseRules && (
+            <div
+              style={{
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '16px',
+                paddingTop: '14px',
+                borderTop: '1px solid rgba(255, 255, 255, 0.08)',
+              }}
+            >
+              {/* Row 1: Arena Visibility & Turn Clock */}
+              <div
+                style={{
+                  display: 'grid',
+                  gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
+                  gap: '16px',
+                }}
+              >
+                {/* Room Visibility */}
+                <div
+                  style={{
+                    background: 'rgba(255, 255, 255, 0.03)',
+                    border: '1px solid rgba(255, 255, 255, 0.08)',
+                    borderRadius: '12px',
+                    padding: '12px 14px',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: '8px',
+                  }}
+                >
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <span style={{ fontSize: '12px', fontWeight: 800, color: '#e2e8f0' }}>
+                      ARENA DIRECTORY VISIBILITY
+                    </span>
+                    <span
+                      style={{
+                        fontSize: '11px',
+                        fontWeight: 900,
+                        color: room.isPrivate ? '#f43f5e' : '#00ff88',
+                      }}
+                    >
+                      {room.isPrivate ? '🔒 PRIVATE ONLY' : '🌐 PUBLIC ARENA'}
+                    </span>
+                  </div>
+                  <div style={{ display: 'flex', gap: '8px' }}>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        soundFx.playClick();
+                        setIsPrivate(gameId, false);
+                      }}
+                      className={`arcade-btn ${!room.isPrivate ? 'arcade-btn-green' : 'arcade-btn-secondary'}`}
+                      style={{ flex: 1, padding: '7px 10px', fontSize: '11px' }}
+                    >
+                      🌐 Public (All Rooms)
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        soundFx.playClick();
+                        setIsPrivate(gameId, true);
+                      }}
+                      className={`arcade-btn ${room.isPrivate ? 'arcade-btn-primary' : 'arcade-btn-secondary'}`}
+                      style={{ flex: 1, padding: '7px 10px', fontSize: '11px' }}
+                    >
+                      🔒 Private (Key Only)
+                    </button>
+                  </div>
+                </div>
+
+                {/* Turn Clock */}
+                <div
+                  style={{
+                    background: 'rgba(255, 255, 255, 0.03)',
+                    border: '1px solid rgba(255, 255, 255, 0.08)',
+                    borderRadius: '12px',
+                    padding: '12px 14px',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: '8px',
+                  }}
+                >
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <span style={{ fontSize: '12px', fontWeight: 800, color: '#e2e8f0' }}>
+                      TURN CLOCK LIMIT
+                    </span>
+                    <span style={{ fontSize: '11px', fontWeight: 900, color: '#00f0ff', fontFamily: 'JetBrains Mono, monospace' }}>
+                      {houseRules.turnTimerSec ? `${houseRules.turnTimerSec}s PER TURN` : 'UNLIMITED'}
+                    </span>
+                  </div>
+                  <div style={{ display: 'flex', gap: '6px' }}>
+                    {[15, 30, 45, 60, null].map((sec) => (
+                      <button
+                        key={String(sec)}
+                        type="button"
+                        onClick={() => {
+                          soundFx.playClick();
+                          setHouseRules(gameId, { turnTimerSec: sec });
+                        }}
+                        className={`arcade-btn ${houseRules.turnTimerSec === sec ? 'arcade-btn-cyan' : 'arcade-btn-secondary'}`}
+                        style={{ flex: 1, padding: '6px 4px', fontSize: '11px' }}
+                      >
+                        {sec ? `${sec}s` : '∞'}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+
+              {/* Row 2: Starting Cash & Payday Amount */}
+              <div
+                style={{
+                  display: 'grid',
+                  gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
+                  gap: '16px',
+                }}
+              >
+                {/* Starting Cash */}
+                <div
+                  style={{
+                    background: 'rgba(255, 255, 255, 0.03)',
+                    border: '1px solid rgba(255, 255, 255, 0.08)',
+                    borderRadius: '12px',
+                    padding: '12px 14px',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: '8px',
+                  }}
+                >
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <span style={{ fontSize: '12px', fontWeight: 800, color: '#e2e8f0' }}>
+                      STARTING CAPITAL
+                    </span>
+                    <span style={{ fontSize: '11px', fontWeight: 900, color: '#ffb703', fontFamily: 'JetBrains Mono, monospace' }}>
+                      ${houseRules.startingCash.toLocaleString()}
+                    </span>
+                  </div>
+                  <div style={{ display: 'flex', gap: '6px' }}>
+                    {[1000, 1500, 2000, 2500].map((amt) => (
+                      <button
+                        key={amt}
+                        type="button"
+                        onClick={() => {
+                          soundFx.playClick();
+                          setHouseRules(gameId, { startingCash: amt });
+                        }}
+                        className={`arcade-btn ${houseRules.startingCash === amt ? 'arcade-btn-gold' : 'arcade-btn-secondary'}`}
+                        style={{ flex: 1, padding: '6px 4px', fontSize: '11px' }}
+                      >
+                        ${amt}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Payday Salary */}
+                <div
+                  style={{
+                    background: 'rgba(255, 255, 255, 0.03)',
+                    border: '1px solid rgba(255, 255, 255, 0.08)',
+                    borderRadius: '12px',
+                    padding: '12px 14px',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: '8px',
+                  }}
+                >
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <span style={{ fontSize: '12px', fontWeight: 800, color: '#e2e8f0' }}>
+                      SALARY ON GO (PAYDAY)
+                    </span>
+                    <span style={{ fontSize: '11px', fontWeight: 900, color: '#00ff88', fontFamily: 'JetBrains Mono, monospace' }}>
+                      ${houseRules.paydayAmount}
+                    </span>
+                  </div>
+                  <div style={{ display: 'flex', gap: '6px' }}>
+                    {[100, 200, 300, 400].map((amt) => (
+                      <button
+                        key={amt}
+                        type="button"
+                        onClick={() => {
+                          soundFx.playClick();
+                          setHouseRules(gameId, { paydayAmount: amt });
+                        }}
+                        className={`arcade-btn ${houseRules.paydayAmount === amt ? 'arcade-btn-green' : 'arcade-btn-secondary'}`}
+                        style={{ flex: 1, padding: '6px 4px', fontSize: '11px' }}
+                      >
+                        ${amt}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+
+              {/* Row 3: Richup Signature Gameplay Mechanics */}
+              <div
+                style={{
+                  display: 'grid',
+                  gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+                  gap: '10px',
+                }}
+              >
+                {/* Double Salary on GO */}
+                <div
+                  onClick={() => {
+                    soundFx.playClick();
+                    setHouseRules(gameId, { doubleGoBonus: !houseRules.doubleGoBonus });
+                  }}
+                  style={{
+                    padding: '10px 12px',
+                    borderRadius: '10px',
+                    background: houseRules.doubleGoBonus ? 'rgba(0, 255, 136, 0.12)' : 'rgba(255, 255, 255, 0.02)',
+                    border: houseRules.doubleGoBonus ? '1px solid rgba(0, 255, 136, 0.4)' : '1px solid rgba(255, 255, 255, 0.08)',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: '4px',
+                    transition: 'all 0.15s ease',
+                  }}
+                >
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <span style={{ fontSize: '11.5px', fontWeight: 800, color: '#ffffff' }}>
+                      🎯 DOUBLE GO BONUS
+                    </span>
+                    <span style={{ fontSize: '11px', fontWeight: 900, color: houseRules.doubleGoBonus ? '#00ff88' : '#64748b' }}>
+                      {houseRules.doubleGoBonus ? 'ON' : 'OFF'}
+                    </span>
+                  </div>
+                  <span style={{ fontSize: '10.5px', color: '#94a3b8' }}>
+                    Land directly on GO to collect 2× salary (${houseRules.paydayAmount * 2})
+                  </span>
+                </div>
+
+                {/* Vacation Jackpot */}
+                <div
+                  onClick={() => {
+                    soundFx.playClick();
+                    setHouseRules(gameId, { vacationCash: !houseRules.vacationCash });
+                  }}
+                  style={{
+                    padding: '10px 12px',
+                    borderRadius: '10px',
+                    background: houseRules.vacationCash ? 'rgba(0, 240, 255, 0.12)' : 'rgba(255, 255, 255, 0.02)',
+                    border: houseRules.vacationCash ? '1px solid rgba(0, 240, 255, 0.4)' : '1px solid rgba(255, 255, 255, 0.08)',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: '4px',
+                    transition: 'all 0.15s ease',
+                  }}
+                >
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <span style={{ fontSize: '11.5px', fontWeight: 800, color: '#ffffff' }}>
+                      🌴 VACATION JACKPOT
+                    </span>
+                    <span style={{ fontSize: '11px', fontWeight: 900, color: houseRules.vacationCash ? '#00f0ff' : '#64748b' }}>
+                      {houseRules.vacationCash ? 'ON' : 'OFF'}
+                    </span>
+                  </div>
+                  <span style={{ fontSize: '10.5px', color: '#94a3b8' }}>
+                    All tax & fine money pools on Vacation tile 20 for whoever lands on it
+                  </span>
+                </div>
+
+                {/* Auction on Decline */}
+                <div
+                  onClick={() => {
+                    soundFx.playClick();
+                    setHouseRules(gameId, { auctionOnDecline: !houseRules.auctionOnDecline });
+                  }}
+                  style={{
+                    padding: '10px 12px',
+                    borderRadius: '10px',
+                    background: houseRules.auctionOnDecline ? 'rgba(255, 0, 119, 0.12)' : 'rgba(255, 255, 255, 0.02)',
+                    border: houseRules.auctionOnDecline ? '1px solid rgba(255, 0, 119, 0.4)' : '1px solid rgba(255, 255, 255, 0.08)',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: '4px',
+                    transition: 'all 0.15s ease',
+                  }}
+                >
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <span style={{ fontSize: '11.5px', fontWeight: 800, color: '#ffffff' }}>
+                      🔨 AUCTION ON DECLINE
+                    </span>
+                    <span style={{ fontSize: '11px', fontWeight: 900, color: houseRules.auctionOnDecline ? '#ff0077' : '#64748b' }}>
+                      {houseRules.auctionOnDecline ? 'ON' : 'OFF'}
+                    </span>
+                  </div>
+                  <span style={{ fontSize: '10.5px', color: '#94a3b8' }}>
+                    When a player passes on unbought land, it enters live auction
+                  </span>
+                </div>
+
+                {/* Even Building Rule */}
+                <div
+                  onClick={() => {
+                    soundFx.playClick();
+                    setHouseRules(gameId, { evenBuild: !houseRules.evenBuild });
+                  }}
+                  style={{
+                    padding: '10px 12px',
+                    borderRadius: '10px',
+                    background: houseRules.evenBuild ? 'rgba(168, 85, 247, 0.12)' : 'rgba(255, 255, 255, 0.02)',
+                    border: houseRules.evenBuild ? '1px solid rgba(168, 85, 247, 0.4)' : '1px solid rgba(255, 255, 255, 0.08)',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: '4px',
+                    transition: 'all 0.15s ease',
+                  }}
+                >
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <span style={{ fontSize: '11.5px', fontWeight: 800, color: '#ffffff' }}>
+                      🏗️ EVEN BUILDING
+                    </span>
+                    <span style={{ fontSize: '11px', fontWeight: 900, color: houseRules.evenBuild ? '#a855f7' : '#64748b' }}>
+                      {houseRules.evenBuild ? 'ON' : 'OFF'}
+                    </span>
+                  </div>
+                  <span style={{ fontSize: '10.5px', color: '#94a3b8' }}>
+                    Must build houses and towers evenly across properties in a color set
+                  </span>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Operator Pods Header */}

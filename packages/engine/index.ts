@@ -561,7 +561,10 @@ function movePlayerAndResolve(
 
   // Payday check: wrapped around or landed on 0
   if (newPosition < oldPosition || newPosition === 0) {
-    const payday = state.rules.paydayAmount;
+    let payday = state.rules.paydayAmount;
+    if (newPosition === 0 && state.rules.doubleGoBonus) {
+      payday *= 2;
+    }
     player.cash += payday;
     events.push({
       type: 'payday_triggered',

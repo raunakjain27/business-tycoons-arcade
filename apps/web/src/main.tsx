@@ -32,6 +32,8 @@ import { DailyRewardModal } from './components/DailyRewardModal';
 import { ReactionOverlay } from './components/ReactionOverlay';
 import { VictoryCelebrationModal } from './components/VictoryCelebrationModal';
 import { LeaderboardModal } from './components/LeaderboardModal';
+import { PublicRoomsModal } from './components/PublicRoomsModal';
+import { ChatDrawer } from './components/ChatDrawer';
 import { useTrophyStore } from './trophyStore';
 import { soundFx } from './soundEffects';
 import { GameErrorBoundary } from './components/GameErrorBoundary';
@@ -665,6 +667,12 @@ export function App() {
 
       {/* Global In-App Store & Customization Modal */}
       <StoreModal />
+
+      {/* Global Public Rooms Directory Browser */}
+      <PublicRoomsModal />
+
+      {/* Global In-Game Chat Drawer & Tactical Comms */}
+      <ChatDrawer />
     </div>
   );
 }

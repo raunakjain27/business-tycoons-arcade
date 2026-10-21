@@ -58,8 +58,14 @@ export interface GameStoreState {
   turnTimerSec: number | null;
   turnTimerActive: boolean;
   turnTimerRemaining: number | null;
+  autoRoll: boolean;
+  turboSpeed: boolean;
 
   // Setters & UI controls
+  toggleAutoRoll: () => void;
+  toggleTurboSpeed: () => void;
+  setAutoRoll: (val: boolean) => void;
+  setTurboSpeed: (val: boolean) => void;
   setGameMode: (mode: GameMode) => void;
   setServerUrl: (url: string) => void;
   setBoardKey: (key: string) => void;
@@ -131,6 +137,13 @@ export const useGameStore = create<GameStoreState>((set, get) => ({
   turnTimerSec: null,
   turnTimerActive: false,
   turnTimerRemaining: null,
+  autoRoll: false,
+  turboSpeed: false,
+
+  toggleAutoRoll: () => set((s) => ({ autoRoll: !s.autoRoll })),
+  toggleTurboSpeed: () => set((s) => ({ turboSpeed: !s.turboSpeed })),
+  setAutoRoll: (val: boolean) => set({ autoRoll: val }),
+  setTurboSpeed: (val: boolean) => set({ turboSpeed: val }),
 
   rooms: { local: emptyLocalRoomState },
   getOrCreateRoom: (gameId: string, hostName: string, maxPlayers: number, minPlayers: number) => ({

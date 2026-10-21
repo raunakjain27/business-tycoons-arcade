@@ -83,6 +83,7 @@ export function createInitialGameState(
       vacationCash: true,
       freeParking: true,
       noRentInPrison: true,
+      doubleGoBonus: true,
       ...rulesOverride,
     },
     round: 1,
@@ -928,13 +929,19 @@ function movePlayer(
 
   // Passed or landed on Start (Payday HQ)
   if (newPos < oldPos || newPos === 0) {
-    const payday = state.rules.paydayAmount;
+    let payday = state.rules.paydayAmount;
+    const isDirectLand = newPos === 0;
+    if (isDirectLand && state.rules.doubleGoBonus) {
+      payday *= 2;
+    }
     player.cash += payday;
     events.push({
       type: 'PAYDAY',
       playerId: player.id,
       amount: payday,
-      reason: `${player.name} passed Payday HQ and collected $${payday}.`,
+      reason: isDirectLand && state.rules.doubleGoBonus
+        ? `${player.name} landed directly on Payday HQ and collected DOUBLE SALARY ($${payday})!`
+        : `${player.name} passed Payday HQ and collected $${payday}.`,
     });
   }
 

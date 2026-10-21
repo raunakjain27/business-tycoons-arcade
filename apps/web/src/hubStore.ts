@@ -165,10 +165,12 @@ interface HubStoreState {
   view: 'dashboard' | 'game';
   searchQuery: string;
   selectedCategory: string;
+  showPublicRoomsModal: boolean;
   setActiveGame: (game: GameId) => void;
   setView: (view: 'dashboard' | 'game') => void;
   setSearchQuery: (query: string) => void;
   setSelectedCategory: (cat: string) => void;
+  setShowPublicRoomsModal: (show: boolean) => void;
 }
 
 export const useHubStore = create<HubStoreState>((set) => ({
@@ -176,6 +178,7 @@ export const useHubStore = create<HubStoreState>((set) => ({
   view: 'dashboard', // default to arcade dashboard so user lands on dashboard first
   searchQuery: '',
   selectedCategory: 'All',
+  showPublicRoomsModal: false,
 
   setActiveGame: (game: GameId) => {
     trackEvent('game_selected', { gameId: game });
@@ -184,4 +187,5 @@ export const useHubStore = create<HubStoreState>((set) => ({
   setView: (view: 'dashboard' | 'game') => set({ view }),
   setSearchQuery: (query: string) => set({ searchQuery: query }),
   setSelectedCategory: (cat: string) => set({ selectedCategory: cat }),
+  setShowPublicRoomsModal: (show: boolean) => set({ showPublicRoomsModal: show }),
 }));

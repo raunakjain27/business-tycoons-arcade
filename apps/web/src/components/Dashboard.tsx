@@ -13,6 +13,7 @@ export const Dashboard: React.FC = () => {
     setSearchQuery,
     selectedCategory,
     setSelectedCategory,
+    setShowPublicRoomsModal,
   } = useHubStore();
 
   const { user, openRulesModal, setShowStoreModal, setShowDailyModal, setShowLeaderboardModal } = useUserStore();
@@ -248,6 +249,30 @@ export const Dashboard: React.FC = () => {
               ⚠️ {joinError}
             </div>
           )}
+
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginTop: '12px' }}>
+            <button
+              type="button"
+              onClick={() => {
+                soundFx.playClick();
+                setShowPublicRoomsModal(true);
+              }}
+              className="arcade-btn arcade-btn-green"
+              style={{
+                padding: '9px 18px',
+                fontSize: '12px',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px',
+              }}
+            >
+              <span>🌐</span>
+              <span>ALL ROOMS BROWSER</span>
+            </button>
+            <span style={{ fontSize: '12px', color: '#94a3b8' }}>
+              or explore live multiplayer arenas
+            </span>
+          </div>
         </div>
 
         {/* Right Column: Player Cyber Telemetry Pod */}

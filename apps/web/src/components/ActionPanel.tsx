@@ -28,6 +28,8 @@ export const ActionPanel: React.FC<ActionPanelProps> = ({ gameState }) => {
     setShowAbilityModal,
     setSelectedTile,
     selectedTile,
+    autoRoll,
+    toggleAutoRoll,
   } = useGameStore();
 
   // Lobby form state
@@ -437,22 +439,41 @@ export const ActionPanel: React.FC<ActionPanelProps> = ({ gameState }) => {
                   <p style={{ fontSize: '14px', color: '#cbd5e1' }}>
                     Roll the dice to move across the Business Tycoons board.
                   </p>
-                  <button
-                    onClick={() => {
-                      soundFx.playDiceRoll();
-                      dispatchAction({ type: 'ROLL' });
-                    }}
-                    style={{
-                      ...primaryButtonStyle,
-                      padding: '16px 36px',
-                      fontSize: '18px',
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '8px',
-                    }}
-                  >
-                    🎲 Roll Dice
-                  </button>
+                  <div style={{ display: 'flex', gap: '10px', alignItems: 'center', flexWrap: 'wrap', justifyContent: 'center' }}>
+                    <button
+                      onClick={() => {
+                        soundFx.playDiceRoll();
+                        dispatchAction({ type: 'ROLL' });
+                      }}
+                      style={{
+                        ...primaryButtonStyle,
+                        padding: '16px 36px',
+                        fontSize: '18px',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '8px',
+                      }}
+                    >
+                      🎲 {autoRoll ? '⚡ Auto-Rolling...' : 'Roll Dice'}
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => {
+                        soundFx.playClick();
+                        toggleAutoRoll();
+                      }}
+                      className={`arcade-btn ${autoRoll ? 'arcade-btn-green' : 'arcade-btn-secondary'}`}
+                      style={{
+                        padding: '14px 16px',
+                        fontSize: '12px',
+                        borderRadius: '10px',
+                      }}
+                      title="Automatically roll dice when it is your turn"
+                    >
+                      ⚡ AUTO-ROLL: {autoRoll ? 'ON' : 'OFF'}
+                    </button>
+                  </div>
                 </div>
               )}
             </>

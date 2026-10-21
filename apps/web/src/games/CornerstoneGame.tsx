@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useGameStore } from '../store';
 import { useGameRoomStore } from '../gameRoomStore';
+import { useHubStore } from '../hubStore';
 import { useVoiceStore } from '../voiceStore';
 import { GameRoomLobby } from '../components/GameRoomLobby';
 import { VoiceRoomBar } from '../components/VoiceRoomBar';
@@ -76,12 +77,23 @@ export const CornerstoneGame: React.FC = () => {
       tokenId: p.avatar || 'alien',
     }));
 
+    const rules = room.houseRules;
     initLocalGame(
       matchPlayers.length,
       matchPlayers[0]?.name || 'Player 1',
       'Tycoon',
       false,
-      1500
+      rules?.startingCash ?? 1500,
+      {
+        startingCash: rules?.startingCash ?? 1500,
+        paydayAmount: rules?.paydayAmount ?? 200,
+        doubleGoBonus: rules?.doubleGoBonus ?? true,
+        vacationCash: rules?.vacationCash ?? true,
+        auctionOnDecline: rules?.auctionOnDecline ?? true,
+        evenBuild: rules?.evenBuild ?? true,
+        turnTimerSec: rules?.turnTimerSec ?? 30,
+        doubleRentFullSet: rules?.doubleRentFullSet ?? true,
+      }
     );
 
     // If online mode is toggled, also connect to the Render Colyseus room
@@ -111,6 +123,55 @@ export const CornerstoneGame: React.FC = () => {
 
   return (
     <div style={{ width: '100%', maxWidth: '1600px', margin: '0 auto' }}>
+      {/* Top Game Navigation & Room Browser Controls */}
+      <div
+        style={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          marginBottom: '10px',
+          flexWrap: 'wrap',
+          gap: '8px',
+        }}
+      >
+        <button
+          onClick={() => {
+            soundFx.playClick();
+            setInLobby(true);
+            room.isGameStarted = false;
+          }}
+          className="arcade-btn arcade-btn-secondary"
+          style={{
+            padding: '6px 14px',
+            fontSize: '11px',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '6px',
+          }}
+        >
+          <span>⚙️</span>
+          <span>LOBBY & HOUSE RULES</span>
+        </button>
+
+        <button
+          onClick={() => {
+            soundFx.playClick();
+            useHubStore.getState().setShowPublicRoomsModal(true);
+          }}
+          className="arcade-btn arcade-btn-cyan"
+          style={{
+            padding: '6px 14px',
+            fontSize: '11px',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '6px',
+          }}
+        >
+          <span>🌐</span>
+          <span>ALL ROOMS BROWSER</span>
+        </button>
+      </div>
+
       {/* Live Voice Status Dock */}
       <VoiceRoomBar gameTitle="Business Tycoons Match" />
 

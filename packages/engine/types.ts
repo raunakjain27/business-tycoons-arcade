@@ -133,6 +133,7 @@ export interface RuleSet {
   vacationCash?: boolean;
   noRentInPrison?: boolean;
   freeParking?: boolean;
+  doubleGoBonus?: boolean;
 }
 
 export interface GameState {
