@@ -3,6 +3,14 @@ import type { GameState, Action, TileId, PlayerId, GameEvent } from '../../../pa
 import { colyseusConnection } from './colyseusClient';
 import { createInitialGameState, applyLocalAction, botStep } from './localEngine';
 import { EventCardDef } from './boardData';
+import { soundFx } from './soundEffects';
+
+export interface EmoteReaction {
+  id: string;
+  emoji: string;
+  playerId: string;
+  timestamp: number;
+}
 
 // ---------------------------------------------------------------------------
 // Shared room types picked up by games/ and components/ that need `getOrCreateRoom`.
@@ -38,10 +46,12 @@ export interface GameStoreState {
   myPlayerId: PlayerId;
   gameState: GameState | null;
   selectedTile: TileId | null;
+  tradeTargetTile: TileId | null;
   showTradeModal: boolean;
   showInfluenceModal: boolean;
   showAbilityModal: boolean;
   activeEventCard: EventCardDef | null;
+  activeEmotes: EmoteReaction[];
   isConnecting: boolean;
   errorMessage: string | null;
   auctionTimeLeft: number | null;
@@ -54,11 +64,13 @@ export interface GameStoreState {
   setServerUrl: (url: string) => void;
   setBoardKey: (key: string) => void;
   setSelectedTile: (tileId: TileId | null) => void;
+  setTradeTargetTile: (tileId: TileId | null) => void;
   setShowTradeModal: (show: boolean) => void;
   setShowInfluenceModal: (show: boolean) => void;
   setShowAbilityModal: (show: boolean) => void;
   dismissEventCard: () => void;
   clearError: () => void;
+  sendEmote: (emoji: string, playerId?: string) => void;
   setTurnTimerActive: (active: boolean) => void;
   setTurnTimerRemaining: (remaining: number | null) => void;
 
@@ -107,10 +119,12 @@ export const useGameStore = create<GameStoreState>((set, get) => ({
   myPlayerId: 'p1',
   gameState: null,
   selectedTile: null,
+  tradeTargetTile: null,
   showTradeModal: false,
   showInfluenceModal: false,
   showAbilityModal: false,
   activeEventCard: null,
+  activeEmotes: [],
   isConnecting: false,
   errorMessage: null,
   auctionTimeLeft: null,
@@ -137,10 +151,31 @@ export const useGameStore = create<GameStoreState>((set, get) => ({
     set({ boardKey: key });
   },
   setSelectedTile: (tileId: TileId | null) => set({ selectedTile: tileId }),
+  setTradeTargetTile: (tileId: TileId | null) => set({ tradeTargetTile: tileId }),
   setShowTradeModal: (show: boolean) => set({ showTradeModal: show }),
   setShowInfluenceModal: (show: boolean) => set({ showInfluenceModal: show }),
   setShowAbilityModal: (show: boolean) => set({ showAbilityModal: show }),
   clearError: () => set({ errorMessage: null }),
+  sendEmote: (emoji: string, playerId?: string) => {
+    const pId = playerId ?? get().myPlayerId;
+    const emote: EmoteReaction = {
+      id: `emote-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
+      emoji,
+      playerId: pId,
+      timestamp: Date.now(),
+    };
+    try {
+      soundFx.playClick();
+    } catch (e) {}
+    set(state => ({
+      activeEmotes: [...state.activeEmotes.slice(-8), emote],
+    }));
+    setTimeout(() => {
+      set(state => ({
+        activeEmotes: state.activeEmotes.filter(e => e.id !== emote.id),
+      }));
+    }, 2500);
+  },
   dismissEventCard: () => {
     set({ activeEventCard: null });
     const state = get().gameState;
@@ -350,6 +385,23 @@ export const useGameStore = create<GameStoreState>((set, get) => ({
 
     set({ gameState: result.state, errorMessage: null });
     if ((get() as any)._errorTimeout) clearTimeout((get() as any)._errorTimeout);
+
+    // Trigger rich procedural audio effects based on events
+    try {
+      result.events.forEach(e => {
+        if (e.type === 'DICE_ROLLED') soundFx.playDiceRoll();
+        else if (e.type === 'PROPERTY_BOUGHT' || e.type === 'AUCTION_WON') soundFx.playCashRegister();
+        else if (e.type === 'RENT_PAID') soundFx.playRent();
+        else if (e.type === 'GO_TO_JAIL') soundFx.playJailDoor();
+        else if (e.type === 'PAYDAY') soundFx.playCoin();
+        else if (e.type === 'COMMUNITY_FUND_COLLECTED') soundFx.playJackpot();
+        else if (e.type === 'JAIL_ESCAPE') soundFx.playLadderClimb();
+        else if (e.type === 'TRADE_COMPLETED') soundFx.playCardSpecial();
+        else if (e.type === 'EVENT_CARD_DRAWN') soundFx.playCardFlip();
+      });
+      if (action.type === 'BUILD') soundFx.playHouseBuild();
+      if (action.type === 'MORTGAGE' || action.type === 'UNMORTGAGE') soundFx.playMortgage();
+    } catch (e) {}
 
     // Check if event card was drawn
     const eventLog = result.events.find(e => e.type === 'EVENT_CARD_DRAWN');

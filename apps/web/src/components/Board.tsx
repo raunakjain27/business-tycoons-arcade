@@ -1,8 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import type { GameState, TileId, PlayerState } from '../../../../packages/engine/types';
 import { BOARD_DATA, getTileDef, getDistrictDef, PLAYER_COLORS, AVAILABLE_PEGS, formatCurrency, updateTileName } from '../boardData';
 import { useGameStore } from '../store';
 import { DiceVisualizer } from './DiceVisualizer';
+import { soundFx } from '../soundEffects';
 
 interface BoardProps {
   gameState: GameState;
@@ -28,15 +29,93 @@ function getGridPosition(tileId: TileId): { row: number; col: number; isCorner: 
 }
 
 export const Board: React.FC<BoardProps> = ({ gameState }) => {
-  const { selectedTile, setSelectedTile, myPlayerId, dispatchAction, dismissEventCard, initLocalGame } = useGameStore();
+  const {
+    selectedTile,
+    setSelectedTile,
+    myPlayerId,
+    dispatchAction,
+    dismissEventCard,
+    initLocalGame,
+    activeEmotes,
+    sendEmote,
+  } = useGameStore();
+
   const [editingTileId, setEditingTileId] = useState<TileId | null>(null);
   const [editNameInput, setEditNameInput] = useState('');
 
-  // Find which players are on which tile
+  // Step-by-step animated token movement
+  const [visualPositions, setVisualPositions] = useState<Record<string, number>>({});
+  const lastStatePositions = useRef<Record<string, number>>({});
+
+  useEffect(() => {
+    for (const [pId, pState] of Object.entries(gameState.players) as [string, PlayerState][]) {
+      if (pState.status !== 'active') continue;
+      const targetPos = pState.position;
+      const prevPos = lastStatePositions.current[pId] ?? targetPos;
+
+      if (prevPos !== targetPos) {
+        lastStatePositions.current[pId] = targetPos;
+
+        // If sent directly to jail, jump immediately and play jail door slam
+        if (targetPos === 10 && pState.inJail) {
+          setVisualPositions(prev => ({ ...prev, [pId]: 10 }));
+          try { soundFx.playJailDoor(); } catch (e) {}
+          continue;
+        }
+
+        // Calculate hop distance
+        const stepDist = (targetPos - prevPos + 40) % 40;
+        if (stepDist > 0 && stepDist <= 12) {
+          let currentStep = 1;
+          const interval = setInterval(() => {
+            const nextStepPos = (prevPos + currentStep) % 40;
+            setVisualPositions(prev => ({ ...prev, [pId]: nextStepPos }));
+            try { soundFx.playStep(); } catch (e) {}
+
+            if (currentStep >= stepDist) {
+              clearInterval(interval);
+              try { soundFx.vibrate(25); } catch (e) {}
+            }
+            currentStep++;
+          }, 90);
+        } else {
+          setVisualPositions(prev => ({ ...prev, [pId]: targetPos }));
+        }
+      } else if (visualPositions[pId] === undefined) {
+        setVisualPositions(prev => ({ ...prev, [pId]: targetPos }));
+        lastStatePositions.current[pId] = targetPos;
+      }
+    }
+  }, [gameState.players]);
+
+  // Global Spacebar and Escape key shortcuts
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (['INPUT', 'TEXTAREA', 'SELECT'].includes((e.target as HTMLElement)?.tagName)) {
+        return;
+      }
+      if (e.code === 'Space') {
+        e.preventDefault();
+        if (gameState.phase === 'awaitRoll' && gameState.turnPlayerId === myPlayerId) {
+          dispatchAction({ type: 'ROLL' });
+        } else if (gameState.phase === 'awaitEndTurn' && gameState.turnPlayerId === myPlayerId) {
+          dispatchAction({ type: 'END_TURN' });
+        } else if (gameState.phase === 'resolveEvent' && gameState.turnPlayerId === myPlayerId) {
+          dismissEventCard();
+        }
+      } else if (e.code === 'Escape') {
+        setSelectedTile(null);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [gameState.phase, gameState.turnPlayerId, myPlayerId, dispatchAction, dismissEventCard, setSelectedTile]);
+
+  // Find which players are on which tile using visual positions
   const playersByTile: Record<TileId, string[]> = {};
   for (const [pId, pState] of Object.entries(gameState.players) as [string, PlayerState][]) {
     if (pState.status === 'active') {
-      const pos = pState.position;
+      const pos = (visualPositions[pId] !== undefined ? visualPositions[pId] : pState.position) as TileId;
       if (!playersByTile[pos]) playersByTile[pos] = [];
       playersByTile[pos].push(pId);
     }
@@ -65,6 +144,12 @@ export const Board: React.FC<BoardProps> = ({ gameState }) => {
         @keyframes bouncePeg {
           0%, 100% { transform: translateY(0) scale(1); }
           40% { transform: translateY(-4px) scale(1.1); }
+        }
+        @keyframes floatEmote {
+          0% { transform: translate(-50%, 0) scale(0.6); opacity: 0; }
+          20% { transform: translate(-50%, -10px) scale(1.3); opacity: 1; }
+          70% { transform: translate(-50%, -24px) scale(1.1); opacity: 0.95; }
+          100% { transform: translate(-50%, -36px) scale(0.8); opacity: 0; }
         }
         @keyframes landmarkGlow {
           0%, 100% { filter: drop-shadow(0 0 2px rgba(255,255,255,0.4)); transform: scale(1); }
@@ -192,6 +277,8 @@ export const Board: React.FC<BoardProps> = ({ gameState }) => {
           return (
             <div
               key={tile.id}
+              className="board-tile"
+              data-tile-id={tile.id}
               onClick={() => setSelectedTile(tile.id)}
               style={{
                 gridRow: row,
@@ -218,16 +305,51 @@ export const Board: React.FC<BoardProps> = ({ gameState }) => {
               }}
               title={`${tile.name}${tile.price ? ` - ${formatCurrency(tile.price, gameState.boardKey)}` : ''}`}
             >
-              {/* Richup-style District Color Bar */}
+              {/* Richup-style District Color Bar with Houses & Hotel */}
               {stripeColor && (
                 <div
                   style={{
-                    height: stripePos === 'top' || stripePos === 'bottom' ? '7px' : '100%',
-                    width: stripePos === 'left' || stripePos === 'right' ? '7px' : '100%',
+                    height: stripePos === 'top' || stripePos === 'bottom' ? '9px' : '100%',
+                    width: stripePos === 'left' || stripePos === 'right' ? '9px' : '100%',
                     backgroundColor: stripeColor,
                     flexShrink: 0,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '1px',
+                    overflow: 'hidden',
                   }}
-                />
+                >
+                  {tier === 4 ? (
+                    <span style={{ fontSize: '7.5px', lineHeight: 1 }} title="Hotel">🏨</span>
+                  ) : tier > 0 ? (
+                    Array.from({ length: tier }).map((_, i) => (
+                      <span key={i} style={{ fontSize: '6.5px', lineHeight: 1 }} title={`${tier} Houses`}>🏠</span>
+                    ))
+                  ) : null}
+                </div>
+              )}
+
+              {/* Mortgaged Warning Stripe Overlay */}
+              {isMortgaged && (
+                <div
+                  style={{
+                    position: 'absolute',
+                    inset: 0,
+                    background: 'repeating-linear-gradient(45deg, rgba(239, 68, 68, 0.18), rgba(239, 68, 68, 0.18) 5px, rgba(0, 0, 0, 0.45) 5px, rgba(0, 0, 0, 0.45) 10px)',
+                    border: '1.5px dashed rgba(239, 68, 68, 0.7)',
+                    borderRadius: '4px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    zIndex: 2,
+                    pointerEvents: 'none',
+                  }}
+                >
+                  <span style={{ fontSize: '8px', backgroundColor: '#7f1d1d', color: '#fca5a5', padding: '1px 3px', borderRadius: '3px', fontWeight: 900 }}>
+                    🔒 MORT
+                  </span>
+                </div>
               )}
 
               {/* Tile Body */}
@@ -655,10 +777,31 @@ export const Board: React.FC<BoardProps> = ({ gameState }) => {
                           fontSize: '10px',
                           lineHeight: 1,
                           animation: isCurrent ? 'bouncePeg 1.2s infinite ease-in-out' : 'floatPeg 3s infinite ease-in-out',
+                          position: 'relative',
                         }}
                         title={`${gameState.players[pId]?.name}${isCurrent ? ' (Active Turn)' : ''}`}
                       >
                         {peg.icon}
+                        {/* Floating Emote for this player */}
+                        {activeEmotes
+                          .filter(em => em.playerId === pId)
+                          .map(em => (
+                            <div
+                              key={em.id}
+                              style={{
+                                position: 'absolute',
+                                top: '-24px',
+                                left: '50%',
+                                transform: 'translateX(-50%)',
+                                fontSize: '18px',
+                                animation: 'floatEmote 2.4s forwards ease-out',
+                                pointerEvents: 'none',
+                                zIndex: 25,
+                              }}
+                            >
+                              {em.emoji}
+                            </div>
+                          ))}
                       </div>
                     );
                   })}
@@ -721,6 +864,69 @@ export const Board: React.FC<BoardProps> = ({ gameState }) => {
           {/* Top of Center: Dice Visualizer moved up */}
           <div style={{ marginTop: '2px', marginBottom: '6px' }}>
             <DiceVisualizer dice={gameState.lastDice} version={gameState.version} />
+          </div>
+
+          {/* Vacation / Free Parking Jackpot Pot */}
+          {gameState.communityFund > 0 && (
+            <div
+              style={{
+                background: 'linear-gradient(135deg, rgba(234, 179, 8, 0.25) 0%, rgba(202, 138, 4, 0.35) 100%)',
+                border: '1px solid rgba(234, 179, 8, 0.6)',
+                borderRadius: '20px',
+                padding: '3px 14px',
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '6px',
+                fontSize: '11.5px',
+                fontWeight: 800,
+                color: '#fef08a',
+                marginBottom: '6px',
+                boxShadow: '0 2px 10px rgba(234, 179, 8, 0.25)',
+                animation: 'pulse 2s infinite',
+              }}
+              title="All taxes & fines accumulate here. Land on Vacation to collect!"
+            >
+              <span>🌴 Vacation Jackpot:</span>
+              <span style={{ color: '#ffffff', fontSize: '13px' }}>
+                {formatCurrency(gameState.communityFund, gameState.boardKey)}
+              </span>
+            </div>
+          )}
+
+          {/* Richup-style Quick Emotes Bar */}
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '4px',
+              backgroundColor: 'rgba(0, 0, 0, 0.4)',
+              borderRadius: '20px',
+              padding: '2px 8px',
+              marginBottom: '8px',
+              border: '1px solid rgba(255, 255, 255, 0.1)',
+            }}
+          >
+            {['😂', '😭', '💸', '🎲', '👑', '🔥', '💀', '🤝'].map(emoji => (
+              <button
+                key={emoji}
+                onClick={() => sendEmote(emoji)}
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  fontSize: '14px',
+                  cursor: 'pointer',
+                  padding: '2px 3px',
+                  lineHeight: 1,
+                  borderRadius: '4px',
+                  transition: 'transform 0.1s ease',
+                }}
+                onMouseEnter={(e: any) => e.currentTarget.style.transform = 'scale(1.3)'}
+                onMouseLeave={(e: any) => e.currentTarget.style.transform = 'scale(1)'}
+                title={`React with ${emoji}`}
+              >
+                {emoji}
+              </button>
+            ))}
           </div>
 
           {/* Roll Action Button in Center */}

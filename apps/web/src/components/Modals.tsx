@@ -1,7 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import type { GameState, TileId, TileState } from '../../../../packages/engine/types';
 import { getTileDef, getDistrictDef, INFLUENCE_ITEMS, PLAYER_ROLES, formatCurrency } from '../boardData';
 import { useGameStore } from '../store';
+import { ownsFullDistrict } from '../computeRent';
+import { soundFx } from '../soundEffects';
 
 interface ModalsProps {
   gameState: GameState;
@@ -20,6 +22,8 @@ export const Modals: React.FC<ModalsProps> = ({ gameState }) => {
     dismissEventCard,
     selectedTile,
     setSelectedTile,
+    tradeTargetTile,
+    setTradeTargetTile,
     dispatchAction,
   } = useGameStore();
 
@@ -35,6 +39,17 @@ export const Modals: React.FC<ModalsProps> = ({ gameState }) => {
   const [wantCash, setWantCash] = useState<number>(0);
   const [giveTiles, setGiveTiles] = useState<TileId[]>([]);
   const [wantTiles, setWantTiles] = useState<TileId[]>([]);
+
+  // When tradeTargetTile is set from Title Deed modal, auto-populate partner & requested tile
+  useEffect(() => {
+    if (tradeTargetTile !== null) {
+      const owner = gameState.tiles[tradeTargetTile]?.ownerId;
+      if (owner && owner !== myPlayerId) {
+        setTradeToId(owner);
+        setWantTiles([tradeTargetTile]);
+      }
+    }
+  }, [tradeTargetTile, myPlayerId, gameState.tiles]);
 
   // Find owned tiles
   const myOwnedTiles: TileId[] = [];
@@ -53,8 +68,8 @@ export const Modals: React.FC<ModalsProps> = ({ gameState }) => {
     left: 0,
     right: 0,
     bottom: 0,
-    backgroundColor: 'rgba(10, 15, 30, 0.75)',
-    backdropFilter: 'blur(4px)',
+    backgroundColor: 'rgba(10, 15, 30, 0.78)',
+    backdropFilter: 'blur(6px)',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
@@ -63,31 +78,62 @@ export const Modals: React.FC<ModalsProps> = ({ gameState }) => {
   };
 
   const modalContainerStyle: React.CSSProperties = {
-    backgroundColor: '#16213e',
-    borderRadius: '12px',
-    border: '1px solid #243356',
-    boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.7)',
-    maxWidth: '520px',
+    backgroundColor: '#161326',
+    borderRadius: '16px',
+    border: '1px solid rgba(255, 255, 255, 0.14)',
+    boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.85), 0 0 35px rgba(124, 58, 237, 0.25)',
+    maxWidth: '560px',
     width: '100%',
-    padding: '24px',
+    padding: '22px',
     display: 'flex',
     flexDirection: 'column',
     gap: '16px',
-    maxHeight: '90vh',
+    maxHeight: '92vh',
     overflowY: 'auto',
   };
 
   return (
     <>
-      {/* 1. TRADE PROPOSAL MODAL */}
+      {/* 1. RICHUP-STYLE SIDE-BY-SIDE TRADE DESK */}
       {showTradeModal && (
-        <div style={backdropStyle} onClick={() => setShowTradeModal(false)}>
+        <div
+          style={backdropStyle}
+          onClick={() => {
+            setShowTradeModal(false);
+            setTradeTargetTile(null);
+          }}
+        >
           <div style={modalContainerStyle} onClick={(e: any) => e.stopPropagation()}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <h3 style={{ fontSize: '18px', fontWeight: 700, color: '#f8fafc' }}>🤝 Propose Trade</h3>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <span style={{ fontSize: '22px' }}>🤝</span>
+                <div>
+                  <h3 style={{ fontSize: '18px', fontWeight: 800, color: '#f8fafc', margin: 0 }}>
+                    Trading Desk
+                  </h3>
+                  <span style={{ fontSize: '12px', color: '#94a3b8' }}>
+                    Negotiate property transfers and cash with opponents
+                  </span>
+                </div>
+              </div>
               <button
-                onClick={() => setShowTradeModal(false)}
-                style={{ background: 'none', border: 'none', color: '#94a3b8', fontSize: '20px', cursor: 'pointer' }}
+                onClick={() => {
+                  setShowTradeModal(false);
+                  setTradeTargetTile(null);
+                }}
+                style={{
+                  background: 'rgba(255,255,255,0.08)',
+                  border: 'none',
+                  color: '#94a3b8',
+                  fontSize: '16px',
+                  cursor: 'pointer',
+                  borderRadius: '50%',
+                  width: '28px',
+                  height: '28px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                }}
               >
                 ✕
               </button>
@@ -99,8 +145,8 @@ export const Modals: React.FC<ModalsProps> = ({ gameState }) => {
               <>
                 {/* Target Player Select */}
                 <div>
-                  <label style={{ fontSize: '12px', fontWeight: 600, color: '#94a3b8', display: 'block', marginBottom: '4px' }}>
-                    Trade Partner:
+                  <label style={{ fontSize: '12px', fontWeight: 700, color: '#c084fc', display: 'block', marginBottom: '6px' }}>
+                    Select Trade Partner:
                   </label>
                   <select
                     value={tradeToId}
@@ -110,104 +156,260 @@ export const Modals: React.FC<ModalsProps> = ({ gameState }) => {
                     }}
                     style={{
                       width: '100%',
-                      padding: '8px 12px',
-                      backgroundColor: '#0f172a',
-                      border: '1px solid #243356',
-                      borderRadius: '6px',
+                      padding: '10px 14px',
+                      backgroundColor: '#0f0c1b',
+                      border: '1px solid #3b2d54',
+                      borderRadius: '8px',
                       color: '#ffffff',
+                      fontWeight: 600,
+                      fontSize: '13px',
+                      outline: 'none',
                     }}
                   >
-                    {otherPlayers.map((id: string) => (
-                      <option key={id} value={id}>
-                        {gameState.players[id]?.name ?? id} (${gameState.players[id]?.cash})
-                      </option>
-                    ))}
+                    {otherPlayers.map((id: string) => {
+                      const p = gameState.players[id];
+                      return (
+                        <option key={id} value={id}>
+                          {p?.name ?? id} • Cash: ${p?.cash ?? 0} • Properties: {Object.values(gameState.tiles).filter(t => t.ownerId === id).length}
+                        </option>
+                      );
+                    })}
                   </select>
                 </div>
 
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
-                  {/* You Offer */}
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                    <h4 style={{ fontSize: '13px', fontWeight: 700, color: '#38bdf8' }}>You Give:</h4>
+                {/* Side-by-Side 2 Column Desk */}
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px' }}>
+                  {/* Left Column: You Give */}
+                  <div
+                    style={{
+                      backgroundColor: '#0f0c1b',
+                      borderRadius: '10px',
+                      border: '1px solid rgba(56, 189, 248, 0.3)',
+                      padding: '12px',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      gap: '10px',
+                    }}
+                  >
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <span style={{ fontSize: '13px', fontWeight: 800, color: '#38bdf8' }}>
+                        You Give:
+                      </span>
+                      <span style={{ fontSize: '11px', color: '#94a3b8' }}>
+                        Max: ${myPlayer?.cash ?? 0}
+                      </span>
+                    </div>
+
+                    {/* Cash Offer */}
                     <div>
-                      <label style={{ fontSize: '11px', color: '#94a3b8' }}>Cash Offer ($):</label>
+                      <div style={{ display: 'flex', gap: '4px', marginBottom: '4px' }}>
+                        {[50, 100, 250].map(amt => (
+                          <button
+                            key={amt}
+                            onClick={() => setGiveCash(prev => Math.min(myPlayer?.cash ?? 0, prev + amt))}
+                            style={{
+                              padding: '2px 6px',
+                              borderRadius: '4px',
+                              border: '1px solid rgba(56, 189, 248, 0.4)',
+                              backgroundColor: 'rgba(56, 189, 248, 0.1)',
+                              color: '#7dd3fc',
+                              fontSize: '10px',
+                              fontWeight: 700,
+                              cursor: 'pointer',
+                            }}
+                          >
+                            +${amt}
+                          </button>
+                        ))}
+                      </div>
                       <input
                         type="number"
                         min="0"
                         max={myPlayer?.cash ?? 0}
-                        value={giveCash}
-                        onChange={(e: any) => setGiveCash(Number(e.target.value))}
+                        value={giveCash || ''}
+                        placeholder="$0 cash"
+                        onChange={(e: any) => setGiveCash(Math.max(0, Math.min(Number(e.target.value), myPlayer?.cash ?? 0)))}
                         style={{
                           width: '100%',
-                          padding: '6px 8px',
-                          backgroundColor: '#0f172a',
-                          border: '1px solid #243356',
-                          borderRadius: '4px',
+                          padding: '8px 10px',
+                          backgroundColor: '#1b162f',
+                          border: '1px solid #3b2d54',
+                          borderRadius: '6px',
                           color: '#ffffff',
+                          fontSize: '13px',
+                          boxSizing: 'border-box',
                         }}
                       />
                     </div>
+
+                    {/* Properties List */}
                     <div>
-                      <label style={{ fontSize: '11px', color: '#94a3b8' }}>Select Properties:</label>
-                      <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', maxHeight: '120px', overflowY: 'auto' }}>
-                        {myOwnedTiles.map(tId => (
-                          <label key={tId} style={{ fontSize: '12px', color: '#cbd5e1', display: 'flex', gap: '6px' }}>
-                            <input
-                              type="checkbox"
-                              checked={giveTiles.includes(tId)}
-                              onChange={(e: any) => {
-                                if (e.target.checked) setGiveTiles([...giveTiles, tId]);
-                                else setGiveTiles(giveTiles.filter((id: number) => id !== tId));
-                              }}
-                            />
-                            {getTileDef(tId).name}
-                          </label>
-                        ))}
+                      <span style={{ fontSize: '11px', color: '#94a3b8', fontWeight: 700, display: 'block', marginBottom: '4px' }}>
+                        Your Properties ({myOwnedTiles.length}):
+                      </span>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', maxHeight: '160px', overflowY: 'auto' }}>
+                        {myOwnedTiles.length === 0 ? (
+                          <span style={{ fontSize: '11px', color: '#64748b' }}>No properties owned</span>
+                        ) : (
+                          myOwnedTiles.map(tId => {
+                            const def = getTileDef(tId);
+                            const district = getDistrictDef(def.districtId);
+                            const isChecked = giveTiles.includes(tId);
+                            return (
+                              <label
+                                key={tId}
+                                style={{
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  gap: '6px',
+                                  padding: '5px 8px',
+                                  borderRadius: '6px',
+                                  backgroundColor: isChecked ? 'rgba(56, 189, 248, 0.2)' : '#161326',
+                                  border: isChecked ? '1px solid #38bdf8' : '1px solid rgba(255,255,255,0.06)',
+                                  cursor: 'pointer',
+                                  fontSize: '11px',
+                                  color: '#ffffff',
+                                }}
+                              >
+                                <input
+                                  type="checkbox"
+                                  checked={isChecked}
+                                  onChange={(e: any) => {
+                                    if (e.target.checked) setGiveTiles([...giveTiles, tId]);
+                                    else setGiveTiles(giveTiles.filter(id => id !== tId));
+                                  }}
+                                />
+                                {district?.color && (
+                                  <div style={{ width: '8px', height: '8px', borderRadius: '2px', backgroundColor: district.color }} />
+                                )}
+                                <span style={{ flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                  {def.name}
+                                </span>
+                                <span style={{ fontSize: '10px', color: '#38bdf8' }}>${def.price ?? 0}</span>
+                              </label>
+                            );
+                          })
+                        )}
                       </div>
                     </div>
                   </div>
 
-                  {/* You Request */}
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                    <h4 style={{ fontSize: '13px', fontWeight: 700, color: '#10b981' }}>You Want:</h4>
+                  {/* Right Column: You Want */}
+                  <div
+                    style={{
+                      backgroundColor: '#0f0c1b',
+                      borderRadius: '10px',
+                      border: '1px solid rgba(16, 185, 129, 0.3)',
+                      padding: '12px',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      gap: '10px',
+                    }}
+                  >
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <span style={{ fontSize: '13px', fontWeight: 800, color: '#10b981' }}>
+                        You Want:
+                      </span>
+                      <span style={{ fontSize: '11px', color: '#94a3b8' }}>
+                        Partner: ${gameState.players[tradeToId]?.cash ?? 0}
+                      </span>
+                    </div>
+
+                    {/* Cash Requested */}
                     <div>
-                      <label style={{ fontSize: '11px', color: '#94a3b8' }}>Cash Requested ($):</label>
+                      <div style={{ display: 'flex', gap: '4px', marginBottom: '4px' }}>
+                        {[50, 100, 250].map(amt => (
+                          <button
+                            key={amt}
+                            onClick={() => setWantCash(prev => prev + amt)}
+                            style={{
+                              padding: '2px 6px',
+                              borderRadius: '4px',
+                              border: '1px solid rgba(16, 185, 129, 0.4)',
+                              backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                              color: '#6ee7b7',
+                              fontSize: '10px',
+                              fontWeight: 700,
+                              cursor: 'pointer',
+                            }}
+                          >
+                            +${amt}
+                          </button>
+                        ))}
+                      </div>
                       <input
                         type="number"
                         min="0"
-                        value={wantCash}
-                        onChange={(e: any) => setWantCash(Number(e.target.value))}
+                        value={wantCash || ''}
+                        placeholder="$0 cash"
+                        onChange={(e: any) => setWantCash(Math.max(0, Number(e.target.value)))}
                         style={{
                           width: '100%',
-                          padding: '6px 8px',
-                          backgroundColor: '#0f172a',
-                          border: '1px solid #243356',
-                          borderRadius: '4px',
+                          padding: '8px 10px',
+                          backgroundColor: '#1b162f',
+                          border: '1px solid #3b2d54',
+                          borderRadius: '6px',
                           color: '#ffffff',
+                          fontSize: '13px',
+                          boxSizing: 'border-box',
                         }}
                       />
                     </div>
+
+                    {/* Partner's Properties List */}
                     <div>
-                      <label style={{ fontSize: '11px', color: '#94a3b8' }}>Select Properties:</label>
-                      <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', maxHeight: '120px', overflowY: 'auto' }}>
-                        {targetOwnedTiles.map(tId => (
-                          <label key={tId} style={{ fontSize: '12px', color: '#cbd5e1', display: 'flex', gap: '6px' }}>
-                            <input
-                              type="checkbox"
-                              checked={wantTiles.includes(tId)}
-                              onChange={(e: any) => {
-                                if (e.target.checked) setWantTiles([...wantTiles, tId]);
-                                else setWantTiles(wantTiles.filter((id: number) => id !== tId));
-                              }}
-                            />
-                            {getTileDef(tId).name}
-                          </label>
-                        ))}
+                      <span style={{ fontSize: '11px', color: '#94a3b8', fontWeight: 700, display: 'block', marginBottom: '4px' }}>
+                        Their Properties ({targetOwnedTiles.length}):
+                      </span>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', maxHeight: '160px', overflowY: 'auto' }}>
+                        {targetOwnedTiles.length === 0 ? (
+                          <span style={{ fontSize: '11px', color: '#64748b' }}>No properties owned</span>
+                        ) : (
+                          targetOwnedTiles.map(tId => {
+                            const def = getTileDef(tId);
+                            const district = getDistrictDef(def.districtId);
+                            const isChecked = wantTiles.includes(tId);
+                            return (
+                              <label
+                                key={tId}
+                                style={{
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  gap: '6px',
+                                  padding: '5px 8px',
+                                  borderRadius: '6px',
+                                  backgroundColor: isChecked ? 'rgba(16, 185, 129, 0.2)' : '#161326',
+                                  border: isChecked ? '1px solid #10b981' : '1px solid rgba(255,255,255,0.06)',
+                                  cursor: 'pointer',
+                                  fontSize: '11px',
+                                  color: '#ffffff',
+                                }}
+                              >
+                                <input
+                                  type="checkbox"
+                                  checked={isChecked}
+                                  onChange={(e: any) => {
+                                    if (e.target.checked) setWantTiles([...wantTiles, tId]);
+                                    else setWantTiles(wantTiles.filter(id => id !== tId));
+                                  }}
+                                />
+                                {district?.color && (
+                                  <div style={{ width: '8px', height: '8px', borderRadius: '2px', backgroundColor: district.color }} />
+                                )}
+                                <span style={{ flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                  {def.name}
+                                </span>
+                                <span style={{ fontSize: '10px', color: '#10b981' }}>${def.price ?? 0}</span>
+                              </label>
+                            );
+                          })
+                        )}
                       </div>
                     </div>
                   </div>
                 </div>
 
+                {/* Send Button */}
                 <button
                   onClick={() => {
                     const safeGive = Math.max(0, Math.min(giveCash || 0, myPlayer?.cash ?? 0));
@@ -221,20 +423,28 @@ export const Modals: React.FC<ModalsProps> = ({ gameState }) => {
                         want: { tileIds: wantTiles, cash: safeWant, influence: 0, cards: [], rentContracts: [] },
                       },
                     });
+                    soundFx.playCardSpecial();
                     setShowTradeModal(false);
+                    setTradeTargetTile(null);
                   }}
                   style={{
-                    padding: '12px',
-                    borderRadius: '8px',
+                    padding: '13px',
+                    borderRadius: '10px',
                     border: 'none',
-                    backgroundColor: '#e94560',
+                    background: 'linear-gradient(135deg, #7c3aed 0%, #a855f7 100%)',
                     color: '#ffffff',
-                    fontWeight: 700,
+                    fontWeight: 800,
+                    fontSize: '14px',
                     cursor: 'pointer',
-                    marginTop: '8px',
+                    boxShadow: '0 4px 16px rgba(124, 58, 237, 0.4)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '8px',
                   }}
                 >
-                  Send Trade Proposal
+                  <span>🤝</span>
+                  <span>Dispatch Trade Proposal</span>
                 </button>
               </>
             )}
@@ -248,7 +458,7 @@ export const Modals: React.FC<ModalsProps> = ({ gameState }) => {
           <div style={modalContainerStyle} onClick={(e: any) => e.stopPropagation()}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <div>
-                <h3 style={{ fontSize: '18px', fontWeight: 700, color: '#f8fafc' }}>⭐ Influence Store</h3>
+                <h3 style={{ fontSize: '18px', fontWeight: 800, color: '#f8fafc', margin: 0 }}>⭐ Influence Store</h3>
                 <span style={{ fontSize: '12px', color: '#f59e0b', fontWeight: 600 }}>
                   Your Balance: {myPlayer?.influence ?? 0} Influence
                 </span>
@@ -268,7 +478,7 @@ export const Modals: React.FC<ModalsProps> = ({ gameState }) => {
                   <div
                     key={item.id}
                     style={{
-                      backgroundColor: '#0f172a',
+                      backgroundColor: '#0f0c1b',
                       borderRadius: '8px',
                       padding: '12px',
                       display: 'flex',
@@ -288,6 +498,7 @@ export const Modals: React.FC<ModalsProps> = ({ gameState }) => {
                     <button
                       onClick={() => {
                         dispatchAction({ type: 'SPEND_INFLUENCE', item: item.id });
+                        soundFx.playCoin();
                         setShowInfluenceModal(false);
                       }}
                       disabled={!canAfford}
@@ -300,11 +511,9 @@ export const Modals: React.FC<ModalsProps> = ({ gameState }) => {
                         fontWeight: 700,
                         fontSize: '12px',
                         cursor: canAfford ? 'pointer' : 'not-allowed',
-                        flexShrink: 0,
-                        marginLeft: '12px',
                       }}
                     >
-                      ★ {item.cost}
+                      Use ★ {item.cost}
                     </button>
                   </div>
                 );
@@ -314,12 +523,12 @@ export const Modals: React.FC<ModalsProps> = ({ gameState }) => {
         </div>
       )}
 
-      {/* 3. ROLE ABILITY MODAL */}
+      {/* 3. EXECUTIVE ABILITY MODAL */}
       {showAbilityModal && (
         <div style={backdropStyle} onClick={() => setShowAbilityModal(false)}>
           <div style={modalContainerStyle} onClick={(e: any) => e.stopPropagation()}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <h3 style={{ fontSize: '18px', fontWeight: 700, color: '#f8fafc' }}>⚡ Executive Ability</h3>
+              <h3 style={{ fontSize: '18px', fontWeight: 800, color: '#f8fafc', margin: 0 }}>⚡ Executive Ability</h3>
               <button
                 onClick={() => setShowAbilityModal(false)}
                 style={{ background: 'none', border: 'none', color: '#94a3b8', fontSize: '20px', cursor: 'pointer' }}
@@ -338,14 +547,14 @@ export const Modals: React.FC<ModalsProps> = ({ gameState }) => {
 
               return (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
-                  <div style={{ backgroundColor: '#0f172a', padding: '16px', borderRadius: '8px', border: '1px solid #243356' }}>
-                    <div style={{ fontSize: '16px', fontWeight: 700, color: '#38bdf8' }}>
+                  <div style={{ backgroundColor: '#0f0c1b', padding: '16px', borderRadius: '10px', border: '1px solid #3b2d54' }}>
+                    <div style={{ fontSize: '16px', fontWeight: 800, color: '#38bdf8' }}>
                       Role: {role.name}
                     </div>
                     <p style={{ fontSize: '13px', color: '#cbd5e1', marginTop: '6px' }}>
                       {role.perk}
                     </p>
-                    <div style={{ marginTop: '10px', fontSize: '12px', color: isReady ? '#10b981' : '#f59e0b' }}>
+                    <div style={{ marginTop: '10px', fontSize: '12px', color: isReady ? '#10b981' : '#f59e0b', fontWeight: 700 }}>
                       {isReady ? '✅ Ready to activate!' : `⏳ Available in Round ${myPlayer?.abilityReadyRound}`}
                     </div>
                   </div>
@@ -353,6 +562,7 @@ export const Modals: React.FC<ModalsProps> = ({ gameState }) => {
                   <button
                     onClick={() => {
                       dispatchAction({ type: 'USE_ABILITY' });
+                      soundFx.playCardSpecial();
                       setShowAbilityModal(false);
                     }}
                     disabled={!isReady}
@@ -362,7 +572,7 @@ export const Modals: React.FC<ModalsProps> = ({ gameState }) => {
                       border: 'none',
                       backgroundColor: isReady ? '#e94560' : '#334155',
                       color: '#ffffff',
-                      fontWeight: 700,
+                      fontWeight: 800,
                       cursor: isReady ? 'pointer' : 'not-allowed',
                     }}
                   >
@@ -424,97 +634,357 @@ export const Modals: React.FC<ModalsProps> = ({ gameState }) => {
         </div>
       )}
 
-      {/* 5. TILE INSPECTOR MODAL (When clicking any tile) */}
+      {/* 5. AUTHENTIC TITLE DEED CARD WITH IN-MODAL PROPERTY CONTROLS */}
       {selectedTile !== null && !showTradeModal && !showInfluenceModal && !showAbilityModal && !activeEventCard && (
         <div style={backdropStyle} onClick={() => setSelectedTile(null)}>
-          <div style={modalContainerStyle} onClick={(e: any) => e.stopPropagation()}>
-            {(() => {
-              const def = getTileDef(selectedTile);
-              const tState = gameState.tiles[selectedTile];
-              const district = getDistrictDef(def.districtId);
-              const ownerName = tState?.ownerId ? gameState.players[tState.ownerId]?.name : null;
-              const baseRent = Math.round((def.price ?? 60) / 8);
+          {(() => {
+            const def = getTileDef(selectedTile);
+            const tState = gameState.tiles[selectedTile];
+            const district = getDistrictDef(def.districtId);
+            const ownerId = tState?.ownerId;
+            const owner = ownerId ? gameState.players[ownerId] : null;
+            const isMyProperty = ownerId === myPlayerId;
+            const hasFullDistrict = def.districtId ? ownsFullDistrict(gameState, ownerId ?? '', def.districtId) : false;
+            const baseRent = Math.round((def.price ?? 60) / 8);
 
-              return (
-                <>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <div>
-                      <h3 style={{ fontSize: '18px', fontWeight: 700, color: '#f8fafc' }}>{def.name}</h3>
-                      {district && (
-                        <span style={{ fontSize: '12px', color: district.color, fontWeight: 600 }}>
-                          {def.districtId} District
-                        </span>
-                      )}
-                    </div>
-                    <button
-                      onClick={() => setSelectedTile(null)}
-                      style={{ background: 'none', border: 'none', color: '#94a3b8', fontSize: '20px', cursor: 'pointer' }}
-                    >
-                      ✕
-                    </button>
+            const isProperty = def.type === 'property';
+            const isHub = def.type === 'hub';
+            const isUtility = def.type === 'utility';
+
+            return (
+              <div
+                style={{
+                  backgroundColor: '#1b172a',
+                  borderRadius: '16px',
+                  border: '2px solid rgba(255, 255, 255, 0.16)',
+                  boxShadow: '0 30px 60px rgba(0, 0, 0, 0.9), 0 0 40px rgba(124, 58, 237, 0.3)',
+                  maxWidth: '430px',
+                  width: '100%',
+                  overflow: 'hidden',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  maxHeight: '90vh',
+                }}
+                onClick={(e: any) => e.stopPropagation()}
+              >
+                {/* Iconic Title Deed Color Header */}
+                <div
+                  style={{
+                    backgroundColor: district?.color ?? (isHub ? '#2563eb' : isUtility ? '#0891b2' : '#334155'),
+                    padding: '16px 20px',
+                    textAlign: 'center',
+                    color: '#ffffff',
+                    borderBottom: '3px solid rgba(0, 0, 0, 0.35)',
+                    position: 'relative',
+                  }}
+                >
+                  <div style={{ fontSize: '10.5px', fontWeight: 900, letterSpacing: '1.5px', textTransform: 'uppercase', opacity: 0.9 }}>
+                    TITLE DEED
                   </div>
+                  <div style={{ fontSize: '20px', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '0.5px', marginTop: '3px' }}>
+                    {def.flag ? `${def.flag} ` : ''}{def.name}
+                  </div>
+                  {def.landmark && (
+                    <div style={{ fontSize: '12px', marginTop: '3px', opacity: 0.95 }}>
+                      {def.landmark} {def.landmarkName ? `• ${def.landmarkName}` : ''}
+                    </div>
+                  )}
+                  <button
+                    onClick={() => setSelectedTile(null)}
+                    style={{
+                      position: 'absolute',
+                      top: '12px',
+                      right: '14px',
+                      background: 'rgba(0,0,0,0.3)',
+                      border: 'none',
+                      color: '#ffffff',
+                      borderRadius: '50%',
+                      width: '28px',
+                      height: '28px',
+                      cursor: 'pointer',
+                      fontSize: '14px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                    }}
+                  >
+                    ✕
+                  </button>
+                </div>
 
-                  {/* Tile Status Box */}
-                  <div style={{ backgroundColor: '#0f172a', padding: '14px', borderRadius: '8px', border: '1px solid #243356' }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                      <span style={{ color: '#94a3b8', fontSize: '13px' }}>Ownership:</span>
-                      <strong style={{ color: ownerName ? '#38bdf8' : '#10b981', fontSize: '13px' }}>
-                        {ownerName ? `Owned by ${ownerName}` : 'Unowned'}
+                {/* Card Body */}
+                <div style={{ padding: '18px', display: 'flex', flexDirection: 'column', gap: '14px', overflowY: 'auto' }}>
+                  {/* Status Banner */}
+                  <div
+                    style={{
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      alignItems: 'center',
+                      backgroundColor: '#0f0c1b',
+                      padding: '10px 14px',
+                      borderRadius: '8px',
+                      border: '1px solid #2d2346',
+                    }}
+                  >
+                    <div>
+                      <span style={{ fontSize: '11px', color: '#94a3b8', display: 'block' }}>Ownership:</span>
+                      <strong style={{ fontSize: '13px', color: owner ? '#38bdf8' : '#10b981' }}>
+                        {owner ? (isMyProperty ? 'Owned by You' : `Owned by ${owner.name}`) : 'Unowned'}
                       </strong>
                     </div>
-
                     {def.price && (
-                      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                        <span style={{ color: '#94a3b8', fontSize: '13px' }}>Purchase Price:</span>
-                        <strong style={{ color: '#ffffff', fontSize: '13px' }}>{formatCurrency(def.price, gameState.boardKey)}</strong>
-                      </div>
-                    )}
-
-                    {tState && (
-                      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                        <span style={{ color: '#94a3b8', fontSize: '13px' }}>Building Tier:</span>
-                        <strong style={{ color: '#ffffff', fontSize: '13px' }}>
-                          Tier {tState.tier} ({['Land', 'House', 'Apartments', 'Tower', 'Landmark'][tState.tier]})
+                      <div style={{ textAlign: 'right' }}>
+                        <span style={{ fontSize: '11px', color: '#94a3b8', display: 'block' }}>Cost / Value:</span>
+                        <strong style={{ fontSize: '14px', color: '#f8fafc' }}>
+                          {formatCurrency(def.price, gameState.boardKey)}
                         </strong>
                       </div>
                     )}
+                  </div>
 
-                    {def.type === 'property' && (
-                      <div style={{ marginTop: '12px', borderTop: '1px solid #1e293b', paddingTop: '10px' }}>
-                        <span style={{ fontSize: '11px', color: '#94a3b8', textTransform: 'uppercase', fontWeight: 600 }}>
-                          Rent Breakdown:
-                        </span>
-                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '4px', marginTop: '6px', textAlign: 'center' }}>
-                          {[
-                            { label: 'Land', mult: 1 },
-                            { label: 'House', mult: 5 },
-                            { label: 'Apts', mult: 15 },
-                            { label: 'Tower', mult: 40 },
-                            { label: 'Mark', mult: 70 },
-                          ].map((t, idx) => (
+                  {/* Mortgaged Warning */}
+                  {tState?.mortgaged && (
+                    <div
+                      style={{
+                        backgroundColor: 'rgba(239, 68, 68, 0.2)',
+                        border: '1px solid #ef4444',
+                        padding: '8px 12px',
+                        borderRadius: '6px',
+                        fontSize: '12px',
+                        color: '#fca5a5',
+                        fontWeight: 700,
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '6px',
+                      }}
+                    >
+                      <span>🔒</span>
+                      <span>MORTGAGED — Collects 0 rent until unmortgaged</span>
+                    </div>
+                  )}
+
+                  {/* Rent Table for Properties */}
+                  {isProperty && (
+                    <div style={{ backgroundColor: '#0f0c1b', borderRadius: '10px', border: '1px solid #2d2346', overflow: 'hidden' }}>
+                      <div style={{ padding: '8px 12px', backgroundColor: 'rgba(255,255,255,0.04)', fontSize: '11px', fontWeight: 800, color: '#c084fc', textTransform: 'uppercase' }}>
+                        Official Rent Schedule
+                      </div>
+                      <div style={{ padding: '6px 12px', display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                        {[
+                          { label: 'Base Rent (Land)', val: baseRent, tierMatch: 0 },
+                          { label: 'Full District (2×)', val: baseRent * 2, tierMatch: -1 },
+                          { label: 'With 1 House 🏠', val: baseRent * 5, tierMatch: 1 },
+                          { label: 'With 2 Houses 🏠🏠', val: baseRent * 15, tierMatch: 2 },
+                          { label: 'With 3 Houses 🏠🏠🏠', val: baseRent * 40, tierMatch: 3 },
+                          { label: 'With Hotel 🏨', val: baseRent * 70, tierMatch: 4 },
+                        ].map((row, idx) => {
+                          const isCurrent = tState && !tState.mortgaged && (
+                            row.tierMatch === tState.tier ||
+                            (row.tierMatch === -1 && tState.tier === 0 && hasFullDistrict)
+                          );
+                          return (
                             <div
                               key={idx}
                               style={{
-                                backgroundColor: tState?.tier === idx ? '#e9456022' : '#16213e',
-                                border: tState?.tier === idx ? '1px solid #e94560' : '1px solid #1e293b',
+                                display: 'flex',
+                                justifyContent: 'space-between',
+                                alignItems: 'center',
+                                padding: '4px 8px',
                                 borderRadius: '4px',
-                                padding: '4px 2px',
+                                backgroundColor: isCurrent ? 'rgba(168, 85, 247, 0.25)' : 'transparent',
+                                border: isCurrent ? '1px solid #a855f7' : 'none',
+                                fontSize: '12px',
+                                color: isCurrent ? '#ffffff' : '#cbd5e1',
+                                fontWeight: isCurrent ? 800 : 500,
                               }}
                             >
-                              <div style={{ fontSize: '9px', color: '#94a3b8' }}>{t.label}</div>
-                              <div style={{ fontSize: '11px', fontWeight: 700, color: '#f8fafc', marginTop: '2px' }}>
-                                {formatCurrency(baseRent * t.mult, gameState.boardKey)}
-                              </div>
+                              <span>{row.label}</span>
+                              <span style={{ color: isCurrent ? '#a855f7' : '#f8fafc', fontWeight: 700 }}>
+                                {formatCurrency(row.val, gameState.boardKey)}
+                              </span>
                             </div>
-                          ))}
-                        </div>
+                          );
+                        })}
                       </div>
-                    )}
-                  </div>
-                </>
-              );
-            })()}
-          </div>
+                    </div>
+                  )}
+
+                  {/* Hub / Utility Rent Information */}
+                  {isHub && (
+                    <div style={{ backgroundColor: '#0f0c1b', borderRadius: '8px', padding: '10px 14px', border: '1px solid #2d2346', fontSize: '12px', color: '#cbd5e1' }}>
+                      <strong style={{ color: '#38bdf8' }}>Airport / Hub Rent:</strong>
+                      <div style={{ marginTop: '4px' }}>1 Hub: $25 • 2 Hubs: $50 • 3 Hubs: $100 • 4 Hubs: $200</div>
+                    </div>
+                  )}
+                  {isUtility && (
+                    <div style={{ backgroundColor: '#0f0c1b', borderRadius: '8px', padding: '10px 14px', border: '1px solid #2d2346', fontSize: '12px', color: '#cbd5e1' }}>
+                      <strong style={{ color: '#38bdf8' }}>Utility Rent:</strong>
+                      <div style={{ marginTop: '4px' }}>1 Utility: 4× Dice Total • 2 Utilities: 10× Dice Total</div>
+                    </div>
+                  )}
+
+                  {/* Mortgage & Build Costs */}
+                  {def.price && (
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', fontSize: '11px', color: '#94a3b8' }}>
+                      <div style={{ backgroundColor: '#0f0c1b', padding: '8px', borderRadius: '6px', border: '1px solid #2d2346' }}>
+                        Mortgage Value: <strong style={{ color: '#f8fafc' }}>{formatCurrency(Math.round(def.price / 2), gameState.boardKey)}</strong>
+                      </div>
+                      <div style={{ backgroundColor: '#0f0c1b', padding: '8px', borderRadius: '6px', border: '1px solid #2d2346' }}>
+                        {district?.buildCost ? (
+                          <>House Cost: <strong style={{ color: '#f8fafc' }}>{formatCurrency(district.buildCost, gameState.boardKey)}</strong></>
+                        ) : (
+                          <>Unmortgage Cost: <strong style={{ color: '#f8fafc' }}>{formatCurrency(Math.round((def.price / 2) * 1.1), gameState.boardKey)}</strong></>
+                        )}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* DIRECT ACTIONS ROW ON TITLE DEED */}
+                  {/* Action 1: If Owned by You, direct property management */}
+                  {isMyProperty && tState && (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginTop: '6px', borderTop: '1px solid #2d2346', paddingTop: '10px' }}>
+                      <span style={{ fontSize: '11px', fontWeight: 800, color: '#a78bfa', textTransform: 'uppercase' }}>
+                        Direct Management:
+                      </span>
+                      <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                        {/* Build House / Hotel */}
+                        {hasFullDistrict && tState.tier < 4 && !tState.mortgaged && (
+                          <button
+                            onClick={() => {
+                              dispatchAction({ type: 'BUILD', tileId: selectedTile });
+                              soundFx.playHouseBuild();
+                            }}
+                            disabled={myPlayer.cash < (district?.buildCost ?? 100)}
+                            style={{
+                              flex: 1,
+                              minWidth: '130px',
+                              padding: '10px',
+                              borderRadius: '8px',
+                              border: 'none',
+                              background: myPlayer.cash >= (district?.buildCost ?? 100)
+                                ? 'linear-gradient(135deg, #10b981 0%, #059669 100%)'
+                                : '#334155',
+                              color: '#ffffff',
+                              fontWeight: 800,
+                              fontSize: '12px',
+                              cursor: myPlayer.cash >= (district?.buildCost ?? 100) ? 'pointer' : 'not-allowed',
+                            }}
+                          >
+                            {tState.tier === 3 ? '🏨 Upgrade to Hotel' : '🏠 Build House'} ({formatCurrency(district?.buildCost ?? 100, gameState.boardKey)})
+                          </button>
+                        )}
+
+                        {/* Sell Building */}
+                        {tState.tier > 0 && (
+                          <button
+                            onClick={() => {
+                              dispatchAction({ type: 'SELL_BUILDING', tileId: selectedTile });
+                              soundFx.playCashRegister();
+                            }}
+                            style={{
+                              flex: 1,
+                              minWidth: '110px',
+                              padding: '10px',
+                              borderRadius: '8px',
+                              border: '1px solid #eab308',
+                              backgroundColor: 'rgba(234, 179, 8, 0.15)',
+                              color: '#fde047',
+                              fontWeight: 700,
+                              fontSize: '12px',
+                              cursor: 'pointer',
+                            }}
+                          >
+                            Sell Building (+{formatCurrency(Math.round((district?.buildCost ?? 100) / 2), gameState.boardKey)})
+                          </button>
+                        )}
+
+                        {/* Mortgage */}
+                        {!tState.mortgaged && tState.tier === 0 && (
+                          <button
+                            onClick={() => {
+                              dispatchAction({ type: 'MORTGAGE', tileId: selectedTile });
+                              soundFx.playMortgage();
+                            }}
+                            style={{
+                              flex: 1,
+                              minWidth: '110px',
+                              padding: '10px',
+                              borderRadius: '8px',
+                              border: '1px solid #ef4444',
+                              backgroundColor: 'rgba(239, 68, 68, 0.15)',
+                              color: '#fca5a5',
+                              fontWeight: 700,
+                              fontSize: '12px',
+                              cursor: 'pointer',
+                            }}
+                          >
+                            🔒 Mortgage (+{formatCurrency(Math.round((def.price ?? 100) / 2), gameState.boardKey)})
+                          </button>
+                        )}
+
+                        {/* Unmortgage */}
+                        {tState.mortgaged && (
+                          <button
+                            onClick={() => {
+                              dispatchAction({ type: 'UNMORTGAGE', tileId: selectedTile });
+                              soundFx.playMortgage();
+                            }}
+                            disabled={myPlayer.cash < Math.round(((def.price ?? 100) / 2) * 1.1)}
+                            style={{
+                              flex: 1,
+                              minWidth: '110px',
+                              padding: '10px',
+                              borderRadius: '8px',
+                              border: 'none',
+                              background: myPlayer.cash >= Math.round(((def.price ?? 100) / 2) * 1.1)
+                                ? 'linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%)'
+                                : '#334155',
+                              color: '#ffffff',
+                              fontWeight: 800,
+                              fontSize: '12px',
+                              cursor: myPlayer.cash >= Math.round(((def.price ?? 100) / 2) * 1.1) ? 'pointer' : 'not-allowed',
+                            }}
+                          >
+                            🔓 Unmortgage (-{formatCurrency(Math.round(((def.price ?? 100) / 2) * 1.1), gameState.boardKey)})
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Action 2: If Owned by Opponent, offer Propose Trade Button */}
+                  {ownerId && !isMyProperty && (
+                    <button
+                      onClick={() => {
+                        setSelectedTile(null);
+                        setTradeTargetTile(selectedTile);
+                        setShowTradeModal(true);
+                      }}
+                      style={{
+                        padding: '12px',
+                        borderRadius: '10px',
+                        border: 'none',
+                        background: 'linear-gradient(135deg, #0284c7 0%, #0369a1 100%)',
+                        color: '#ffffff',
+                        fontWeight: 800,
+                        fontSize: '13px',
+                        cursor: 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        gap: '8px',
+                        boxShadow: '0 4px 14px rgba(2, 132, 199, 0.4)',
+                        marginTop: '4px',
+                      }}
+                    >
+                      <span>🤝</span>
+                      <span>Propose Trade for this Property</span>
+                    </button>
+                  )}
+                </div>
+              </div>
+            );
+          })()}
         </div>
       )}
     </>

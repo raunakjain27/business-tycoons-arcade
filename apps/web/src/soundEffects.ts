@@ -330,6 +330,195 @@ class SoundEffectsEngine {
   }
 
   /**
+   * 🚶 Token Step Hop: Short, crisp wooden/plastic tap
+   */
+  public playStep() {
+    const ctx = this.getContext();
+    if (!ctx) return;
+
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(320 + Math.random() * 40, ctx.currentTime);
+    osc.frequency.exponentialRampToValueAtTime(120, ctx.currentTime + 0.035);
+
+    gain.gain.setValueAtTime(0.18, ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.035);
+
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+
+    osc.start(ctx.currentTime);
+    osc.stop(ctx.currentTime + 0.04);
+  }
+
+  /**
+   * 🔒 Jail Iron Door Slam: Heavy metallic impact + reverberation
+   */
+  public playJailDoor() {
+    const ctx = this.getContext();
+    if (!ctx) return;
+
+    // Heavy slam
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = 'square';
+    osc.frequency.setValueAtTime(120, ctx.currentTime);
+    osc.frequency.exponentialRampToValueAtTime(35, ctx.currentTime + 0.4);
+
+    gain.gain.setValueAtTime(0.4, ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.4);
+
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.start(ctx.currentTime);
+    osc.stop(ctx.currentTime + 0.45);
+
+    // Iron bar rattle clang
+    [0.08, 0.16, 0.24].forEach((time, i) => {
+      const metalOsc = ctx.createOscillator();
+      const metalGain = ctx.createGain();
+      metalOsc.type = 'sawtooth';
+      metalOsc.frequency.setValueAtTime(800 - i * 150, ctx.currentTime + time);
+      metalGain.gain.setValueAtTime(0.15, ctx.currentTime + time);
+      metalGain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + time + 0.12);
+      metalOsc.connect(metalGain);
+      metalGain.connect(ctx.destination);
+      metalOsc.start(ctx.currentTime + time);
+      metalOsc.stop(ctx.currentTime + time + 0.13);
+    });
+  }
+
+  /**
+   * 🏗️ House / Hotel Construction: Solid double hammer tap
+   */
+  public playHouseBuild() {
+    const ctx = this.getContext();
+    if (!ctx) return;
+
+    [0, 0.09].forEach((time, idx) => {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+
+      osc.type = 'triangle';
+      osc.frequency.setValueAtTime(540 + idx * 80, ctx.currentTime + time);
+      osc.frequency.exponentialRampToValueAtTime(220, ctx.currentTime + time + 0.06);
+
+      gain.gain.setValueAtTime(0.3, ctx.currentTime + time);
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + time + 0.06);
+
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+
+      osc.start(ctx.currentTime + time);
+      osc.stop(ctx.currentTime + time + 0.07);
+    });
+  }
+
+  /**
+   * 📜 Mortgage / Unmortgage Contract Stamp: Paper flick + dull thud
+   */
+  public playMortgage() {
+    const ctx = this.getContext();
+    if (!ctx) return;
+
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+
+    osc.type = 'triangle';
+    osc.frequency.setValueAtTime(260, ctx.currentTime);
+    osc.frequency.exponentialRampToValueAtTime(70, ctx.currentTime + 0.12);
+
+    gain.gain.setValueAtTime(0.35, ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.12);
+
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+
+    osc.start(ctx.currentTime);
+    osc.stop(ctx.currentTime + 0.13);
+  }
+
+  /**
+   * 💸 Rent Payment: Quick coin exchange swoosh
+   */
+  public playRent() {
+    const ctx = this.getContext();
+    if (!ctx) return;
+
+    const freqs = [880, 659.25, 523.25];
+    freqs.forEach((freq, idx) => {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(freq, ctx.currentTime + idx * 0.05);
+
+      gain.gain.setValueAtTime(0.2, ctx.currentTime + idx * 0.05);
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + idx * 0.05 + 0.18);
+
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+
+      osc.start(ctx.currentTime + idx * 0.05);
+      osc.stop(ctx.currentTime + idx * 0.05 + 0.2);
+    });
+  }
+
+  /**
+   * 💀 Bankruptcy Horn: Descending sad slide
+   */
+  public playBankruptcy() {
+    const ctx = this.getContext();
+    if (!ctx) return;
+
+    const notes = [440, 415.3, 392, 349.23];
+    notes.forEach((freq, idx) => {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+
+      osc.type = 'sawtooth';
+      osc.frequency.setValueAtTime(freq, ctx.currentTime + idx * 0.2);
+
+      gain.gain.setValueAtTime(0.25, ctx.currentTime + idx * 0.2);
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + idx * 0.2 + 0.28);
+
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+
+      osc.start(ctx.currentTime + idx * 0.2);
+      osc.stop(ctx.currentTime + idx * 0.2 + 0.3);
+    });
+  }
+
+  /**
+   * 🌴 Vacation / Free Parking Jackpot: Rapid sparkling coin cascades
+   */
+  public playJackpot() {
+    const ctx = this.getContext();
+    if (!ctx) return;
+
+    const notes = [523.25, 659.25, 783.99, 1046.5, 1318.51, 1567.98, 2093];
+    notes.forEach((freq, idx) => {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+
+      osc.type = 'triangle';
+      osc.frequency.setValueAtTime(freq, ctx.currentTime + idx * 0.06);
+
+      gain.gain.setValueAtTime(0.22, ctx.currentTime + idx * 0.06);
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + idx * 0.06 + 0.25);
+
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+
+      osc.start(ctx.currentTime + idx * 0.06);
+      osc.stop(ctx.currentTime + idx * 0.06 + 0.28);
+    });
+  }
+
+  /**
    * 📳 Mobile Haptic Vibration
    */
   public vibrate(pattern: number | number[] = 40) {
