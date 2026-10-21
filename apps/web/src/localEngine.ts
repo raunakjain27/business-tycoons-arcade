@@ -1594,21 +1594,21 @@ function evaluateIncomingTradeLocal(
 
   if (completesOpponentMonopoly && !completesBotMonopoly) {
     if (totalGain < totalLoss * 2.2) {
-      return { response: 'decline', banter: 'No deal! That property gives you a monopoly, which is too dangerous.' };
+      return { response: 'decline', banter: 'No deal! That property grants you a district monopoly without sufficient return.' };
     }
   }
 
   if (completesBotMonopoly) {
     if (totalGain >= totalLoss * 0.88 && bot.cash - trade.want.cash >= 100) {
-      return { response: 'accept', banter: 'Deal accepted! That completes my district monopoly 🤝' };
+      return { response: 'accept', banter: 'Deal accepted! That completes my district monopoly.' };
     }
   }
 
   if (totalGain >= totalLoss * 0.98 && (trade.want.cash <= bot.cash - 120 || trade.want.cash === 0)) {
-    return { response: 'accept', banter: 'Trade accepted! Good doing business with you 🤝' };
+    return { response: 'accept', banter: 'Trade accepted! Good doing business with you.' };
   }
 
-  return { response: 'decline', banter: 'Trade declined. The numbers don\'t work in my favor ✋' };
+  return { response: 'decline', banter: 'Trade declined. The valuation does not work in my favor.' };
 }
 
 function findSmartTradeProposalLocal(state: GameState, botId: PlayerId): { action: Action; banter: string } | null {
@@ -1679,7 +1679,7 @@ function findSmartTradeProposalLocal(state: GameState, botId: PlayerId): { actio
                 },
               },
             },
-            banter: `Hey ${targetPlayer.name}, I'll give you ${giveDef.name} + $${cashDiff} for ${missingDef.name}! Deal? 🤝`,
+            banter: `Proposal to ${targetPlayer.name}: ${giveDef.name} + $${cashDiff} for ${missingDef.name}. Check your trade desk.`,
           };
         }
       } else {
@@ -1707,7 +1707,7 @@ function findSmartTradeProposalLocal(state: GameState, botId: PlayerId): { actio
                 },
               },
             },
-            banter: `Hey ${targetPlayer.name}, I'm offering $${generousCash} cash to buy ${missingDef.name}! Check your trade desk 🤝`,
+            banter: `Cash proposal to ${targetPlayer.name}: $${generousCash} cash for ${missingDef.name}. Check your trade desk.`,
           };
         }
       }
@@ -1717,9 +1717,17 @@ function findSmartTradeProposalLocal(state: GameState, botId: PlayerId): { actio
   return null;
 }
 
+function getBotDelay(baseMs: number): number {
+  if (typeof window !== 'undefined') {
+    const turbo = (window as any).useGameStore?.getState()?.turboSpeed;
+    if (turbo) return Math.max(300, Math.round(baseMs * 0.35));
+  }
+  return baseMs;
+}
+
 /**
  * Automates one action step for a bot player during local games.
- * Powered by full monopoly strategic intelligence.
+ * Powered by full monopoly strategic intelligence with deliberate, human-observable pacing.
  */
 export function botStep(state: GameState, botId: PlayerId): { action: Action; delayMs: number } | null {
   const bot = state.players[botId];
@@ -1748,9 +1756,9 @@ export function botStep(state: GameState, botId: PlayerId): { action: Action; de
     }
 
     if (state.auction.highBid + 10 <= maxBid && bot.cash >= state.auction.highBid + 10) {
-      return { action: { type: 'BID', amount: state.auction.highBid + 10 }, delayMs: 800 };
+      return { action: { type: 'BID', amount: state.auction.highBid + 10 }, delayMs: getBotDelay(2000) };
     }
-    return { action: { type: 'PASS_BID' }, delayMs: 600 };
+    return { action: { type: 'PASS_BID' }, delayMs: getBotDelay(1800) };
   }
 
   // 2. Respond to pending trades proposed to this bot
@@ -1761,14 +1769,14 @@ export function botStep(state: GameState, botId: PlayerId): { action: Action; de
       useChatStore.getState().sendMessage(evaluation.banter, true, {
         id: bot.id,
         name: bot.name,
-        avatar: '🤖',
+        avatar: 'AI',
         color: '#38bdf8',
       });
     } catch (_) {}
 
     return {
       action: { type: 'RESPOND_TRADE', tradeId: pendingTrade.id, response: evaluation.response },
-      delayMs: 900,
+      delayMs: getBotDelay(2200),
     };
   }
 
@@ -1777,16 +1785,16 @@ export function botStep(state: GameState, botId: PlayerId): { action: Action; de
   // 3. Current Turn Actions
   switch (state.phase) {
     case 'awaitRoll':
-      return { action: { type: 'ROLL' }, delayMs: 600 };
+      return { action: { type: 'ROLL' }, delayMs: getBotDelay(1800) };
 
     case 'awaitJailChoice':
       if (bot.heldCards.includes('jail_card')) {
-        return { action: { type: 'USE_JAIL_CARD' }, delayMs: 500 };
+        return { action: { type: 'USE_JAIL_CARD' }, delayMs: getBotDelay(1800) };
       }
       if (bot.cash >= 280) {
-        return { action: { type: 'PAY_JAIL_FEE' }, delayMs: 500 };
+        return { action: { type: 'PAY_JAIL_FEE' }, delayMs: getBotDelay(1800) };
       }
-      return { action: { type: 'ROLL' }, delayMs: 600 };
+      return { action: { type: 'ROLL' }, delayMs: getBotDelay(1800) };
 
     case 'awaitBuyDecision': {
       const tileDef = getTileDef(bot.lastLandedTile);
@@ -1796,23 +1804,23 @@ export function botStep(state: GameState, botId: PlayerId): { action: Action; de
       if (bot.cash >= effectivePrice) {
         const val = evaluateTileStrategicValueLocal(state, bot.lastLandedTile, botId, true);
         if (val >= effectivePrice * 0.9 || bot.cash > effectivePrice + 180) {
-          return { action: { type: 'BUY' }, delayMs: 700 };
+          return { action: { type: 'BUY' }, delayMs: getBotDelay(2600) };
         }
       }
-      return { action: { type: 'DECLINE_BUY' }, delayMs: 700 };
+      return { action: { type: 'DECLINE_BUY' }, delayMs: getBotDelay(2600) };
     }
 
     case 'resolveEvent':
       if (bot.doublesStreak > 0 && !bot.inJail) {
-        return { action: { type: 'ACKNOWLEDGE_EVENT' }, delayMs: 600 };
+        return { action: { type: 'ACKNOWLEDGE_EVENT' }, delayMs: getBotDelay(2800) };
       }
-      return { action: { type: 'END_TURN' }, delayMs: 600 };
+      return { action: { type: 'END_TURN' }, delayMs: getBotDelay(2800) };
 
     case 'awaitDebtSettlement': {
       // Sell buildings first
       for (const [idStr, t] of Object.entries(state.tiles)) {
         if (t.ownerId === botId && t.tier > 0) {
-          return { action: { type: 'SELL_BUILDING', tileId: Number(idStr) }, delayMs: 600 };
+          return { action: { type: 'SELL_BUILDING', tileId: Number(idStr) }, delayMs: getBotDelay(1800) };
         }
       }
       // Mortgage orphan properties first
@@ -1827,16 +1835,16 @@ export function botStep(state: GameState, botId: PlayerId): { action: Action; de
         return true;
       });
       if (orphan) {
-        return { action: { type: 'MORTGAGE', tileId: Number(orphan[0]) }, delayMs: 600 };
+        return { action: { type: 'MORTGAGE', tileId: Number(orphan[0]) }, delayMs: getBotDelay(1800) };
       }
       // Mortgage any remaining
       const anyProp = Object.entries(state.tiles).find(
         ([_, t]) => t.ownerId === botId && !t.mortgaged && t.tier === 0
       );
       if (anyProp) {
-        return { action: { type: 'MORTGAGE', tileId: Number(anyProp[0]) }, delayMs: 600 };
+        return { action: { type: 'MORTGAGE', tileId: Number(anyProp[0]) }, delayMs: getBotDelay(1800) };
       }
-      return { action: { type: 'RAISE_FUNDS_DONE' }, delayMs: 600 };
+      return { action: { type: 'RAISE_FUNDS_DONE' }, delayMs: getBotDelay(1800) };
     }
 
     case 'awaitEndTurn': {
@@ -1847,11 +1855,11 @@ export function botStep(state: GameState, botId: PlayerId): { action: Action; de
           useChatStore.getState().sendMessage(smartTrade.banter, true, {
             id: bot.id,
             name: bot.name,
-            avatar: '🤖',
+            avatar: 'AI',
             color: '#38bdf8',
           });
         } catch (_) {}
-        return { action: smartTrade.action, delayMs: 900 };
+        return { action: smartTrade.action, delayMs: getBotDelay(2400) };
       }
 
       // 2. Attempt building upgrades if bot owns a full district and has safe cash buffer
@@ -1871,7 +1879,7 @@ export function botStep(state: GameState, botId: PlayerId): { action: Action; de
           if (tState.tier === minTier) {
             const district = BOARD_DATA.districts[def.districtId];
             if (district && bot.cash > district.buildCost + 260) {
-              return { action: { type: 'BUILD', tileId }, delayMs: 700 };
+              return { action: { type: 'BUILD', tileId }, delayMs: getBotDelay(2200) };
             }
           }
         }
@@ -1884,13 +1892,13 @@ export function botStep(state: GameState, botId: PlayerId): { action: Action; de
             const def = getTileDef(Number(idStr));
             const cost = Math.round(((def.price ?? 100) / 2) * 1.1);
             if (bot.cash >= cost + 300) {
-              return { action: { type: 'UNMORTGAGE', tileId: Number(idStr) }, delayMs: 700 };
+              return { action: { type: 'UNMORTGAGE', tileId: Number(idStr) }, delayMs: getBotDelay(2000) };
             }
           }
         }
       }
 
-      return { action: { type: 'END_TURN' }, delayMs: 800 };
+      return { action: { type: 'END_TURN' }, delayMs: getBotDelay(2000) };
     }
 
     default:

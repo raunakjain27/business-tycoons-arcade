@@ -16,7 +16,7 @@ export const ChatDrawer: React.FC = () => {
   const senderInfo = {
     id: myPlayerId,
     name: myPlayer?.name || user?.username || 'Operator',
-    avatar: myPlayer?.tokenId ? '👑' : user?.selectedAvatar || '⚡',
+    avatar: 'YOU',
     color: '#00f0ff',
   };
 
@@ -58,17 +58,26 @@ export const ChatDrawer: React.FC = () => {
           className={`arcade-btn ${isOpen ? 'arcade-btn-magenta' : 'arcade-btn-cyan'}`}
           style={{
             padding: '10px 18px',
-            fontSize: '12px',
+            fontSize: '11.5px',
             borderRadius: '9999px',
             display: 'flex',
             alignItems: 'center',
-            gap: '8px',
+            gap: '9px',
             boxShadow: '0 8px 30px rgba(0, 0, 0, 0.7), 0 0 20px rgba(0, 240, 255, 0.3)',
             fontFamily: 'Orbitron, sans-serif',
             letterSpacing: '0.8px',
           }}
         >
-          <span>💬</span>
+          <span
+            style={{
+              width: '8px',
+              height: '8px',
+              borderRadius: '50%',
+              backgroundColor: '#00ff88',
+              boxShadow: '0 0 8px #00ff88',
+              display: 'inline-block',
+            }}
+          />
           <span>{isOpen ? 'CLOSE COMMS' : 'ARENA COMMS'}</span>
           {unreadCount > 0 && !isOpen && (
             <span
@@ -125,28 +134,36 @@ export const ChatDrawer: React.FC = () => {
             }}
           >
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <span style={{ fontSize: '16px' }}>⚡</span>
+              <div
+                style={{
+                  width: '10px',
+                  height: '10px',
+                  borderRadius: '2px',
+                  backgroundColor: '#00f0ff',
+                  boxShadow: '0 0 8px #00f0ff',
+                }}
+              />
               <div>
                 <span
                   style={{
-                    fontSize: '13px',
+                    fontSize: '12px',
                     fontWeight: 900,
                     fontFamily: 'Orbitron, sans-serif',
                     color: '#ffffff',
-                    letterSpacing: '0.5px',
+                    letterSpacing: '0.8px',
                   }}
                 >
-                  TACTICAL COMMS LINK
+                  TACTICAL COMMS TERMINAL
                 </span>
                 <span
                   style={{
                     display: 'block',
-                    fontSize: '10px',
+                    fontSize: '9.5px',
                     color: '#00ff88',
                     fontFamily: 'JetBrains Mono, monospace',
                   }}
                 >
-                  ● ENCRYPTED ARENA BROADCAST
+                  CHANNEL: ARENA_LOCAL // ENCRYPTED
                 </span>
               </div>
             </div>
@@ -187,13 +204,16 @@ export const ChatDrawer: React.FC = () => {
                 onClick={() => handleShoutout(shoutout)}
                 className="arcade-btn arcade-btn-secondary"
                 style={{
-                  padding: '4px 8px',
-                  fontSize: '10.5px',
-                  borderRadius: '6px',
+                  padding: '4px 9px',
+                  fontSize: '9.5px',
+                  borderRadius: '4px',
                   whiteSpace: 'nowrap',
+                  flexShrink: 0,
+                  fontFamily: 'JetBrains Mono, monospace',
+                  letterSpacing: '0.3px',
                 }}
               >
-                {shoutout}
+                [{shoutout}]
               </button>
             ))}
           </div>
@@ -227,7 +247,7 @@ export const ChatDrawer: React.FC = () => {
                       fontFamily: 'JetBrains Mono, monospace',
                     }}
                   >
-                    ⚡ {msg.text}
+                    [SYSTEM] {msg.text}
                   </div>
                 );
               }
@@ -243,7 +263,20 @@ export const ChatDrawer: React.FC = () => {
                   }}
                 >
                   <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '10px', color: '#94a3b8' }}>
-                    <span>{msg.senderAvatar}</span>
+                    <span
+                      style={{
+                        fontFamily: 'JetBrains Mono, monospace',
+                        fontSize: '9px',
+                        fontWeight: 900,
+                        padding: '1px 5px',
+                        borderRadius: '3px',
+                        backgroundColor: isMe ? 'rgba(0, 240, 255, 0.2)' : 'rgba(255, 255, 255, 0.12)',
+                        border: `1px solid ${isMe ? '#00f0ff' : 'rgba(255, 255, 255, 0.2)'}`,
+                        color: isMe ? '#00f0ff' : '#cbd5e1',
+                      }}
+                    >
+                      {isMe ? 'YOU' : msg.senderAvatar || 'OP'}
+                    </span>
                     <strong style={{ color: msg.senderColor }}>{msg.senderName}</strong>
                     <span>
                       {new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}

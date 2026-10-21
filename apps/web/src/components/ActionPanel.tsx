@@ -632,8 +632,33 @@ export const ActionPanel: React.FC<ActionPanelProps> = ({ gameState }) => {
             </>
           ) : (
             <div style={{ textAlign: 'center', padding: '24px 0', color: '#94a3b8' }}>
-              <div style={{ fontSize: '24px', marginBottom: '8px' }}>⏳</div>
-              <p>Waiting for {currentPlayer?.name ?? 'opponent'} to roll...</p>
+              <div
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '8px',
+                  padding: '6px 14px',
+                  borderRadius: '9999px',
+                  backgroundColor: 'rgba(0, 240, 255, 0.1)',
+                  border: '1px solid rgba(0, 240, 255, 0.3)',
+                  marginBottom: '10px',
+                }}
+              >
+                <span
+                  style={{
+                    width: '8px',
+                    height: '8px',
+                    borderRadius: '50%',
+                    backgroundColor: '#00f0ff',
+                    boxShadow: '0 0 8px #00f0ff',
+                    animation: 'pulse 1.5s infinite',
+                  }}
+                />
+                <span style={{ fontSize: '11px', fontFamily: 'Orbitron, sans-serif', color: '#00f0ff', letterSpacing: '0.8px' }}>
+                  {currentPlayer?.name ?? 'BOT'} IS STRATEGIZING
+                </span>
+              </div>
+              <p style={{ fontSize: '13px', color: '#cbd5e1' }}>Preparing to roll the dice</p>
             </div>
           )}
         </div>
@@ -736,9 +761,32 @@ export const ActionPanel: React.FC<ActionPanelProps> = ({ gameState }) => {
                     </button>
                   </div>
                 ) : (
-                  <p style={{ fontSize: '13px', color: '#94a3b8' }}>
-                    Waiting for {currentPlayer?.name} to decide whether to purchase...
-                  </p>
+                  <div
+                    style={{
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: '8px',
+                      padding: '6px 12px',
+                      borderRadius: '8px',
+                      backgroundColor: 'rgba(56, 189, 248, 0.1)',
+                      border: '1px solid rgba(56, 189, 248, 0.25)',
+                      marginTop: '6px',
+                    }}
+                  >
+                    <span
+                      style={{
+                        width: '7px',
+                        height: '7px',
+                        borderRadius: '50%',
+                        backgroundColor: '#38bdf8',
+                        boxShadow: '0 0 6px #38bdf8',
+                        animation: 'pulse 1.5s infinite',
+                      }}
+                    />
+                    <span style={{ fontSize: '11px', fontFamily: 'JetBrains Mono, monospace', color: '#38bdf8' }}>
+                      {currentPlayer?.name} is evaluating asset acquisition...
+                    </span>
+                  </div>
                 )}
               </div>
             );
@@ -1052,7 +1100,30 @@ export const ActionPanel: React.FC<ActionPanelProps> = ({ gameState }) => {
             </>
           ) : (
             <div style={{ textAlign: 'center', padding: '16px', color: '#94a3b8' }}>
-              <p>Waiting for {currentPlayer?.name} to wrap up their turn...</p>
+              <div
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '8px',
+                  padding: '6px 14px',
+                  borderRadius: '8px',
+                  backgroundColor: 'rgba(255, 255, 255, 0.05)',
+                  border: '1px solid rgba(255, 255, 255, 0.12)',
+                }}
+              >
+                <span
+                  style={{
+                    width: '7px',
+                    height: '7px',
+                    borderRadius: '50%',
+                    backgroundColor: '#00ff88',
+                    boxShadow: '0 0 6px #00ff88',
+                  }}
+                />
+                <span style={{ fontSize: '11px', fontFamily: 'JetBrains Mono, monospace', color: '#cbd5e1' }}>
+                  {currentPlayer?.name} is concluding turn actions...
+                </span>
+              </div>
             </div>
           )}
         </div>

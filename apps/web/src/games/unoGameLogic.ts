@@ -425,7 +425,7 @@ export function useUnoGame(initialPlayers: UnoPlayer[], roomCode: string) {
         const currentPlayer = (playersRef.current ?? [])[state.currentPlayerIdx];
         if (currentPlayer?.id !== bot.id) return;
         botPlay(bot);
-      }, 1100);
+      }, 2000);
       return timer;
     },
     [state.winner, playersRef.current, state.currentPlayerIdx, botPlay],

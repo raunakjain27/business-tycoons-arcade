@@ -72,6 +72,7 @@ export const Board: React.FC<BoardProps> = ({ gameState }) => {
         const stepDist = (targetPos - prevPos + 40) % 40;
         if (stepDist > 0 && stepDist <= 12) {
           let currentStep = 1;
+          const stepIntervalMs = turboSpeed ? 60 : 120;
           const interval = setInterval(() => {
             const nextStepPos = (prevPos + currentStep) % 40;
             setVisualPositions(prev => ({ ...prev, [pId]: nextStepPos }));
@@ -82,7 +83,7 @@ export const Board: React.FC<BoardProps> = ({ gameState }) => {
               try { soundFx.vibrate(25); } catch (e) {}
             }
             currentStep++;
-          }, 90);
+          }, stepIntervalMs);
         } else {
           setVisualPositions(prev => ({ ...prev, [pId]: targetPos }));
         }
@@ -91,20 +92,21 @@ export const Board: React.FC<BoardProps> = ({ gameState }) => {
         lastStatePositions.current[pId] = targetPos;
       }
     }
-  }, [gameState.players]);
+  }, [gameState.players, turboSpeed]);
 
-  // Richup-style Auto-Roll: Automatically rolls dice during player's roll phase
+  // Measured Auto-Roll: Automatically rolls dice during player's roll phase with human-comfortable pacing
   useEffect(() => {
     if (!autoRoll) return;
     if (gameState.phase === 'awaitRoll' && gameState.turnPlayerId === myPlayerId) {
+      const delay = turboSpeed ? 500 : 1400;
       const timer = setTimeout(() => {
         soundFx.playClick();
         soundFx.playDiceRoll();
         dispatchAction({ type: 'ROLL' });
-      }, 550);
+      }, delay);
       return () => clearTimeout(timer);
     }
-  }, [autoRoll, gameState.phase, gameState.turnPlayerId, myPlayerId, dispatchAction]);
+  }, [autoRoll, turboSpeed, gameState.phase, gameState.turnPlayerId, myPlayerId, dispatchAction]);
 
   // Turbo Speed mode: Automatically dismisses resolved event cards
   useEffect(() => {
@@ -817,7 +819,7 @@ export const Board: React.FC<BoardProps> = ({ gameState }) => {
                         title={`${gameState.players[pId]?.name}${isCurrent ? ' (Active Turn)' : ''}`}
                       >
                         {peg.icon}
-                        {/* Floating Emote for this player */}
+                        {/* Floating Tactical Callout for this player */}
                         {activeEmotes
                           .filter(em => em.playerId === pId)
                           .map(em => (
@@ -828,13 +830,22 @@ export const Board: React.FC<BoardProps> = ({ gameState }) => {
                                 top: '-24px',
                                 left: '50%',
                                 transform: 'translateX(-50%)',
-                                fontSize: '18px',
+                                fontSize: '10px',
+                                fontFamily: 'JetBrains Mono, monospace',
+                                fontWeight: 800,
+                                padding: '2px 6px',
+                                borderRadius: '4px',
+                                backgroundColor: 'rgba(10, 15, 29, 0.95)',
+                                border: '1px solid #00f0ff',
+                                color: '#00f0ff',
+                                boxShadow: '0 0 10px rgba(0, 240, 255, 0.4)',
+                                whiteSpace: 'nowrap',
                                 animation: 'floatEmote 2.4s forwards ease-out',
                                 pointerEvents: 'none',
                                 zIndex: 25,
                               }}
                             >
-                              {em.emoji}
+                              [{em.emoji}]
                             </div>
                           ))}
                       </div>
@@ -931,41 +942,6 @@ export const Board: React.FC<BoardProps> = ({ gameState }) => {
             </div>
           )}
 
-          {/* Richup-style Quick Emotes Bar */}
-          <div
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '4px',
-              backgroundColor: 'rgba(0, 0, 0, 0.4)',
-              borderRadius: '20px',
-              padding: '2px 8px',
-              marginBottom: '8px',
-              border: '1px solid rgba(255, 255, 255, 0.1)',
-            }}
-          >
-            {['😂', '😭', '💸', '🎲', '👑', '🔥', '💀', '🤝'].map(emoji => (
-              <button
-                key={emoji}
-                onClick={() => sendEmote(emoji)}
-                style={{
-                  background: 'none',
-                  border: 'none',
-                  fontSize: '14px',
-                  cursor: 'pointer',
-                  padding: '2px 3px',
-                  lineHeight: 1,
-                  borderRadius: '4px',
-                  transition: 'transform 0.1s ease',
-                }}
-                onMouseEnter={(e: any) => e.currentTarget.style.transform = 'scale(1.3)'}
-                onMouseLeave={(e: any) => e.currentTarget.style.transform = 'scale(1)'}
-                title={`React with ${emoji}`}
-              >
-                {emoji}
-              </button>
-            ))}
-          </div>
 
           {/* Richup-grade Auto-Roll, Turbo Speed & Propose Trade Controls */}
           {(() => {

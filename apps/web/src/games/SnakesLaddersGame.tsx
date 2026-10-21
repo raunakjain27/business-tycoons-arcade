@@ -167,7 +167,7 @@ export const SnakesLaddersGame: React.FC = () => {
     if (!winner && curPlayer && curPlayer.isBot && !isRolling && !inLobby) {
       const timer = setTimeout(() => {
         rollDice();
-      }, 900);
+      }, 2000);
       return () => clearTimeout(timer);
     }
   }, [curPlayer, isRolling, winner, inLobby]);

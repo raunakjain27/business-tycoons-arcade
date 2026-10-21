@@ -117,7 +117,7 @@ export const SequenceGame: React.FC = () => {
     if (room.allowBots || room.players.length === 1) {
       setTimeout(() => {
         botPlayTurn();
-      }, 900);
+      }, 2000);
     }
   };
 

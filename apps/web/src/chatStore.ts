@@ -13,18 +13,20 @@ export interface ChatMessage {
   isShoutout?: boolean;
 }
 
-export const QUICK_SHOUTOUTS = [
-  '🍀 Good luck!',
-  '🎲 Nice roll!',
-  '💥 Ouch!',
-  '🤝 Trade with me?',
-  '⏳ Hurry up!',
-  '😱 No way!',
-  '👑 GG!',
-  '🚀 Let\'s go!',
-  '💸 Big spender!',
-  '🏛️ Monopolized!',
+export const TACTICAL_CALLOUTS = [
+  'TRADE REQUEST',
+  'COUNTER-OFFER',
+  'WELL PLAYED',
+  'HIGH STAKES',
+  'CAREFUL HERE',
+  'AFFIRMATIVE',
+  'DECLINED',
+  'GOOD MATCH',
+  'PRESSURE ON',
+  'NEGOTIATE',
 ];
+
+export const QUICK_SHOUTOUTS = TACTICAL_CALLOUTS;
 
 interface ChatStoreState {
   isOpen: boolean;
@@ -43,12 +45,14 @@ const chatSyncChannel = typeof window !== 'undefined' && 'BroadcastChannel' in w
   : null;
 
 const BOT_BANTER_LIST = [
-  'I have my eyes on the Boardwalk! 🏙️',
-  'Don\'t you dare land on my hotels! 💥',
-  'Who wants to make a deal? 🤝',
-  'Double dice baby! Let\'s go! 🎲',
-  'Ouch, that audit stung a bit! 😬',
-  'Playing for keeps this round! 👑',
+  'Monitoring high-yield properties across this district.',
+  'Careful stepping into developed sectors.',
+  'Trading desk open for strategic asset exchanges.',
+  'Strong liquidity position established.',
+  'Analyzing monopoly formations along this corridor.',
+  'I have a strategic trade proposal pending review.',
+  'Every property has a valuation—make your offer.',
+  'Pacing investments carefully this round.',
 ];
 
 export const useChatStore = create<ChatStoreState>((set, get) => {
@@ -71,9 +75,9 @@ export const useChatStore = create<ChatStoreState>((set, get) => {
       id: 'sys-welcome',
       senderId: 'system',
       senderName: 'SYSTEM',
-      senderAvatar: '⚡',
+      senderAvatar: 'SYS',
       senderColor: '#00f0ff',
-      text: 'Tactical Arena Comms Link established. Broadcast chat or use preset tactical shoutouts.',
+      text: 'Tactical Arena Comms link established. Transmit strategic messages or tactical callouts.',
       timestamp: Date.now() - 30000,
       isSystem: true,
     },
@@ -81,9 +85,9 @@ export const useChatStore = create<ChatStoreState>((set, get) => {
       id: 'bot-greeting',
       senderId: 'bot-1',
       senderName: 'Atlas Bot',
-      senderAvatar: '🚀',
-      senderColor: '#3b82f6',
-      text: 'Good luck everyone! Let the best tycoon win 🏆',
+      senderAvatar: 'AI',
+      senderColor: '#38bdf8',
+      text: 'Good luck operators. Trading desk is active for the match.',
       timestamp: Date.now() - 15000,
       isShoutout: true,
     },
@@ -110,8 +114,8 @@ export const useChatStore = create<ChatStoreState>((set, get) => {
         id: `msg-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
         senderId: senderInfo?.id || 'player-1',
         senderName: senderInfo?.name || 'You',
-        senderAvatar: senderInfo?.avatar || '👑',
-        senderColor: senderInfo?.color || '#ec4899',
+        senderAvatar: senderInfo?.avatar || 'YOU',
+        senderColor: senderInfo?.color || '#00f0ff',
         text: cleanText,
         timestamp: Date.now(),
         isShoutout,
@@ -128,7 +132,7 @@ export const useChatStore = create<ChatStoreState>((set, get) => {
         console.error('Chat broadcast error:', err);
       }
 
-      // Random bot reaction after 1.5s - 3s to keep chat active and engaging
+      // Random bot reaction after 2s - 3.5s to keep chat active and engaging
       if (Math.random() > 0.45) {
         setTimeout(() => {
           const randomBanter = BOT_BANTER_LIST[Math.floor(Math.random() * BOT_BANTER_LIST.length)];
@@ -136,8 +140,8 @@ export const useChatStore = create<ChatStoreState>((set, get) => {
             id: `msg-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
             senderId: 'bot-atlas',
             senderName: 'Atlas Bot',
-            senderAvatar: '🚀',
-            senderColor: '#3b82f6',
+            senderAvatar: 'AI',
+            senderColor: '#38bdf8',
             text: randomBanter,
             timestamp: Date.now(),
             isShoutout: true,
@@ -150,7 +154,7 @@ export const useChatStore = create<ChatStoreState>((set, get) => {
           try {
             chatSyncChannel?.postMessage({ type: 'NEW_CHAT_MESSAGE', message: botMsg });
           } catch (_) {}
-        }, 1800);
+        }, 2200);
       }
     },
 
@@ -159,7 +163,7 @@ export const useChatStore = create<ChatStoreState>((set, get) => {
         id: `sys-${Date.now()}`,
         senderId: 'system',
         senderName: 'ARENA',
-        senderAvatar: '⚡',
+        senderAvatar: 'SYS',
         senderColor: '#00f0ff',
         text,
         timestamp: Date.now(),

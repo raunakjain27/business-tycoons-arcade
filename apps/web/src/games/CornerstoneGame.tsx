@@ -11,6 +11,9 @@ import { PlayerDashboard } from '../components/PlayerDashboard';
 import { GameLog } from '../components/GameLog';
 import { Modals } from '../components/Modals';
 import { useCelebrationStore } from '../celebrationStore';
+import { useChatStore, QUICK_SHOUTOUTS } from '../chatStore';
+import { soundFx } from '../soundEffects';
+import { useUserStore } from '../userStore';
 
 export const CornerstoneGame: React.FC = () => {
   const { getOrCreateRoom } = useGameRoomStore();
@@ -29,6 +32,10 @@ export const CornerstoneGame: React.FC = () => {
 
   const room = getOrCreateRoom('cornerstone', 'You (Tycoon 👑)', 8, 2);
   const [inLobby, setInLobby] = useState<boolean>(!room.isGameStarted);
+  const [sideTab, setSideTab] = useState<'feed' | 'comms'>('feed');
+  const [chatInput, setChatInput] = useState('');
+  const { messages, unreadCount, sendMessage } = useChatStore();
+  const { user } = useUserStore();
 
   // Sync lobby state when host starts the match across browser tabs
   React.useEffect(() => {
@@ -212,18 +219,263 @@ export const CornerstoneGame: React.FC = () => {
           {/* Action & Turn Controls Panel */}
           <ActionPanel gameState={gameState} />
 
-          {/* Live Activity Stream */}
+          {/* Live Activity Stream & Arena Comms Dual Panel */}
           {gameState && (
-            <div className="glass-panel" style={{ padding: '14px', borderRadius: '16px' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '10px' }}>
-                <span style={{ fontSize: '13px' }}>📜</span>
-                <span style={{ fontSize: '12px', fontWeight: 800, color: '#f8fafc', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-                  Live Match Feed
-                </span>
+            <div
+              className="glass-panel"
+              style={{
+                padding: '14px',
+                borderRadius: '16px',
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '10px',
+                background: 'linear-gradient(135deg, rgba(14, 20, 38, 0.95) 0%, rgba(8, 12, 24, 0.98) 100%)',
+                border: '1.5px solid rgba(0, 240, 255, 0.25)',
+              }}
+            >
+              {/* Tab Selector */}
+              <div
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '8px',
+                  borderBottom: '1px solid rgba(255, 255, 255, 0.08)',
+                  paddingBottom: '8px',
+                }}
+              >
+                <button
+                  onClick={() => {
+                    soundFx.playClick();
+                    setSideTab('feed');
+                  }}
+                  className={`arcade-btn ${sideTab === 'feed' ? 'arcade-btn-cyan' : 'arcade-btn-secondary'}`}
+                  style={{
+                    padding: '5px 12px',
+                    fontSize: '11px',
+                    borderRadius: '6px',
+                    fontFamily: 'Orbitron, sans-serif',
+                    letterSpacing: '0.5px',
+                  }}
+                >
+                  ACTIVITY FEED ({gameState.log?.length ?? 0})
+                </button>
+
+                <button
+                  onClick={() => {
+                    soundFx.playClick();
+                    setSideTab('comms');
+                  }}
+                  className={`arcade-btn ${sideTab === 'comms' ? 'arcade-btn-magenta' : 'arcade-btn-secondary'}`}
+                  style={{
+                    padding: '5px 12px',
+                    fontSize: '11px',
+                    borderRadius: '6px',
+                    fontFamily: 'Orbitron, sans-serif',
+                    letterSpacing: '0.5px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '6px',
+                  }}
+                >
+                  <span
+                    style={{
+                      width: '6px',
+                      height: '6px',
+                      borderRadius: '50%',
+                      backgroundColor: '#00ff88',
+                      boxShadow: '0 0 6px #00ff88',
+                      display: 'inline-block',
+                    }}
+                  />
+                  <span>ARENA COMMS</span>
+                  {unreadCount > 0 && sideTab !== 'comms' && (
+                    <span
+                      style={{
+                        backgroundColor: '#ff0077',
+                        color: '#fff',
+                        fontSize: '9px',
+                        padding: '1px 5px',
+                        borderRadius: '9999px',
+                        fontFamily: 'JetBrains Mono, monospace',
+                      }}
+                    >
+                      {unreadCount}
+                    </span>
+                  )}
+                </button>
               </div>
-              <div style={{ maxHeight: '280px', overflowY: 'auto' }}>
-                <GameLog events={gameState.log} />
-              </div>
+
+              {/* Feed Tab View */}
+              {sideTab === 'feed' && (
+                <div style={{ maxHeight: '280px', overflowY: 'auto' }}>
+                  <GameLog events={gameState.log} />
+                </div>
+              )}
+
+              {/* Comms Tab View */}
+              {sideTab === 'comms' && (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                  {/* Tactical Preset Callouts Bar */}
+                  <div
+                    style={{
+                      display: 'flex',
+                      gap: '5px',
+                      overflowX: 'auto',
+                      paddingBottom: '4px',
+                      whiteSpace: 'nowrap',
+                    }}
+                  >
+                    {QUICK_SHOUTOUTS.map((shoutout) => (
+                      <button
+                        key={shoutout}
+                        onClick={() => {
+                          soundFx.playClick();
+                          sendMessage(shoutout, true, {
+                            id: myPlayerId,
+                            name: gameState.players[myPlayerId]?.name || user?.username || 'Operator',
+                            avatar: 'YOU',
+                            color: '#00f0ff',
+                          });
+                        }}
+                        className="arcade-btn arcade-btn-secondary"
+                        style={{
+                          padding: '3px 9px',
+                          fontSize: '9.5px',
+                          borderRadius: '4px',
+                          fontFamily: 'JetBrains Mono, monospace',
+                          whiteSpace: 'nowrap',
+                          flexShrink: 0,
+                        }}
+                      >
+                        [{shoutout}]
+                      </button>
+                    ))}
+                  </div>
+
+                  {/* Messages Stream */}
+                  <div
+                    style={{
+                      maxHeight: '210px',
+                      overflowY: 'auto',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      gap: '8px',
+                      paddingRight: '4px',
+                    }}
+                  >
+                    {messages.slice(-20).map((msg) => {
+                      const isMe = msg.senderId === myPlayerId;
+                      if (msg.isSystem) {
+                        return (
+                          <div
+                            key={msg.id}
+                            style={{
+                              padding: '4px 8px',
+                              borderRadius: '6px',
+                              background: 'rgba(0, 240, 255, 0.08)',
+                              border: '1px solid rgba(0, 240, 255, 0.2)',
+                              fontSize: '10.5px',
+                              color: '#67e8f9',
+                              textAlign: 'center',
+                              fontFamily: 'JetBrains Mono, monospace',
+                            }}
+                          >
+                            [SYSTEM] {msg.text}
+                          </div>
+                        );
+                      }
+                      return (
+                        <div
+                          key={msg.id}
+                          style={{
+                            display: 'flex',
+                            flexDirection: 'column',
+                            alignItems: isMe ? 'flex-end' : 'flex-start',
+                            gap: '2px',
+                          }}
+                        >
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '5px', fontSize: '9.5px', color: '#94a3b8' }}>
+                            <span
+                              style={{
+                                fontFamily: 'JetBrains Mono, monospace',
+                                fontSize: '8.5px',
+                                fontWeight: 800,
+                                padding: '1px 4px',
+                                borderRadius: '3px',
+                                backgroundColor: isMe ? 'rgba(0, 240, 255, 0.2)' : 'rgba(255, 255, 255, 0.1)',
+                                border: `1px solid ${isMe ? '#00f0ff' : 'rgba(255, 255, 255, 0.2)'}`,
+                                color: isMe ? '#00f0ff' : '#cbd5e1',
+                              }}
+                            >
+                              {isMe ? 'YOU' : msg.senderAvatar || 'OP'}
+                            </span>
+                            <strong style={{ color: msg.senderColor }}>{msg.senderName}</strong>
+                            <span style={{ fontSize: '9px' }}>
+                              {new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                            </span>
+                          </div>
+                          <div
+                            style={{
+                              maxWidth: '90%',
+                              padding: '6px 10px',
+                              borderRadius: isMe ? '10px 10px 2px 10px' : '10px 10px 10px 2px',
+                              backgroundColor: isMe ? 'rgba(0, 240, 255, 0.18)' : 'rgba(255, 255, 255, 0.06)',
+                              border: isMe ? '1px solid rgba(0, 240, 255, 0.4)' : '1px solid rgba(255, 255, 255, 0.1)',
+                              color: '#ffffff',
+                              fontSize: '11.5px',
+                              lineHeight: 1.35,
+                            }}
+                          >
+                            {msg.text}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+
+                  {/* Inline Message Input */}
+                  <form
+                    onSubmit={(e) => {
+                      e.preventDefault();
+                      if (!chatInput.trim()) return;
+                      soundFx.playClick();
+                      sendMessage(chatInput.trim(), false, {
+                        id: myPlayerId,
+                        name: gameState.players[myPlayerId]?.name || user?.username || 'Operator',
+                        avatar: 'YOU',
+                        color: '#00f0ff',
+                      });
+                      setChatInput('');
+                    }}
+                    style={{ display: 'flex', gap: '6px', marginTop: '4px' }}
+                  >
+                    <input
+                      type="text"
+                      placeholder="Transmit tactical comms..."
+                      value={chatInput}
+                      onChange={(e) => setChatInput(e.target.value)}
+                      style={{
+                        flex: 1,
+                        backgroundColor: 'rgba(255, 255, 255, 0.05)',
+                        border: '1px solid rgba(255, 255, 255, 0.15)',
+                        borderRadius: '6px',
+                        padding: '6px 10px',
+                        color: '#ffffff',
+                        fontSize: '11.5px',
+                        fontFamily: 'Space Grotesk, sans-serif',
+                        outline: 'none',
+                      }}
+                    />
+                    <button
+                      type="submit"
+                      className="arcade-btn arcade-btn-cyan"
+                      style={{ padding: '6px 12px', fontSize: '10.5px', whiteSpace: 'nowrap' }}
+                    >
+                      TRANSMIT
+                    </button>
+                  </form>
+                </div>
+              )}
             </div>
           )}
         </div>

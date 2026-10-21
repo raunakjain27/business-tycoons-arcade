@@ -353,7 +353,7 @@ export const LudoGame: React.FC = () => {
     if (!hasRolled && !isRolling) {
       const timer = setTimeout(() => {
         rollDice();
-      }, 800);
+      }, 1800);
       pushTimer(timer);
       return clearTimers;
     }
@@ -365,13 +365,13 @@ export const LudoGame: React.FC = () => {
           const baseToken = movableTokens.find((t) => t.step === -1);
           const chosen = diceVal === 6 && baseToken ? baseToken : movableTokens[0];
           moveToken(chosen, diceVal);
-        }, 700);
+        }, 1600);
         pushTimer(timer);
         return clearTimers;
       } else {
         const timer = setTimeout(() => {
           passTurn(false);
-        }, 600);
+        }, 1500);
         pushTimer(timer);
         return clearTimers;
       }
