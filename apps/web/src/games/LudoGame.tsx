@@ -1,5 +1,4 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { DESIGN_SYSTEM } from '../designSystem';
 import { useHubStore } from '../hubStore';
 import { useGameRoomStore } from '../gameRoomStore';
 import { useVoiceStore } from '../voiceStore';
@@ -28,41 +27,70 @@ interface LudoPlayer {
 
 const PLAYER_THEMES: Record<
   PlayerColor,
-  { name: string; hex: string; lightHex: string; gradient: string; startPos: number }
+  { name: string; hex: string; lightHex: string; gradient: string; startPos: number; badge: string }
 > = {
   red: {
-    name: 'Crimson Warriors',
+    name: 'Crimson Ruby',
     hex: '#ef4444',
     lightHex: '#fca5a5',
-    gradient: 'linear-gradient(135deg, #ef4444 0%, #b91c1c 100%)',
+    gradient: 'linear-gradient(135deg, #ef4444 0%, #991b1b 100%)',
     startPos: 0,
+    badge: '🔴',
   },
   green: {
-    name: 'Emerald Dragons',
+    name: 'Emerald Jade',
     hex: '#10b981',
     lightHex: '#6ee7b7',
     gradient: 'linear-gradient(135deg, #10b981 0%, #047857 100%)',
     startPos: 13,
+    badge: '🟢',
   },
   yellow: {
-    name: 'Solar Phoenix',
+    name: 'Solar Amber',
     hex: '#f59e0b',
     lightHex: '#fcd34d',
     gradient: 'linear-gradient(135deg, #f59e0b 0%, #b45309 100%)',
     startPos: 26,
+    badge: '🟡',
   },
   blue: {
-    name: 'Abyssal Sharks',
+    name: 'Cobalt Lapis',
     hex: '#3b82f6',
     lightHex: '#93c5fd',
     gradient: 'linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%)',
     startPos: 39,
+    badge: '🔵',
   },
 };
 
 const ORDER: PlayerColor[] = ['red', 'green', 'yellow', 'blue'];
 
 const SAFE_POSITIONS = new Set([0, 8, 13, 21, 26, 34, 39, 47]);
+
+// 52 Main Track Coordinate Mapping: [row, col] on 15x15 grid (0-indexed)
+const GLOBAL_TRACK_COORDS: [number, number][] = [
+  [6, 1], [6, 2], [6, 3], [6, 4], [6, 5],
+  [5, 6], [4, 6], [3, 6], [2, 6], [1, 6], [0, 6],
+  [0, 7],
+  [0, 8], [1, 8], [2, 8], [3, 8], [4, 8], [5, 8],
+  [6, 9], [6, 10], [6, 11], [6, 12], [6, 13], [6, 14],
+  [7, 14],
+  [8, 14], [8, 13], [8, 12], [8, 11], [8, 10], [8, 9],
+  [9, 8], [10, 8], [11, 8], [12, 8], [13, 8], [14, 8],
+  [14, 7],
+  [14, 6], [13, 6], [12, 6], [11, 6], [10, 6], [9, 6],
+  [8, 5], [8, 4], [8, 3], [8, 2], [8, 1], [8, 0],
+  [7, 0],
+  [6, 0],
+];
+
+// Home stretch mapping for each color (steps 51 to 56)
+const HOME_STRETCH_COORDS: Record<PlayerColor, [number, number][]> = {
+  red: [[7, 1], [7, 2], [7, 3], [7, 4], [7, 5], [7, 6]],
+  green: [[1, 7], [2, 7], [3, 7], [4, 7], [5, 7], [6, 7]],
+  yellow: [[7, 13], [7, 12], [7, 11], [7, 10], [7, 9], [7, 8]],
+  blue: [[13, 7], [12, 7], [11, 7], [10, 7], [9, 7], [8, 7]],
+};
 
 function buildInitialPlayers(
   roomPlayers: Array<{ id?: string; name?: string; avatar?: string; isBot?: boolean; color?: string }>,
@@ -103,51 +131,40 @@ export const LudoGame: React.FC = () => {
   const [isRolling, setIsRolling] = useState(false);
   const [hasRolled, setHasRolled] = useState(false);
   const [winner, setWinner] = useState<LudoPlayer | null>(null);
-  const [gameLog, setGameLog] = useState<string[]>([]);
+  const [gameLog, setGameLog] = useState<string[]>(['Royal Pachisi Match initiated. Roll a 6 to release tokens from base!']);
 
-  useEffect(() => {
-    if (winner) {
-      useCelebrationStore.getState().triggerVictory({
-        gameTitle: 'Ludo Royale',
-        winnerName: winner.name,
-        winnerAvatar: winner.avatar || '👑',
-        coinsAwarded: 200,
-        xpAwarded: 150,
-        reason: `${winner.name} guided all 4 tokens into the central home triangle!`,
-      });
-    }
-  }, [winner]);
-
-  const timerRegistry = useRef<ReturnType<typeof setTimeout>[]>([]);
-  const intervalRegistry = useRef<ReturnType<typeof setInterval> | null>(null);
-  const timersRegistryMut = timerRegistry as unknown as { current: ReturnType<typeof setTimeout>[] };
-
-  const timersRegistryGet = useCallback((): NonNullable<ReturnType<typeof setTimeout>[]> => {
-    return timerRegistry.current ?? [];
-  }, []);
-
-  const pushTimer = useCallback((t: ReturnType<typeof setTimeout>) => {
-    timerRegistry.current = timerRegistry.current ?? [];
-    timerRegistry.current.push(t);
-  }, []);
+  const timerRegistry = useRef<NodeJS.Timeout[]>([]);
+  const intervalRegistry = useRef<NodeJS.Timeout | null>(null);
 
   const clearTimers = useCallback(() => {
-    const timers = timersRegistryMut.current;
-    timersRegistryMut.current = [];
-    for (let i = 0; i < timers.length; i++) {
-      clearTimeout(timers[i]);
-    }
+    timerRegistry.current.forEach(clearTimeout);
+    timerRegistry.current = [];
     if (intervalRegistry.current) {
       clearInterval(intervalRegistry.current);
       intervalRegistry.current = null;
     }
   }, []);
 
-  const timersRegistryPop = useCallback(() => {
-    const timers = timersRegistryMut.current;
-    timersRegistryMut.current = [];
-    return timers;
+  const pushTimer = useCallback((t: NodeJS.Timeout) => {
+    timerRegistry.current.push(t);
   }, []);
+
+  useEffect(() => {
+    return () => clearTimers();
+  }, [clearTimers]);
+
+  useEffect(() => {
+    if (winner) {
+      useCelebrationStore.getState().triggerVictory({
+        gameTitle: 'Ludo Superstars Deluxe',
+        winnerName: winner.name,
+        winnerAvatar: winner.avatar || '👑',
+        coinsAwarded: 200,
+        xpAwarded: 220,
+        reason: `${winner.name} guided all 4 royal tokens into the home sanctuary first!`,
+      });
+    }
+  }, [winner]);
 
   const logMessage = useCallback((msg: string) => {
     setGameLog((prev) => [msg, ...prev.slice(0, 15)]);
@@ -181,21 +198,18 @@ export const LudoGame: React.FC = () => {
     setWinner(null);
     setInLobby(false);
     setGameLog([
-      `🎲 Authentic Ludo Match started in room ${room.roomCode}! Red rolls first. Roll a 6 to release from base!`,
+      `🎲 Royal Pachisi Match launched in room ${room.roomCode}! Red rolls first. Roll a 6 to release from base.`,
     ]);
   }, [room, clearTimers, connectVoice, disconnectVoice]);
 
   const curPlayer = players[currentTurnIdx];
 
-  const canMoveToken = useCallback(
-    (token: Token, roll: number): boolean => {
-      if (token.step === 57) return false;
-      if (token.step === -1) return roll === 6;
-      if (token.step + roll > 57) return false;
-      return true;
-    },
-    [],
-  );
+  const canMoveToken = useCallback((token: Token, roll: number): boolean => {
+    if (token.step === 57) return false;
+    if (token.step === -1) return roll === 6;
+    if (token.step + roll > 57) return false;
+    return true;
+  }, []);
 
   const rollDice = useCallback(() => {
     if (isRolling || hasRolled || winner) return;
@@ -241,14 +255,14 @@ export const LudoGame: React.FC = () => {
       } else {
         newStep = token.step + roll;
         soundFx.playCardFlip();
-        logMessage(`${curPlayer.name} advanced a token ${roll} steps.`);
+        logMessage(`${curPlayer.name} advanced a token ${roll} tiles.`);
       }
 
       let reachedHome = false;
       if (newStep === 57) {
         reachedHome = true;
         soundFx.playLadderClimb();
-        logMessage(`🎯 ${curPlayer.name}'s token reached the HOME TRIANGLE!`);
+        logMessage(`🎯 ${curPlayer.name}'s token entered the HOME SANCTUARY!`);
       }
 
       let cutOpponent = false;
@@ -268,7 +282,7 @@ export const LudoGame: React.FC = () => {
                     if (oppGlobalPos === myGlobalPos) {
                       cutOpponent = true;
                       soundFx.playTokenCut();
-                      logMessage(`⚔️ ${curPlayer.name} CUT ${p.name}'s token back to base!`);
+                      logMessage(`⚔️ ${curPlayer.name} captured ${p.name}'s token back to base!`);
                       return { ...oppToken, step: -1 };
                     }
                   }
@@ -298,13 +312,13 @@ export const LudoGame: React.FC = () => {
       const finalHomeCount = curPlayer.tokensHome + (reachedHome ? 1 : 0);
       if (finalHomeCount === 4) {
         setWinner(curPlayer);
-        logMessage(`🏆 ${curPlayer.name} has brought all 4 tokens home and WON!`);
+        logMessage(`🏆 ${curPlayer.name} brought all 4 tokens home and claimed victory!`);
         return;
       }
 
       const extraTurn = roll === 6 || cutOpponent;
       if (extraTurn) {
-        logMessage(`✨ Extra turn for ${curPlayer.name}!`);
+        logMessage(`✨ Bonus turn awarded to ${curPlayer.name}!`);
         setHasRolled(false);
         setDiceVal(null);
       } else {
@@ -329,11 +343,7 @@ export const LudoGame: React.FC = () => {
     rollDice();
   }, [curPlayer, winner, rollDice]);
 
-  const handleDiceFaceClick = useCallback(() => {
-    if (!curPlayer || curPlayer.isBot || winner || isRolling || hasRolled) return;
-    rollDice();
-  }, [curPlayer, winner, isRolling, hasRolled, rollDice]);
-
+  // Bot automation loop
   useEffect(() => {
     if (winner || inLobby || !curPlayer || !curPlayer.isBot) {
       clearTimers();
@@ -343,281 +353,452 @@ export const LudoGame: React.FC = () => {
     if (!hasRolled && !isRolling) {
       const timer = setTimeout(() => {
         rollDice();
-      }, 900);
+      }, 800);
       pushTimer(timer);
       return clearTimers;
     }
 
     if (hasRolled && diceVal !== null && curPlayer) {
       const movableTokens = curPlayer.tokens.filter((t) => canMoveToken(t, diceVal));
-      if (movableTokens.length > 0 && movableTokens.length === 1) {
-        const timer = setTimeout(() => {
-          moveToken(movableTokens[0], diceVal);
-        }, 700);
-        pushTimer(timer);
-        return clearTimers;
-      }
-    }
-  }, [curPlayer, hasRolled, isRolling, diceVal, winner, inLobby, rollDice, moveToken, clearTimers, /** timerRegistryCurrent / popTimers intentionally omitted to avoid stale capture */]);
-
-  useEffect(() => {
-    if (!winner && curPlayer && curPlayer.isBot && !hasRolled && !isRolling && !inLobby) {
-      const timer = setTimeout(() => {
-        rollDice();
-      }, 900);
-      pushTimer(timer);
-      return clearTimers;
-    }
-  }, [curPlayer, hasRolled, isRolling, winner, inLobby, rollDice]);
-
-  useEffect(() => {
-    if (curPlayer && curPlayer.isBot && hasRolled && diceVal !== null && !winner && !inLobby) {
-      const movableTokens = curPlayer.tokens.filter((t) => canMoveToken(t, diceVal));
       if (movableTokens.length > 0) {
         const timer = setTimeout(() => {
           const baseToken = movableTokens.find((t) => t.step === -1);
           const chosen = diceVal === 6 && baseToken ? baseToken : movableTokens[0];
           moveToken(chosen, diceVal);
-        }, 800);
+        }, 700);
+        pushTimer(timer);
+        return clearTimers;
+      } else {
+        const timer = setTimeout(() => {
+          passTurn(false);
+        }, 600);
         pushTimer(timer);
         return clearTimers;
       }
     }
-  }, [hasRolled, diceVal, curPlayer, winner, inLobby, canMoveToken, moveToken]);
-
-  const renderToken = (tok: Token, color: PlayerColor, themed: typeof PLAYER_THEMES[PlayerColor], isHumanTurn: boolean) => {
-    const ownedByCur = curPlayer?.color === color;
-    const isMovable = ownedByCur && hasRolled && diceVal !== null && canMoveToken(tok, diceVal) && isHumanTurn;
-    return (
-      <button
-        key={tok.id}
-        onClick={() => handleTokenClick(tok)}
-        style={{
-          aspectRatio: '1/1',
-          borderRadius: '50%',
-          background: tok.step === 57 ? '#22c55e' : '#fff',
-          border: isMovable ? '3px solid #fbbf24' : `2px solid ${themed.hex}`,
-          color: tok.step === 57 ? '#fff' : themed.hex,
-          fontWeight: 900,
-          fontSize: '11px',
-          cursor: isMovable ? 'pointer' : 'default',
-          transform: isMovable ? 'scale(1.2)' : 'none',
-          animation: isMovable ? 'pulse 1s infinite' : 'none',
-          boxShadow: isMovable ? '0 0 15px #fbbf24' : '0 4px 8px rgba(0,0,0,0.4)',
-        }}
-      >
-        {tok.step === 57 ? '🏁' : tok.step === -1 ? 'BASE' : tok.step}
-      </button>
-    );
-  };
-
-  const yardSection = (idx: number, color: PlayerColor, themed: typeof PLAYER_THEMES[PlayerColor], placement: 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right') => {
-    const p = players[idx];
-    const isMyYard = curPlayer?.color === color;
-    const cornerRadii =
-      placement === 'top-left'
-        ? '20px 0 0 0'
-        : placement === 'top-right'
-        ? '0 20px 0 0'
-        : placement === 'bottom-left'
-        ? '0 0 0 20px'
-        : '0 0 20px 0';
-
-    const tokenGrid = p?.tokens.map((tok) => renderToken(tok, color, themed, curPlayer && !curPlayer.isBot)) ?? [];
-
-    return (
-      <div
-        style={{
-          gridColumn: placement === 'top-left' ? '1 / 7' : placement === 'top-right' ? '10 / 16' : placement === 'bottom-left' ? '1 / 7' : '10 / 16',
-          gridRow: placement === 'top-left' || placement === 'top-right' ? '1 / 7' : '10 / 16',
-          background: themed.gradient,
-          borderRadius: cornerRadii,
-          padding: '16px',
-          display: 'flex',
-          flexDirection: 'column',
-          justifyContent: 'space-between',
-          boxShadow: isMyYard ? '0 0 25px rgba(239, 68, 68, 0.6)' : 'none',
-          border: isMyYard ? '3px solid #fff' : '2px solid rgba(255,255,255,0.2)',
-        }}
-      >
-        <div style={{ display: 'flex', justifyContent: 'space-between', color: '#fff', fontWeight: 900, fontSize: '13px' }}>
-          <span>{color === 'red' ? '🔴' : color === 'green' ? '🟢' : color === 'blue' ? '🔵' : '🟡'} {p?.name || themed.name}</span>
-          <span>Home: {p?.tokensHome ?? 0}/4</span>
-        </div>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '10px', background: 'rgba(0,0,0,0.3)', padding: '12px', borderRadius: '14px' }}>
-          {tokenGrid}
-        </div>
-      </div>
-    );
-  };
+  }, [curPlayer, hasRolled, isRolling, diceVal, winner, inLobby, rollDice, moveToken, passTurn, canMoveToken, clearTimers, pushTimer]);
 
   if (inLobby) {
     return (
       <GameRoomLobby
         gameId="ludo"
-        gameTitle="Ludo Superstars Deluxe"
+        gameTitle="Royal Pachisi Court (Ludo)"
         gameIcon="🎲"
         minPlayers={2}
         maxPlayers={4}
-        bannerGradient={`linear-gradient(135deg, ${DESIGN_SYSTEM.colors.success} 0%, ${DESIGN_SYSTEM.colors.primary} 100%)`}
         onStart={startMatchFromRoom}
       />
     );
   }
 
+  // Token rendering helper
+  const renderInteractiveToken = (tok: Token, isHumanTurn: boolean) => {
+    const ownedByCur = curPlayer?.color === tok.color;
+    const isMovable = ownedByCur && hasRolled && diceVal !== null && canMoveToken(tok, diceVal) && isHumanTurn;
+    const theme = PLAYER_THEMES[tok.color];
+
+    return (
+      <button
+        key={tok.id}
+        onClick={() => handleTokenClick(tok)}
+        style={{
+          width: '26px',
+          height: '26px',
+          borderRadius: '50%',
+          background: theme.gradient,
+          border: isMovable ? '2.5px solid #fbbf24' : '2px solid rgba(255,255,255,0.7)',
+          boxShadow: isMovable
+            ? '0 0 16px #fbbf24, inset 0 1px 2px rgba(255,255,255,0.8)'
+            : '0 4px 8px rgba(0,0,0,0.6)',
+          cursor: isMovable ? 'pointer' : 'default',
+          transform: isMovable ? 'scale(1.18)' : 'none',
+          animation: isMovable ? 'turnRingPulse 1.2s infinite ease-in-out' : 'none',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          color: '#ffffff',
+          fontSize: '11px',
+          fontWeight: 900,
+          padding: 0,
+          zIndex: isMovable ? 10 : 2,
+        }}
+        title={`${theme.name} Token #${tok.id + 1} (${tok.step === -1 ? 'Base' : tok.step === 57 ? 'Home' : `Step ${tok.step}`})`}
+      >
+        {tok.step === 57 ? '★' : tok.id + 1}
+      </button>
+    );
+  };
+
+  // Build lookup of tokens by board cell coordinate
+  const cellTokensMap = new Map<string, Token[]>();
+  players.forEach((p) => {
+    p.tokens.forEach((tok) => {
+      if (tok.step >= 0 && tok.step <= 50) {
+        const globalPos = (PLAYER_THEMES[tok.color].startPos + tok.step) % 52;
+        const [r, c] = GLOBAL_TRACK_COORDS[globalPos];
+        const key = `${r}-${c}`;
+        const arr = cellTokensMap.get(key) || [];
+        arr.push(tok);
+        cellTokensMap.set(key, arr);
+      } else if (tok.step >= 51 && tok.step <= 56) {
+        const stretchIdx = tok.step - 51;
+        const [r, c] = HOME_STRETCH_COORDS[tok.color][stretchIdx];
+        const key = `${r}-${c}`;
+        const arr = cellTokensMap.get(key) || [];
+        arr.push(tok);
+        cellTokensMap.set(key, arr);
+      }
+    });
+  });
+
   const isHumanTurn = curPlayer && !curPlayer.isBot;
 
-  return (
-    <div style={{ maxWidth: '1080px', margin: '0 auto', padding: '16px', display: 'flex', flexDirection: 'column', gap: '20px' }}>
-      <VoiceRoomBar gameTitle="Ludo Superstars Deluxe" turnRestricted={false} />
+  // Yard Section renderer
+  const renderYard = (color: PlayerColor, placement: 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right') => {
+    const p = players.find((pl) => pl.color === color);
+    const theme = PLAYER_THEMES[color];
+    const isMyYard = curPlayer?.color === color;
+    const baseTokens = p?.tokens.filter((t) => t.step === -1) || [];
 
+    const colRange = placement === 'top-left' || placement === 'bottom-left' ? '1 / 7' : '10 / 16';
+    const rowRange = placement === 'top-left' || placement === 'top-right' ? '1 / 7' : '10 / 16';
+
+    return (
       <div
+        style={{
+          gridColumn: colRange,
+          gridRow: rowRange,
+          background: `linear-gradient(135deg, rgba(14, 19, 32, 0.95) 0%, rgba(8, 12, 20, 0.98) 100%)`,
+          border: isMyYard ? `2px solid ${theme.hex}` : '1px solid rgba(255, 255, 255, 0.1)',
+          borderRadius: '20px',
+          padding: '16px',
+          display: 'flex',
+          flexDirection: 'column',
+          justifyContent: 'space-between',
+          boxShadow: isMyYard ? `0 0 25px ${theme.hex}44` : 'inset 0 2px 10px rgba(0, 0, 0, 0.6)',
+          position: 'relative',
+          overflow: 'hidden',
+        }}
+      >
+        {/* Color Accent Bar */}
+        <div
+          style={{
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            right: 0,
+            height: '3px',
+            background: theme.gradient,
+          }}
+        />
+
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+            <span style={{ fontSize: '16px' }}>{theme.badge}</span>
+            <span style={{ fontSize: '13px', fontWeight: 800, color: '#f8fafc' }}>
+              {p?.name || theme.name}
+            </span>
+          </div>
+          <span
+            style={{
+              fontSize: '11px',
+              fontWeight: 800,
+              color: '#fbbf24',
+              fontFamily: 'ui-monospace, monospace',
+            }}
+          >
+            {p?.tokensHome ?? 0}/4 🏆
+          </span>
+        </div>
+
+        {/* 4 Pedestals for Base Tokens */}
+        <div
+          style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(2, 1fr)',
+            gap: '12px',
+            background: 'rgba(0, 0, 0, 0.45)',
+            padding: '14px',
+            borderRadius: '14px',
+            border: '1px solid rgba(255, 255, 255, 0.05)',
+            justifyItems: 'center',
+            alignItems: 'center',
+          }}
+        >
+          {baseTokens.map((tok) => renderInteractiveToken(tok, isHumanTurn))}
+          {Array.from({ length: 4 - baseTokens.length }).map((_, i) => (
+            <div
+              key={`pedestal-${i}`}
+              style={{
+                width: '26px',
+                height: '26px',
+                borderRadius: '50%',
+                border: '1px dashed rgba(255, 255, 255, 0.2)',
+                background: 'rgba(255, 255, 255, 0.02)',
+              }}
+            />
+          ))}
+        </div>
+      </div>
+    );
+  };
+
+  return (
+    <div
+      style={{
+        maxWidth: '1140px',
+        margin: '0 auto',
+        padding: '16px',
+        display: 'flex',
+        flexDirection: 'column',
+        gap: '20px',
+        animation: 'fadeInUp 0.35s cubic-bezier(0.16, 1, 0.3, 1)',
+      }}
+    >
+      <VoiceRoomBar gameTitle="Royal Pachisi Court (Ludo)" turnRestricted={false} />
+
+      {/* Top Header Strip */}
+      <div
+        className="glass-panel"
         style={{
           display: 'flex',
           justifyContent: 'space-between',
           alignItems: 'center',
-          background: 'rgba(255,255,255,0.06)',
-          backdropFilter: 'blur(12px)',
-          padding: '14px 24px',
-          borderRadius: '20px',
-          border: '1px solid rgba(255,255,255,0.12)',
+          padding: '12px 20px',
+          background: 'rgba(12, 17, 28, 0.85)',
+          border: '1px solid rgba(255, 255, 255, 0.08)',
+          borderRadius: '16px',
+          flexWrap: 'wrap',
+          gap: '12px',
         }}
       >
         <button
           onClick={() => setInLobby(true)}
+          className="btn-tactile-secondary"
           style={{
-            background: 'rgba(255,255,255,0.08)',
-            border: '1px solid rgba(255,255,255,0.2)',
-            color: '#cbd5e1',
-            padding: '8px 16px',
-            borderRadius: '10px',
-            cursor: 'pointer',
-            fontWeight: 700,
+            padding: '7px 14px',
             fontSize: '12px',
           }}
         >
-          ⚙️ Room Lobby ({room.roomCode})
+          ⚙️ Salon Lobby ({room.roomCode})
         </button>
 
         <div style={{ textAlign: 'center' }}>
-          <h2 style={{ margin: 0, fontSize: '22px', color: '#f8fafc', display: 'flex', alignItems: 'center', gap: '8px', justifyContent: 'center' }}>
-            <span>🎲</span> Ludo Superstars Deluxe
-          </h2>
-          <span style={{ fontSize: '13px', color: '#94a3b8' }}>
-            Current Turn:{' '}
-            <strong style={{ color: curPlayer ? PLAYER_THEMES[curPlayer.color].hex : '#fff' }}>
-              {curPlayer?.name}
+          <div
+            style={{
+              fontSize: '18px',
+              fontWeight: 900,
+              color: '#ffffff',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '8px',
+            }}
+          >
+            <span>🎲</span>
+            <span>Royal Pachisi Court</span>
+          </div>
+          <div style={{ fontSize: '12px', color: '#94a3b8', marginTop: '2px' }}>
+            Active Crown:{' '}
+            <strong style={{ color: curPlayer ? PLAYER_THEMES[curPlayer.color].hex : '#ffffff' }}>
+              {curPlayer?.name} {curPlayer ? PLAYER_THEMES[curPlayer.color].badge : ''}
             </strong>
-          </span>
+          </div>
         </div>
 
         <button
           onClick={startMatchFromRoom}
+          className="btn-tactile-secondary"
           style={{
-            background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
-            border: 'none',
-            color: '#ffffff',
-            padding: '8px 18px',
-            borderRadius: '10px',
-            cursor: 'pointer',
-            fontWeight: 800,
+            padding: '7px 14px',
             fontSize: '12px',
-            boxShadow: '0 4px 14px rgba(16, 185, 129, 0.4)',
+            color: '#34d399',
+            borderColor: 'rgba(16, 185, 129, 0.3)',
           }}
         >
-          Restart Match
+          🔄 Restart Court
         </button>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '20px', alignItems: 'start' }}>
+      {/* Main Arena Layout */}
+      <div
+        style={{
+          display: 'grid',
+          gridTemplateColumns: 'minmax(0, 1fr) 340px',
+          gap: '20px',
+          alignItems: 'start',
+        }}
+      >
+        {/* 15x15 Royal Pachisi Stone Board */}
         <div
+          className="glass-panel"
           style={{
             aspectRatio: '1/1',
-            background: '#0a0d18',
-            border: '4px solid #243048',
-            borderRadius: '28px',
-            padding: '16px',
+            maxHeight: 'min(760px, calc(100vh - 200px))',
+            margin: '0 auto',
+            width: '100%',
+            background: 'radial-gradient(ellipse at center, #0e1422 0%, #060911 100%)',
+            border: '2px solid rgba(245, 158, 11, 0.3)',
+            borderRadius: '24px',
+            padding: '12px',
             display: 'grid',
             gridTemplateColumns: 'repeat(15, 1fr)',
             gridTemplateRows: 'repeat(15, 1fr)',
-            gap: '2px',
-            boxShadow: '0 30px 80px rgba(0,0,0,0.85), inset 0 0 40px rgba(0,0,0,0.5)',
+            gap: '3px',
+            boxShadow: '0 25px 60px rgba(0, 0, 0, 0.8), inset 0 0 40px rgba(0, 0, 0, 0.7)',
             position: 'relative',
+            boxSizing: 'border-box',
           }}
         >
-          {yardSection(0, 'red', PLAYER_THEMES.red, 'top-left')}
-          {yardSection(1, 'green', PLAYER_THEMES.green, 'top-right')}
-          {yardSection(3, 'blue', PLAYER_THEMES.blue, 'bottom-left')}
-          {yardSection(2, 'yellow', PLAYER_THEMES.yellow, 'bottom-right')}
+          {/* 4 Quadrant Yards */}
+          {renderYard('red', 'top-left')}
+          {renderYard('green', 'top-right')}
+          {renderYard('blue', 'bottom-left')}
+          {renderYard('yellow', 'bottom-right')}
 
+          {/* Central Golden Sanctuary (Rows 7-9, Cols 7-9) */}
           <div
             style={{
               gridColumn: '7 / 10',
               gridRow: '7 / 10',
-              background: 'radial-gradient(circle, #fff 0%, #1e1b4b 100%)',
+              background: 'radial-gradient(circle, rgba(245, 158, 11, 0.25) 0%, rgba(10, 14, 24, 0.95) 100%)',
               border: '2px solid #fbbf24',
+              borderRadius: '16px',
               display: 'flex',
               flexDirection: 'column',
               alignItems: 'center',
               justifyContent: 'center',
-              fontSize: '26px',
-              boxShadow: '0 0 20px rgba(251, 191, 36, 0.5)',
+              boxShadow: '0 0 25px rgba(245, 158, 11, 0.35)',
+              position: 'relative',
+              zIndex: 3,
             }}
           >
-            🏆
+            <span style={{ fontSize: '28px', filter: 'drop-shadow(0 2px 8px rgba(245,158,11,0.6))' }}>🏆</span>
+            <span
+              style={{
+                fontSize: '10px',
+                fontWeight: 900,
+                color: '#fbbf24',
+                letterSpacing: '1px',
+                textTransform: 'uppercase',
+                marginTop: '4px',
+              }}
+            >
+              SANCTUM
+            </span>
           </div>
 
-          <div style={{ gridColumn: '7 / 10', gridRow: '1 / 7', background: 'rgba(16, 185, 129, 0.15)', border: '1px solid rgba(16, 185, 129, 0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#6ee7b7', fontSize: '11px', fontWeight: 800 }}>
-            Green Path ★
-          </div>
-          <div style={{ gridColumn: '10 / 16', gridRow: '7 / 10', background: 'rgba(245, 158, 11, 0.15)', border: '1px solid rgba(245, 158, 11, 0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fcd34d', fontSize: '11px', fontWeight: 800 }}>
-            Yellow Path ★
-          </div>
-          <div style={{ gridColumn: '7 / 10', gridRow: '10 / 16', background: 'rgba(59, 130, 246, 0.15)', border: '1px solid rgba(59, 130, 246, 0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#93c5fd', fontSize: '11px', fontWeight: 800 }}>
-            Blue Path ★
-          </div>
-          <div style={{ gridColumn: '1 / 7', gridRow: '7 / 10', background: 'rgba(239, 68, 68, 0.15)', border: '1px solid rgba(239, 68, 68, 0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fca5a5', fontSize: '11px', fontWeight: 800 }}>
-            Red Path ★
-          </div>
+          {/* Render All Track Cells (Rows 0-14, Cols 0-14) */}
+          {Array.from({ length: 15 }).map((_, r) =>
+            Array.from({ length: 15 }).map((__, c) => {
+              // Skip inside the 4 yards (6x6 corners) and center (3x3)
+              const inTopLeft = r < 6 && c < 6;
+              const inTopRight = r < 6 && c >= 9;
+              const inBottomLeft = r >= 9 && c < 6;
+              const inBottomRight = r >= 9 && c >= 9;
+              const inCenter = r >= 6 && r < 9 && c >= 6 && c < 9;
+
+              if (inTopLeft || inTopRight || inBottomLeft || inBottomRight || inCenter) {
+                return null;
+              }
+
+              // Check if safe position
+              const globalIdx = GLOBAL_TRACK_COORDS.findIndex(([gr, gc]) => gr === r && gc === c);
+              const isSafe = globalIdx !== -1 && SAFE_POSITIONS.has(globalIdx);
+
+              // Check if home stretch
+              const isRedHomeStretch = r === 7 && c >= 1 && c <= 5;
+              const isGreenHomeStretch = c === 7 && r >= 1 && r <= 5;
+              const isYellowHomeStretch = r === 7 && c >= 9 && c <= 13;
+              const isBlueHomeStretch = c === 7 && r >= 9 && r <= 13;
+
+              const cellTokens = cellTokensMap.get(`${r}-${c}`) || [];
+
+              return (
+                <div
+                  key={`cell-${r}-${c}`}
+                  style={{
+                    gridColumn: `${c + 1} / ${c + 2}`,
+                    gridRow: `${r + 1} / ${r + 2}`,
+                    background: isRedHomeStretch
+                      ? 'rgba(239, 68, 68, 0.35)'
+                      : isGreenHomeStretch
+                      ? 'rgba(16, 185, 129, 0.35)'
+                      : isYellowHomeStretch
+                      ? 'rgba(245, 158, 11, 0.35)'
+                      : isBlueHomeStretch
+                      ? 'rgba(59, 130, 246, 0.35)'
+                      : isSafe
+                      ? 'rgba(245, 158, 11, 0.15)'
+                      : 'rgba(255, 255, 255, 0.04)',
+                    border: isSafe
+                      ? '1px solid rgba(245, 158, 11, 0.45)'
+                      : '1px solid rgba(255, 255, 255, 0.06)',
+                    borderRadius: '6px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    position: 'relative',
+                  }}
+                >
+                  {isSafe && cellTokens.length === 0 && (
+                    <span style={{ fontSize: '10px', color: '#fbbf24', opacity: 0.8 }}>★</span>
+                  )}
+                  {cellTokens.map((tok) => renderInteractiveToken(tok, isHumanTurn))}
+                </div>
+              );
+            }),
+          )}
         </div>
 
+        {/* Dice & Tactical Controls Dock */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
           <div
+            className="glass-panel"
             style={{
-              background: 'rgba(30, 24, 55, 0.85)',
-              border: '1px solid rgba(255,255,255,0.12)',
-              borderRadius: '24px',
-              padding: '28px 18px',
+              padding: '24px 20px',
               textAlign: 'center',
               display: 'flex',
               flexDirection: 'column',
               alignItems: 'center',
               gap: '16px',
-              boxShadow: '0 15px 35px rgba(0,0,0,0.6)',
+              background: 'linear-gradient(135deg, rgba(14, 19, 32, 0.85) 0%, rgba(9, 13, 22, 0.95) 100%)',
+              border: '1px solid rgba(255, 255, 255, 0.1)',
             }}
           >
-            <span style={{ fontSize: '13px', color: '#94a3b8', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '1px' }}>
-              SUPERSTAR DICE ARENA
+            <span
+              style={{
+                fontSize: '11px',
+                fontWeight: 800,
+                color: '#94a3b8',
+                letterSpacing: '1px',
+                textTransform: 'uppercase',
+              }}
+            >
+              Ivory Dice Crucible
             </span>
 
+            {/* 3D Dice */}
             <div
-              onClick={handleDiceFaceClick}
+              onClick={handleRollClick}
               style={{
-                width: '92px',
-                height: '92px',
-                borderRadius: '24px',
-                background: curPlayer ? PLAYER_THEMES[curPlayer.color].gradient : '#7c3aed',
+                width: '88px',
+                height: '88px',
+                borderRadius: '20px',
+                background: curPlayer ? PLAYER_THEMES[curPlayer.color].gradient : '#1e293b',
                 border: '3px solid #ffffff',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                fontSize: '46px',
+                fontSize: '44px',
                 fontWeight: 900,
                 color: '#ffffff',
-                boxShadow: `0 15px 30px rgba(0,0,0,0.7), 0 0 25px ${curPlayer ? PLAYER_THEMES[curPlayer.color].hex : '#7c3aed'}66`,
+                boxShadow: `0 12px 28px rgba(0,0,0,0.7), 0 0 25px ${
+                  curPlayer ? PLAYER_THEMES[curPlayer.color].hex : '#7c3aed'
+                }55`,
                 cursor: curPlayer && !curPlayer.isBot && !hasRolled ? 'pointer' : 'default',
-                transform: isRolling ? 'rotate(35deg) scale(0.9)' : 'none',
-                transition: 'all 0.1s ease',
+                transform: isRolling ? 'rotate(35deg) scale(0.92)' : 'none',
+                transition: 'all 0.12s ease',
               }}
             >
               {diceVal || '🎲'}
@@ -627,34 +808,69 @@ export const LudoGame: React.FC = () => {
               <button
                 onClick={handleRollClick}
                 disabled={hasRolled || isRolling}
+                className="btn-primary-glow"
                 style={{
                   width: '100%',
-                  padding: '14px',
-                  borderRadius: '12px',
-                  background: hasRolled ? '#334155' : 'linear-gradient(135deg, #7c3aed 0%, #ec4899 100%)',
-                  border: 'none',
-                  color: '#ffffff',
-                  fontWeight: 900,
-                  fontSize: '15px',
-                  cursor: hasRolled ? 'not-allowed' : 'pointer',
-                  boxShadow: hasRolled ? 'none' : '0 8px 20px rgba(236,72,153,0.4)',
+                  padding: '13px',
+                  fontSize: '14px',
+                  background: hasRolled
+                    ? '#334155'
+                    : 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+                  boxShadow: hasRolled ? 'none' : '0 6px 20px rgba(16, 185, 129, 0.4)',
                 }}
               >
-                {isRolling ? 'Rolling...' : hasRolled ? 'Tap Highlighted Token!' : 'Roll 3D Dice!'}
+                {isRolling ? 'Casting Dice...' : hasRolled ? 'Tap Glowing Token!' : 'Cast Ivory Dice 🎲'}
               </button>
             )}
 
             {winner && (
-              <div style={{ background: '#22c55e22', border: '1px solid #22c55e', padding: '14px', borderRadius: '12px', color: '#4ade80', fontSize: '14px', fontWeight: 900 }}>
-                🏆 {winner.name} Reached Home and WON!
+              <div
+                style={{
+                  background: 'rgba(16, 185, 129, 0.15)',
+                  border: '1px solid #10b981',
+                  padding: '12px 16px',
+                  borderRadius: '12px',
+                  color: '#34d399',
+                  fontSize: '13px',
+                  fontWeight: 900,
+                }}
+              >
+                🏆 {winner.name} Claimed the Royal Crown!
               </div>
             )}
           </div>
 
-          <div style={{ background: 'rgba(0,0,0,0.5)', borderRadius: '20px', padding: '16px', fontSize: '12px', color: '#94a3b8', maxHeight: '180px', overflowY: 'auto' }}>
-            <strong style={{ color: '#38bdf8', display: 'block', marginBottom: '8px' }}>Action Log:</strong>
+          {/* Action Log */}
+          <div
+            className="glass-card"
+            style={{
+              padding: '14px 18px',
+              fontSize: '12px',
+              color: '#94a3b8',
+              maxHeight: '190px',
+              overflowY: 'auto',
+            }}
+          >
+            <strong
+              style={{
+                color: '#fbbf24',
+                display: 'block',
+                marginBottom: '8px',
+                fontSize: '11px',
+                letterSpacing: '0.8px',
+                textTransform: 'uppercase',
+              }}
+            >
+              ⚔️ Court Chronicle:
+            </strong>
             {gameLog.map((log, i) => (
-              <div key={i} style={{ padding: '3px 0', borderBottom: '1px solid rgba(255,255,255,0.03)' }}>
+              <div
+                key={i}
+                style={{
+                  padding: '3px 0',
+                  borderBottom: '1px solid rgba(255,255,255,0.03)',
+                }}
+              >
                 {log}
               </div>
             ))}

@@ -1,13 +1,9 @@
-import React, { useState, useEffect, useRef } from 'react';
-
-type IntervalId = ReturnType<typeof setInterval>;
-import { DESIGN_SYSTEM } from '../designSystem';
+import React, { useState, useEffect } from 'react';
 import { useHubStore } from '../hubStore';
 import { useGameRoomStore } from '../gameRoomStore';
 import { useVoiceStore } from '../voiceStore';
 import { GameRoomLobby } from '../components/GameRoomLobby';
 import { VoiceRoomBar } from '../components/VoiceRoomBar';
-import { soundFx } from '../soundEffects';
 
 interface RoundAnswers {
   name: string;
@@ -54,7 +50,7 @@ export const WordGame: React.FC = () => {
   };
 
   useEffect(() => {
-    let timer: any = null;
+    let timer: NodeJS.Timeout | null = null;
     if (isPlaying && timerSec > 0) {
       timer = setInterval(() => {
         setTimerSec((prev) => prev - 1);
@@ -63,9 +59,7 @@ export const WordGame: React.FC = () => {
       submitRound();
     }
     return () => {
-      if (timer) {
-        clearInterval(timer);
-      }
+      if (timer) clearInterval(timer);
     };
   }, [isPlaying, timerSec]);
 
@@ -120,112 +114,135 @@ export const WordGame: React.FC = () => {
     return (
       <GameRoomLobby
         gameId="wordgame"
-        gameTitle="Name Place Animal Thing"
+        gameTitle="The Scribe's Lexicon (Word Duel)"
         gameIcon="📝"
         minPlayers={2}
         maxPlayers={8}
-        bannerGradient="linear-gradient(135deg, DESIGN_SYSTEM.colors.warningLight 0%, DESIGN_SYSTEM.colors.cautionLight 100%)"
         onStart={startMatchFromRoom}
       />
     );
   }
 
   return (
-    <div style={{ maxWidth: '900px', margin: '0 auto', padding: '16px', display: 'flex', flexDirection: 'column', gap: '20px' }}>
-      {/* Live Voice Room Bar */}
-      <VoiceRoomBar gameTitle="Name Place Animal Thing" turnRestricted={false} />
+    <div
+      style={{
+        maxWidth: '1060px',
+        margin: '0 auto',
+        padding: '16px',
+        display: 'flex',
+        flexDirection: 'column',
+        gap: '20px',
+        animation: 'fadeInUp 0.35s cubic-bezier(0.16, 1, 0.3, 1)',
+      }}
+    >
+      <VoiceRoomBar gameTitle="The Scribe's Lexicon (Word Duel)" turnRestricted={false} />
 
-      {/* Top Header */}
+      {/* Top Header Strip */}
       <div
+        className="glass-panel"
         style={{
           display: 'flex',
           justifyContent: 'space-between',
           alignItems: 'center',
-          background: 'rgba(255,255,255,0.06)',
-          backdropFilter: 'blur(10px)',
           padding: '12px 20px',
+          background: 'rgba(12, 17, 28, 0.85)',
+          border: '1px solid rgba(255, 255, 255, 0.08)',
           borderRadius: '16px',
-          border: '1px solid rgba(255,255,255,0.1)',
+          flexWrap: 'wrap',
+          gap: '12px',
         }}
       >
         <button
           onClick={() => setInLobby(true)}
+          className="btn-tactile-secondary"
           style={{
-            background: 'rgba(255,255,255,0.08)',
-            border: '1px solid rgba(255,255,255,0.2)',
-            color: '#cbd5e1',
-            padding: '6px 14px',
-            borderRadius: '8px',
-            cursor: 'pointer',
-            fontWeight: 700,
+            padding: '7px 14px',
             fontSize: '12px',
           }}
         >
-          ⚙️ Room Lobby ({room.roomCode})
+          ⚙️ Salon Lobby ({room.roomCode})
         </button>
 
         <div style={{ textAlign: 'center' }}>
-          <h2 style={{ margin: 0, fontSize: '20px', color: '#f8fafc', display: 'flex', alignItems: 'center', gap: '8px', justifyContent: 'center' }}>
-            <span>📝</span> Name Place Animal Thing
-          </h2>
-          <span style={{ fontSize: '12px', color: '#94a3b8' }}>
-            Total Score: You <strong style={{ color: '#4ade80' }}>{totalScore.player}</strong> - Opponents <strong style={{ color: '#f43f5e' }}>{totalScore.opponent}</strong>
-          </span>
+          <div
+            style={{
+              fontSize: '18px',
+              fontWeight: 900,
+              color: '#ffffff',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '8px',
+            }}
+          >
+            <span>📝</span>
+            <span>The Scribe's Lexicon Duel</span>
+          </div>
+          <div style={{ fontSize: '12px', color: '#94a3b8', marginTop: '2px' }}>
+            Score: You <strong style={{ color: '#34d399' }}>{totalScore.player} pts</strong> — Associates{' '}
+            <strong style={{ color: '#fb7185' }}>{totalScore.opponent} pts</strong>
+          </div>
         </div>
 
         <button
           onClick={startRound}
+          className="btn-tactile-secondary"
           style={{
-            background: 'linear-gradient(135deg, #eab308 0%, #ca8a04 100%)',
-            border: 'none',
-            color: '#1e293b',
-            padding: '8px 16px',
-            borderRadius: '8px',
-            cursor: 'pointer',
-            fontWeight: 900,
+            padding: '7px 14px',
             fontSize: '12px',
-            boxShadow: '0 4px 12px rgba(234, 179, 8, 0.4)',
+            color: '#fbbf24',
+            borderColor: 'rgba(245, 158, 11, 0.3)',
           }}
         >
-          {isPlaying ? 'Restart Letter' : 'Next Letter 🔤'}
+          {isPlaying ? '🔄 Reshuffle Letter' : '🔤 Next Letter'}
         </button>
       </div>
 
       {/* Main Arena */}
       <div
+        className="glass-panel"
         style={{
-          background: 'rgba(30, 24, 55, 0.85)',
-          border: '1px solid rgba(255,255,255,0.12)',
-          borderRadius: '24px',
           padding: '28px',
           display: 'flex',
           flexDirection: 'column',
           gap: '24px',
-          boxShadow: '0 25px 60px rgba(0,0,0,0.8)',
+          background: 'linear-gradient(135deg, rgba(14, 19, 32, 0.9) 0%, rgba(8, 12, 20, 0.98) 100%)',
+          borderRadius: '24px',
+          border: '1px solid rgba(255, 255, 255, 0.1)',
         }}
       >
+        {/* Active Letter Medallion & Clock */}
         <div
           style={{
             display: 'flex',
             justifyContent: 'space-around',
             alignItems: 'center',
-            background: 'rgba(255,255,255,0.04)',
+            background: 'rgba(0, 0, 0, 0.4)',
             padding: '24px',
             borderRadius: '20px',
-            border: '1px solid rgba(255,255,255,0.08)',
+            border: '1px solid rgba(255, 255, 255, 0.08)',
           }}
         >
           <div style={{ textAlign: 'center' }}>
-            <span style={{ fontSize: '12px', color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '1px', fontWeight: 700 }}>
-              ACTIVE LETTER
+            <span
+              style={{
+                fontSize: '11px',
+                color: '#fbbf24',
+                textTransform: 'uppercase',
+                letterSpacing: '1px',
+                fontWeight: 800,
+              }}
+            >
+              Active Sovereign Letter
             </span>
             <div
               style={{
-                fontSize: '64px',
+                fontSize: '68px',
                 fontWeight: 900,
-                color: '#f59e0b',
-                textShadow: '0 0 25px rgba(245, 158, 11, 0.6)',
-                animation: 'pulse 2s infinite',
+                color: '#fbbf24',
+                textShadow: '0 0 30px rgba(245, 158, 11, 0.5)',
+                fontFamily: 'Outfit, system-ui, sans-serif',
+                lineHeight: 1.1,
               }}
             >
               {activeLetter}
@@ -233,8 +250,16 @@ export const WordGame: React.FC = () => {
           </div>
 
           <div style={{ textAlign: 'center' }}>
-            <span style={{ fontSize: '12px', color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '1px', fontWeight: 700 }}>
-              COUNTDOWN
+            <span
+              style={{
+                fontSize: '11px',
+                color: '#94a3b8',
+                textTransform: 'uppercase',
+                letterSpacing: '1px',
+                fontWeight: 800,
+              }}
+            >
+              Remaining Clock
             </span>
             <div
               style={{
@@ -242,6 +267,8 @@ export const WordGame: React.FC = () => {
                 fontWeight: 900,
                 color: timerSec <= 10 ? '#ef4444' : '#38bdf8',
                 textShadow: timerSec <= 10 ? '0 0 20px rgba(239, 68, 68, 0.6)' : 'none',
+                fontFamily: 'ui-monospace, monospace',
+                lineHeight: 1.1,
               }}
             >
               {timerSec}s
@@ -249,119 +276,177 @@ export const WordGame: React.FC = () => {
           </div>
         </div>
 
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '16px' }}>
+        {/* 4 Lexicon Category Inputs */}
+        <div
+          style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(210px, 1fr))',
+            gap: '16px',
+          }}
+        >
           <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-            <label style={{ fontSize: '13px', fontWeight: 800, color: '#c084fc' }}>👤 Name starting with '{activeLetter}':</label>
+            <label style={{ fontSize: '13px', fontWeight: 800, color: '#38bdf8' }}>
+              👤 Name starting with '{activeLetter}':
+            </label>
             <input
               type="text"
               value={answers.name}
               disabled={!isPlaying}
               onChange={(e: React.ChangeEvent<HTMLInputElement>) => setAnswers({ ...answers, name: e.target.value })}
               placeholder={`e.g. ${activeLetter}ob`}
-              style={{ padding: '14px', borderRadius: '10px', border: '1px solid #475569', background: '#0f172a', color: '#fff', fontSize: '15px', outline: 'none' }}
+              style={{
+                padding: '14px',
+                borderRadius: '10px',
+                border: '1px solid rgba(255, 255, 255, 0.12)',
+                background: '#090d16',
+                color: '#ffffff',
+                fontSize: '15px',
+                outline: 'none',
+              }}
             />
           </div>
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-            <label style={{ fontSize: '13px', fontWeight: 800, color: '#38bdf8' }}>🌍 Place starting with '{activeLetter}':</label>
+            <label style={{ fontSize: '13px', fontWeight: 800, color: '#fbbf24' }}>
+              🌍 Place starting with '{activeLetter}':
+            </label>
             <input
               type="text"
               value={answers.place}
               disabled={!isPlaying}
               onChange={(e: React.ChangeEvent<HTMLInputElement>) => setAnswers({ ...answers, place: e.target.value })}
               placeholder={`e.g. ${activeLetter}erlin`}
-              style={{ padding: '14px', borderRadius: '10px', border: '1px solid #475569', background: '#0f172a', color: '#fff', fontSize: '15px', outline: 'none' }}
+              style={{
+                padding: '14px',
+                borderRadius: '10px',
+                border: '1px solid rgba(255, 255, 255, 0.12)',
+                background: '#090d16',
+                color: '#ffffff',
+                fontSize: '15px',
+                outline: 'none',
+              }}
             />
           </div>
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-            <label style={{ fontSize: '13px', fontWeight: 800, color: '#4ade80' }}>🦁 Animal starting with '{activeLetter}':</label>
+            <label style={{ fontSize: '13px', fontWeight: 800, color: '#34d399' }}>
+              🦁 Animal starting with '{activeLetter}':
+            </label>
             <input
               type="text"
               value={answers.animal}
               disabled={!isPlaying}
               onChange={(e: React.ChangeEvent<HTMLInputElement>) => setAnswers({ ...answers, animal: e.target.value })}
               placeholder={`e.g. ${activeLetter}ear`}
-              style={{ padding: '14px', borderRadius: '10px', border: '1px solid #475569', background: '#0f172a', color: '#fff', fontSize: '15px', outline: 'none' }}
+              style={{
+                padding: '14px',
+                borderRadius: '10px',
+                border: '1px solid rgba(255, 255, 255, 0.12)',
+                background: '#090d16',
+                color: '#ffffff',
+                fontSize: '15px',
+                outline: 'none',
+              }}
             />
           </div>
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-            <label style={{ fontSize: '13px', fontWeight: 800, color: '#f43f5e' }}>📦 Thing starting with '{activeLetter}':</label>
+            <label style={{ fontSize: '13px', fontWeight: 800, color: '#f43f5e' }}>
+              📦 Thing starting with '{activeLetter}':
+            </label>
             <input
               type="text"
               value={answers.thing}
               disabled={!isPlaying}
               onChange={(e: React.ChangeEvent<HTMLInputElement>) => setAnswers({ ...answers, thing: e.target.value })}
               placeholder={`e.g. ${activeLetter}ook`}
-              style={{ padding: '14px', borderRadius: '10px', border: '1px solid #475569', background: '#0f172a', color: '#fff', fontSize: '15px', outline: 'none' }}
+              style={{
+                padding: '14px',
+                borderRadius: '10px',
+                border: '1px solid rgba(255, 255, 255, 0.12)',
+                background: '#090d16',
+                color: '#ffffff',
+                fontSize: '15px',
+                outline: 'none',
+              }}
             />
           </div>
         </div>
 
+        {/* Primary Action Button */}
         {isPlaying ? (
           <button
             onClick={submitRound}
+            className="btn-primary-glow"
             style={{
               padding: '16px',
-              borderRadius: '12px',
+              fontSize: '15px',
               background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
-              border: 'none',
-              color: '#fff',
-              fontSize: '16px',
-              fontWeight: 900,
-              cursor: 'pointer',
-              boxShadow: '0 8px 25px rgba(16, 185, 129, 0.4)',
+              boxShadow: '0 8px 24px rgba(16, 185, 129, 0.4)',
             }}
           >
-            STOP! Submit Answers ⏱️
+            STOP! Declare Lexicon Submission ⏱️
           </button>
         ) : (
           <button
             onClick={startRound}
+            className="btn-primary-glow"
             style={{
               padding: '16px',
-              borderRadius: '12px',
-              background: 'linear-gradient(135deg, #7c3aed 0%, #4f46e5 100%)',
-              border: 'none',
-              color: '#fff',
-              fontSize: '16px',
-              fontWeight: 900,
-              cursor: 'pointer',
+              fontSize: '15px',
+              background: 'linear-gradient(135deg, #38bdf8 0%, #0284c7 100%)',
             }}
           >
-            Play Next Round with Letter '{activeLetter}' →
+            Initiate Next Round with Letter '{activeLetter}' →
           </button>
         )}
 
+        {/* Round Scoring Comparison Grid */}
         {roundScore && botAnswers && (
-          <div style={{ background: 'rgba(0,0,0,0.4)', borderRadius: '16px', padding: '18px', display: 'flex', flexDirection: 'column', gap: '14px' }}>
+          <div
+            className="glass-card"
+            style={{
+              padding: '20px',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '14px',
+              background: 'rgba(0, 0, 0, 0.4)',
+            }}
+          >
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <strong style={{ fontSize: '16px', color: '#c084fc' }}>Round Results</strong>
-              <span style={{ fontSize: '14px', color: '#4ade80', fontWeight: 700 }}>
+              <strong style={{ fontSize: '15px', color: '#fbbf24' }}>Lexicon Assessment</strong>
+              <span style={{ fontSize: '13.5px', color: '#34d399', fontWeight: 800 }}>
                 You earned +{roundScore.player} pts | Opponents earned +{roundScore.opponent} pts
               </span>
             </div>
 
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '12px', textAlign: 'center', fontSize: '13px' }}>
-              <div style={{ background: 'rgba(255,255,255,0.04)', padding: '10px', borderRadius: '10px' }}>
-                <span style={{ color: '#94a3b8' }}>Name</span>
-                <div style={{ fontWeight: 800, color: '#fff', marginTop: '2px' }}>{answers.name || '—'}</div>
+            <div
+              style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(4, 1fr)',
+                gap: '12px',
+                textAlign: 'center',
+                fontSize: '13px',
+              }}
+            >
+              <div style={{ background: 'rgba(255,255,255,0.03)', padding: '10px', borderRadius: '10px' }}>
+                <span style={{ color: '#8492a6', fontSize: '11px', textTransform: 'uppercase' }}>Name</span>
+                <div style={{ fontWeight: 800, color: '#ffffff', marginTop: '2px' }}>{answers.name || '—'}</div>
                 <div style={{ fontSize: '11px', color: '#64748b' }}>Opponent: {botAnswers.name}</div>
               </div>
-              <div style={{ background: 'rgba(255,255,255,0.04)', padding: '10px', borderRadius: '10px' }}>
-                <span style={{ color: '#94a3b8' }}>Place</span>
-                <div style={{ fontWeight: 800, color: '#fff', marginTop: '2px' }}>{answers.place || '—'}</div>
+              <div style={{ background: 'rgba(255,255,255,0.03)', padding: '10px', borderRadius: '10px' }}>
+                <span style={{ color: '#8492a6', fontSize: '11px', textTransform: 'uppercase' }}>Place</span>
+                <div style={{ fontWeight: 800, color: '#ffffff', marginTop: '2px' }}>{answers.place || '—'}</div>
                 <div style={{ fontSize: '11px', color: '#64748b' }}>Opponent: {botAnswers.place}</div>
               </div>
-              <div style={{ background: 'rgba(255,255,255,0.04)', padding: '10px', borderRadius: '10px' }}>
-                <span style={{ color: '#94a3b8' }}>Animal</span>
-                <div style={{ fontWeight: 800, color: '#fff', marginTop: '2px' }}>{answers.animal || '—'}</div>
+              <div style={{ background: 'rgba(255,255,255,0.03)', padding: '10px', borderRadius: '10px' }}>
+                <span style={{ color: '#8492a6', fontSize: '11px', textTransform: 'uppercase' }}>Animal</span>
+                <div style={{ fontWeight: 800, color: '#ffffff', marginTop: '2px' }}>{answers.animal || '—'}</div>
                 <div style={{ fontSize: '11px', color: '#64748b' }}>Opponent: {botAnswers.animal}</div>
               </div>
-              <div style={{ background: 'rgba(255,255,255,0.04)', padding: '10px', borderRadius: '10px' }}>
-                <span style={{ color: '#94a3b8' }}>Thing</span>
-                <div style={{ fontWeight: 800, color: '#fff', marginTop: '2px' }}>{answers.thing || '—'}</div>
+              <div style={{ background: 'rgba(255,255,255,0.03)', padding: '10px', borderRadius: '10px' }}>
+                <span style={{ color: '#8492a6', fontSize: '11px', textTransform: 'uppercase' }}>Thing</span>
+                <div style={{ fontWeight: 800, color: '#ffffff', marginTop: '2px' }}>{answers.thing || '—'}</div>
                 <div style={{ fontSize: '11px', color: '#64748b' }}>Opponent: {botAnswers.thing}</div>
               </div>
             </div>

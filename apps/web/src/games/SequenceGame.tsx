@@ -1,11 +1,10 @@
-import React, { useState, useEffect } from 'react';
-import { DESIGN_SYSTEM } from '../designSystem';
+import React, { useState } from 'react';
 import { useHubStore } from '../hubStore';
 import { useGameRoomStore } from '../gameRoomStore';
 import { useVoiceStore } from '../voiceStore';
 import { GameRoomLobby } from '../components/GameRoomLobby';
 import { VoiceRoomBar } from '../components/VoiceRoomBar';
-import { soundFx } from '../soundEffects';
+import { useCelebrationStore } from '../celebrationStore';
 
 type Chip = 'blue' | 'green' | null;
 
@@ -61,7 +60,7 @@ export const SequenceGame: React.FC = () => {
   const [selectedCardIdx, setSelectedCardIdx] = useState<number | null>(0);
   const [currentTurn, setCurrentTurn] = useState<'blue' | 'green'>('blue');
   const [winner, setWinner] = useState<'blue' | 'green' | null>(null);
-  const [log, setLog] = useState<string[]>(['Match started! Select a card and click the matching board square.']);
+  const [log, setLog] = useState<string[]>(['Grandmaster Sequence match initialized! Connect 5 chips in a row.']);
 
   const addLog = (msg: string) => {
     setLog((prev) => [msg, ...prev.slice(0, 10)]);
@@ -76,7 +75,7 @@ export const SequenceGame: React.FC = () => {
     setCurrentTurn('blue');
     setWinner(null);
     setInLobby(false);
-    setLog([`Sequence match launched in room ${room.roomCode}! Connect 5 chips in a row.`]);
+    setLog([`Sequence match launched in room ${room.roomCode}! Align 5 chips horizontally, vertically, or diagonally.`]);
   };
 
   const handleCellClick = (r: number, c: number) => {
@@ -95,7 +94,7 @@ export const SequenceGame: React.FC = () => {
     }
 
     if (cell.chip !== null) {
-      addLog(`This square is already occupied by a ${cell.chip.toUpperCase()} chip!`);
+      addLog(`This square is already claimed by a ${cell.chip.toUpperCase()} chip!`);
       return;
     }
 
@@ -118,7 +117,7 @@ export const SequenceGame: React.FC = () => {
     if (room.allowBots || room.players.length === 1) {
       setTimeout(() => {
         botPlayTurn();
-      }, 1000);
+      }, 900);
     }
   };
 
@@ -131,6 +130,14 @@ export const SequenceGame: React.FC = () => {
 
     if (checkSequenceWin(newBoard, color)) {
       setWinner(color);
+      useCelebrationStore.getState().triggerVictory({
+        gameTitle: 'Sequence Masters Deluxe',
+        winnerName: color === 'blue' ? 'You (Blue)' : 'Opponent (Green)',
+        winnerAvatar: color === 'blue' ? '👑' : '🤖',
+        coinsAwarded: 180,
+        xpAwarded: 200,
+        reason: `${color === 'blue' ? 'You' : 'Opponent'} aligned 5 consecutive chips in a winning Sequence!`,
+      });
       addLog(`🏆 ${color === 'blue' ? 'YOU WON' : 'OPPONENT WON'} with a 5-in-a-row Sequence!`);
     }
   };
@@ -163,25 +170,21 @@ export const SequenceGame: React.FC = () => {
         if ([0, 1, 2, 3, 4].every((i) => isChipValid(r, c + i))) return true;
       }
     }
-
     for (let c = 0; c < 10; c++) {
       for (let r = 0; r <= 5; r++) {
         if ([0, 1, 2, 3, 4].every((i) => isChipValid(r + i, c))) return true;
       }
     }
-
     for (let r = 0; r <= 5; r++) {
       for (let c = 0; c <= 5; c++) {
         if ([0, 1, 2, 3, 4].every((i) => isChipValid(r + i, c + i))) return true;
       }
     }
-
     for (let r = 4; r < 10; r++) {
       for (let c = 0; c <= 5; c++) {
         if ([0, 1, 2, 3, 4].every((i) => isChipValid(r - i, c + i))) return true;
       }
     }
-
     return false;
   };
 
@@ -189,92 +192,113 @@ export const SequenceGame: React.FC = () => {
     return (
       <GameRoomLobby
         gameId="sequence"
-        gameTitle="Series Five Masters"
+        gameTitle="The Grandmaster's Sequence"
         gameIcon="🎯"
         minPlayers={2}
         maxPlayers={6}
-        bannerGradient="linear-gradient(135deg, #3b82f6 0%, #6366f1 100%)"
         onStart={startMatchFromRoom}
       />
     );
   }
 
   return (
-    <div style={{ maxWidth: '1060px', margin: '0 auto', padding: '16px', display: 'flex', flexDirection: 'column', gap: '20px' }}>
-      {/* Live Voice Room Bar */}
-      <VoiceRoomBar gameTitle="Series Five Masters" turnRestricted={false} />
+    <div
+      style={{
+        maxWidth: '1120px',
+        margin: '0 auto',
+        padding: '16px',
+        display: 'flex',
+        flexDirection: 'column',
+        gap: '20px',
+        animation: 'fadeInUp 0.35s cubic-bezier(0.16, 1, 0.3, 1)',
+      }}
+    >
+      <VoiceRoomBar gameTitle="The Grandmaster's Sequence" turnRestricted={false} />
 
-      {/* Header */}
+      {/* Top Header Strip */}
       <div
+        className="glass-panel"
         style={{
           display: 'flex',
           justifyContent: 'space-between',
           alignItems: 'center',
-          background: 'rgba(255,255,255,0.06)',
-          backdropFilter: 'blur(12px)',
-          padding: '14px 24px',
-          borderRadius: '20px',
-          border: '1px solid rgba(255,255,255,0.12)',
+          padding: '12px 20px',
+          background: 'rgba(12, 17, 28, 0.85)',
+          border: '1px solid rgba(255, 255, 255, 0.08)',
+          borderRadius: '16px',
+          flexWrap: 'wrap',
+          gap: '12px',
         }}
       >
         <button
           onClick={() => setInLobby(true)}
+          className="btn-tactile-secondary"
           style={{
-            background: 'rgba(255,255,255,0.08)',
-            border: '1px solid rgba(255,255,255,0.2)',
-            color: '#cbd5e1',
-            padding: '8px 16px',
-            borderRadius: '10px',
-            cursor: 'pointer',
-            fontWeight: 800,
+            padding: '7px 14px',
             fontSize: '12px',
           }}
         >
-          ⚙️ Room Lobby ({room.roomCode})
+          ⚙️ Salon Lobby ({room.roomCode})
         </button>
 
         <div style={{ textAlign: 'center' }}>
-          <h2 style={{ margin: 0, fontSize: '22px', color: '#f8fafc', display: 'flex', alignItems: 'center', gap: '8px', justifyContent: 'center' }}>
-            <span>🎯</span> Sequence Masters Deluxe
-          </h2>
-          <span style={{ fontSize: '13px', color: '#94a3b8' }}>
+          <div
+            style={{
+              fontSize: '18px',
+              fontWeight: 900,
+              color: '#ffffff',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '8px',
+            }}
+          >
+            <span>🎯</span>
+            <span>The Grandmaster's Sequence</span>
+          </div>
+          <div style={{ fontSize: '12px', color: '#94a3b8', marginTop: '2px' }}>
             Turn:{' '}
-            <strong style={{ color: currentTurn === 'blue' ? '#3b82f6' : '#10b981' }}>
-              {currentTurn === 'blue' ? 'Your Turn (Blue Chips)' : 'Opponent Turn (Green Chips)'}
+            <strong style={{ color: currentTurn === 'blue' ? '#38bdf8' : '#34d399' }}>
+              {currentTurn === 'blue' ? 'Your Move (Cobalt Chips)' : 'Opponent Move (Emerald Chips)'}
             </strong>
-          </span>
+          </div>
         </div>
 
         <button
           onClick={startMatchFromRoom}
+          className="btn-tactile-secondary"
           style={{
-            background: 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)',
-            border: 'none',
-            color: '#ffffff',
-            padding: '8px 18px',
-            borderRadius: '10px',
-            cursor: 'pointer',
-            fontWeight: 800,
+            padding: '7px 14px',
             fontSize: '12px',
-            boxShadow: '0 4px 14px rgba(59, 130, 246, 0.4)',
+            color: '#38bdf8',
+            borderColor: 'rgba(56, 189, 248, 0.3)',
           }}
         >
-          Restart Match
+          🔄 Restart Board
         </button>
       </div>
 
       {/* Main Grid & Controls */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'minmax(340px, 1fr) 280px', gap: '24px', alignItems: 'start' }}>
+      <div
+        style={{
+          display: 'grid',
+          gridTemplateColumns: 'minmax(340px, 1fr) 300px',
+          gap: '20px',
+          alignItems: 'start',
+        }}
+      >
+        {/* 10x10 Card Mosaic Board */}
         <div
+          className="glass-panel"
           style={{
             display: 'grid',
             gridTemplateColumns: 'repeat(10, 1fr)',
             gap: '3px',
-            background: '#090d16',
+            background: 'radial-gradient(ellipse at center, #0e1628 0%, #060912 100%)',
             padding: '12px',
             borderRadius: '24px',
-            border: '2px solid rgba(255,255,255,0.12)',
-            boxShadow: '0 30px 80px rgba(0,0,0,0.85)',
+            border: '2px solid rgba(255, 255, 255, 0.1)',
+            boxShadow: '0 25px 60px rgba(0, 0, 0, 0.85)',
           }}
         >
           {board.map((row, r) =>
@@ -288,7 +312,9 @@ export const SequenceGame: React.FC = () => {
                   onClick={() => handleCellClick(r, c)}
                   style={{
                     aspectRatio: '1/1',
-                    background: isCorner ? '#312e81' : '#1e293b',
+                    background: isCorner
+                      ? 'radial-gradient(circle, #312e81 0%, #1e1b4b 100%)'
+                      : 'rgba(255, 255, 255, 0.03)',
                     borderRadius: '6px',
                     display: 'flex',
                     flexDirection: 'column',
@@ -296,13 +322,14 @@ export const SequenceGame: React.FC = () => {
                     justifyContent: 'center',
                     cursor: cell.chip ? 'default' : 'pointer',
                     position: 'relative',
-                    border: '1px solid rgba(255,255,255,0.06)',
-                    transform: 'translateZ(0)',
+                    border: isCorner
+                      ? '1px solid #fbbf24'
+                      : '1px solid rgba(255, 255, 255, 0.05)',
                     transition: 'all 0.15s ease',
                   }}
                 >
                   {isCorner ? (
-                    <span style={{ fontSize: '16px', color: '#eab308' }}>★</span>
+                    <span style={{ fontSize: '15px', color: '#fbbf24' }}>★</span>
                   ) : (
                     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', lineHeight: 1 }}>
                       <span style={{ fontSize: '10px', fontWeight: 900, color: '#f8fafc' }}>{cell.rank}</span>
@@ -310,32 +337,53 @@ export const SequenceGame: React.FC = () => {
                     </div>
                   )}
 
+                  {/* 3D Casino Chip */}
                   {cell.chip && (
                     <div
                       style={{
                         position: 'absolute',
-                        width: '22px',
-                        height: '22px',
+                        width: '24px',
+                        height: '24px',
                         borderRadius: '50%',
-                        background: cell.chip === 'blue' ? 'linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%)' : 'linear-gradient(135deg, #10b981 0%, #047857 100%)',
+                        background:
+                          cell.chip === 'blue'
+                            ? 'radial-gradient(circle at 35% 35%, #60a5fa 0%, #1d4ed8 70%, #0c1c4f 100%)'
+                            : 'radial-gradient(circle at 35% 35%, #34d399 0%, #059669 70%, #042f2c 100%)',
                         border: '2px solid #ffffff',
-                        boxShadow: `0 0 12px ${cell.chip === 'blue' ? '#3b82f6' : '#10b981'}`,
-                        animation: 'bounce 0.4s ease',
+                        boxShadow: `0 0 14px ${cell.chip === 'blue' ? '#38bdf8' : '#34d399'}, 0 4px 8px rgba(0,0,0,0.7)`,
+                        animation: 'bouncePeg 0.4s ease',
                       }}
                     />
                   )}
                 </div>
               );
-            })
+            }),
           )}
         </div>
 
         {/* Player Hand & Controls */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-          <div style={{ background: 'rgba(30, 24, 55, 0.85)', border: '1px solid rgba(255,255,255,0.12)', borderRadius: '20px', padding: '18px' }}>
-            <span style={{ fontSize: '13px', fontWeight: 900, color: '#c084fc', display: 'block', marginBottom: '12px' }}>
-              YOUR CARDS (Click to Select)
+          <div
+            className="glass-panel"
+            style={{
+              padding: '18px',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '12px',
+            }}
+          >
+            <span
+              style={{
+                fontSize: '11px',
+                fontWeight: 800,
+                color: '#fbbf24',
+                letterSpacing: '1px',
+                textTransform: 'uppercase',
+              }}
+            >
+              Your Playing Hand (Select One)
             </span>
+
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '10px' }}>
               {hand.map((card, idx) => {
                 const isSelected = selectedCardIdx === idx;
@@ -345,20 +393,24 @@ export const SequenceGame: React.FC = () => {
                     key={card.id}
                     onClick={() => setSelectedCardIdx(idx)}
                     style={{
-                      background: isSelected ? 'linear-gradient(135deg, #4338ca 0%, #312e81 100%)' : '#1e1b4b',
-                      border: isSelected ? '2px solid #a5b4fc' : '1px solid rgba(255,255,255,0.15)',
+                      background: isSelected
+                        ? 'linear-gradient(135deg, rgba(56, 189, 248, 0.25) 0%, rgba(30, 58, 138, 0.4) 100%)'
+                        : 'rgba(255, 255, 255, 0.04)',
+                      border: isSelected
+                        ? '2px solid #38bdf8'
+                        : '1px solid rgba(255, 255, 255, 0.1)',
                       borderRadius: '12px',
                       padding: '14px 6px',
                       display: 'flex',
                       flexDirection: 'column',
                       alignItems: 'center',
                       cursor: 'pointer',
-                      transform: isSelected ? 'scale(1.08)' : 'none',
+                      transform: isSelected ? 'scale(1.06) translateY(-4px)' : 'none',
                       transition: 'all 0.15s ease',
-                      boxShadow: isSelected ? '0 10px 20px rgba(99, 102, 241, 0.5)' : 'none',
+                      boxShadow: isSelected ? '0 10px 24px rgba(56, 189, 248, 0.35)' : 'none',
                     }}
                   >
-                    <span style={{ fontSize: '14px', fontWeight: 900, color: '#fff' }}>{card.rank}</span>
+                    <span style={{ fontSize: '14px', fontWeight: 900, color: '#ffffff' }}>{card.rank}</span>
                     <span style={{ fontSize: '20px', color: isRed ? '#ef4444' : '#cbd5e1' }}>{card.suit}</span>
                   </button>
                 );
@@ -367,15 +419,53 @@ export const SequenceGame: React.FC = () => {
           </div>
 
           {winner && (
-            <div style={{ background: '#22c55e22', border: '1px solid #22c55e', padding: '16px', borderRadius: '14px', color: '#4ade80', textAlign: 'center', fontWeight: 900 }}>
-              🏆 {winner === 'blue' ? 'YOU WON!' : 'OPPONENT WON!'} 5-in-a-row Sequence!
+            <div
+              style={{
+                background: 'rgba(16, 185, 129, 0.15)',
+                border: '1.5px solid #10b981',
+                padding: '16px',
+                borderRadius: '14px',
+                color: '#34d399',
+                textAlign: 'center',
+                fontWeight: 900,
+                fontSize: '14px',
+              }}
+            >
+              🏆 {winner === 'blue' ? 'YOU WON!' : 'OPPONENT WON!'} 5-in-a-Row Sequence!
             </div>
           )}
 
-          <div style={{ background: 'rgba(0,0,0,0.5)', borderRadius: '20px', padding: '16px', fontSize: '12px', color: '#94a3b8', maxHeight: '180px', overflowY: 'auto' }}>
-            <strong style={{ color: '#38bdf8', display: 'block', marginBottom: '8px' }}>Action Log:</strong>
+          {/* Action Log */}
+          <div
+            className="glass-card"
+            style={{
+              padding: '14px 18px',
+              fontSize: '12px',
+              color: '#94a3b8',
+              maxHeight: '200px',
+              overflowY: 'auto',
+            }}
+          >
+            <strong
+              style={{
+                color: '#38bdf8',
+                display: 'block',
+                marginBottom: '8px',
+                fontSize: '11px',
+                letterSpacing: '0.8px',
+                textTransform: 'uppercase',
+              }}
+            >
+              📜 Table Chronicle:
+            </strong>
             {log.map((item, i) => (
-              <div key={i} style={{ padding: '3px 0', borderBottom: '1px solid rgba(255,255,255,0.03)' }}>
+              <div
+                key={i}
+                style={{
+                  padding: '3px 0',
+                  borderBottom: '1px solid rgba(255,255,255,0.03)',
+                }}
+              >
                 {item}
               </div>
             ))}

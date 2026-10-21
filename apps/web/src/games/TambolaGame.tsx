@@ -17,7 +17,7 @@ interface PlayerTicket {
   name: string;
   avatar: string;
   isBot: boolean;
-  grids: TambolaTicketCell[][][]; // array of 3x9 tickets (supports 1, 2, 3, or 6 tickets)
+  grids: TambolaTicketCell[][][];
   claimedAwards: string[];
 }
 
@@ -28,7 +28,6 @@ interface Award {
   winner: string | null;
 }
 
-// Generate valid authentic Indian Tambola ticket (3 rows x 9 cols, 5 numbers per row, 15 numbers total)
 function generateAuthenticTambolaTicket(): TambolaTicketCell[][] {
   const grid: TambolaTicketCell[][] = Array.from({ length: 3 }, () =>
     Array.from({ length: 9 }, () => ({ num: null, marked: false }))
@@ -79,24 +78,24 @@ export const TambolaGame: React.FC = () => {
   const room = getOrCreateRoom('tambola', 'You (Ticket #1)', 8, 2);
 
   const [inLobby, setInLobby] = useState(!room.isGameStarted);
-  const [ticketCount, setTicketCount] = useState<number>(2); // 1, 2, 3, or 6 tickets
-  const [activeTicketIdx, setActiveTicketIdx] = useState<number>(0);
-  const [callSpeedSec, setCallSpeedSec] = useState<number>(3); // 2s, 3s, 5s, 8s, 10s
+  const [ticketCount, setTicketCount] = useState<number>(2);
+  const [callSpeedSec, setCallSpeedSec] = useState<number>(5);
+  const [voiceLanguage, setVoiceLanguage] = useState<'hi' | 'en'>('hi');
+
   const [players, setPlayers] = useState<PlayerTicket[]>([]);
   const [calledNumbers, setCalledNumbers] = useState<number[]>([]);
   const [currentCall, setCurrentCall] = useState<number | null>(null);
-  const [isAutoCalling, setIsAutoCalling] = useState(false);
+  const [isAutoCalling, setIsAutoCalling] = useState<boolean>(false);
   const [countdownSec, setCountdownSec] = useState<number>(callSpeedSec);
-  const [log, setLog] = useState<string[]>(['Welcome to Tambola (Housie)! Mark numbers on your tickets as they are called.']);
-
-  const [voiceLanguage, setVoiceLanguage] = useState<'hi' | 'en'>('hi');
   const [boogieMessage, setBoogieMessage] = useState<string>('');
+  const [log, setLog] = useState<string[]>(['Imperial Housie Pavilion initialized. Tap numbers on your ticket as they are called!']);
+
   const [awards, setAwards] = useState<Award[]>([
-    { id: 'early5', title: 'Early Five (First 5 Numbers)', coins: 50, winner: null },
-    { id: 'topLine', title: 'Top Line (Row 1 Complete)', coins: 100, winner: null },
-    { id: 'middleLine', title: 'Middle Line (Row 2 Complete)', coins: 100, winner: null },
-    { id: 'bottomLine', title: 'Bottom Line (Row 3 Complete)', coins: 100, winner: null },
-    { id: 'fourCorners', title: 'Four Corners', coins: 80, winner: null },
+    { id: 'early5', title: 'EARLY FIVE (First 5 Numbers)', coins: 60, winner: null },
+    { id: 'fourCorners', title: 'FOUR CORNERS', coins: 80, winner: null },
+    { id: 'topLine', title: 'TOP LINE (Row 1)', coins: 100, winner: null },
+    { id: 'middleLine', title: 'MIDDLE LINE (Row 2)', coins: 100, winner: null },
+    { id: 'bottomLine', title: 'BOTTOM LINE (Row 3)', coins: 100, winner: null },
     { id: 'fullHouse', title: 'FULL HOUSE (All 15 Numbers)', coins: 300, winner: null },
   ]);
 
@@ -130,7 +129,6 @@ export const TambolaGame: React.FC = () => {
     setPlayers(builtPlayers);
     setCalledNumbers([]);
     setCurrentCall(null);
-    setActiveTicketIdx(0);
     setCountdownSec(callSpeedSec);
     setInLobby(false);
     room.isGameStarted = true;
@@ -139,7 +137,6 @@ export const TambolaGame: React.FC = () => {
     addLog(`🎟️ Match started! Distributed ${ticketCount} serialized tickets per player. Auto-call timer: ${callSpeedSec}s.`);
   };
 
-  // Call Next Number
   const callNextNumber = () => {
     if (calledNumbers.length >= 90) {
       addLog('All 90 numbers have been called!');
@@ -155,7 +152,6 @@ export const TambolaGame: React.FC = () => {
     setCalledNumbers((prev) => [picked, ...prev]);
     setCountdownSec(callSpeedSec);
 
-    // Tambola slang calling
     let slang = '';
     if (picked === 1) slang = 'Kelly’s Eye';
     else if (picked === 7) slang = 'Lucky Seven';
@@ -165,12 +161,9 @@ export const TambolaGame: React.FC = () => {
     else if (picked === 88) slang = 'Two fat ladies';
     else if (picked === 90) slang = 'Top of the house!';
 
-    // Announce via authentic synthesized caller voice in Hindi or English
     soundFx.announceTambolaNumber(picked, slang, voiceLanguage);
+    addLog(`📢 Number Announced: [ ${picked} ] ${slang ? `— ${slang}` : ''}`);
 
-    addLog(`📢 Number Called: [ ${picked} ] ${slang ? `— ${slang}` : ''}`);
-
-    // Auto-mark bot tickets
     setPlayers((prev) =>
       prev.map((player) => {
         if (!player.isBot) return player;
@@ -184,9 +177,8 @@ export const TambolaGame: React.FC = () => {
     );
   };
 
-  // Auto-caller countdown ticker
   useEffect(() => {
-    let timer: any = null;
+    let timer: NodeJS.Timeout | null = null;
     if (isAutoCalling && !inLobby && calledNumbers.length < 90) {
       timer = setInterval(() => {
         setCountdownSec((prev) => {
@@ -198,10 +190,11 @@ export const TambolaGame: React.FC = () => {
         });
       }, 1000);
     }
-    return () => clearInterval(timer);
+    return () => {
+      if (timer) clearInterval(timer);
+    };
   }, [isAutoCalling, inLobby, calledNumbers, callSpeedSec]);
 
-  // Click on ticket cell to toggle dab (ONLY allowed if number has been called!)
   const toggleMarkCell = (ticketIdx: number, rowIndex: number, colIndex: number) => {
     const myPlayer = players[0];
     if (!myPlayer) return;
@@ -211,11 +204,10 @@ export const TambolaGame: React.FC = () => {
     const cell = targetGrid[rowIndex][colIndex];
     if (cell.num === null) return;
 
-    // Strict rule: Can only cut/mark if number has been called!
     if (!calledNumbers.includes(cell.num)) {
       soundFx.playSnakeHiss();
       soundFx.vibrate([40, 40]);
-      setBoogieMessage(`⚠️ Number ${cell.num} has NOT been called yet! You can only cut numbers called by the caller.`);
+      setBoogieMessage(`⚠️ Number ${cell.num} has not been called yet! Only called numbers may be dabbed.`);
       setTimeout(() => setBoogieMessage(''), 2500);
       return;
     }
@@ -232,7 +224,6 @@ export const TambolaGame: React.FC = () => {
     setPlayers((prev) => prev.map((p, idx) => (idx === 0 ? { ...p, grids: newGrids } : p)));
   };
 
-  // Claim Prize Verification across any owned ticket
   const claimAward = (awardId: string) => {
     const myPlayer = players[0];
     if (!myPlayer) return;
@@ -302,7 +293,7 @@ export const TambolaGame: React.FC = () => {
       soundFx.vibrate([100, 50, 100, 50, 200]);
       if (awardId === 'fullHouse') {
         useCelebrationStore.getState().triggerVictory({
-          gameTitle: 'Tambola (Housie)',
+          gameTitle: 'Tambola (Indian Housie)',
           winnerName: myPlayer.name,
           winnerAvatar: myPlayer.avatar || '🎟️',
           coinsAwarded: targetAward.coins,
@@ -313,7 +304,7 @@ export const TambolaGame: React.FC = () => {
       setAwards((prev) =>
         prev.map((a) => (a.id === awardId ? { ...a, winner: `${myPlayer.name} (Ticket #${winningTicketIdx + 1})` } : a))
       );
-      addLog(`🎉 TAMBOLA BINGO! ${myPlayer.name} won [ ${targetAward.title} ] on Ticket #${winningTicketIdx + 1} (+${targetAward.coins} Coins)!`);
+      addLog(`🎉 TAMBOLA BINGO! ${myPlayer.name} claimed [ ${targetAward.title} ] on Ticket #${winningTicketIdx + 1} (+${targetAward.coins} Coins)!`);
     } else {
       soundFx.playSnakeHiss();
       soundFx.vibrate([300, 100, 300]);
@@ -325,37 +316,45 @@ export const TambolaGame: React.FC = () => {
 
   if (inLobby) {
     return (
-      <div style={{ maxWidth: '840px', margin: '0 auto', display: 'flex', flexDirection: 'column', gap: '20px' }}>
-        {/* Pre-Match Ticket & Caller Speed Settings Card */}
+      <div
+        style={{
+          maxWidth: '880px',
+          margin: '0 auto',
+          display: 'flex',
+          flexDirection: 'column',
+          gap: '20px',
+          animation: 'fadeInUp 0.35s cubic-bezier(0.16, 1, 0.3, 1)',
+        }}
+      >
+        {/* Match Configuration Card */}
         <div
+          className="glass-panel"
           style={{
-            background: 'linear-gradient(135deg, #231238 0%, #0d071c 100%)',
-            borderRadius: '24px',
-            border: '1px solid rgba(245, 158, 11, 0.4)',
-            padding: '24px',
+            padding: '24px 28px',
             display: 'flex',
             flexDirection: 'column',
             gap: '18px',
-            boxShadow: '0 15px 40px rgba(0,0,0,0.6)',
+            background: 'linear-gradient(135deg, rgba(14, 19, 32, 0.9) 0%, rgba(9, 13, 22, 0.95) 100%)',
+            border: '1px solid rgba(245, 158, 11, 0.3)',
           }}
         >
-          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-            <span style={{ fontSize: '24px' }}>⚙️</span>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+            <span style={{ fontSize: '26px' }}>⚙️</span>
             <div>
-              <h3 style={{ margin: 0, fontSize: '18px', fontWeight: 900, color: '#fde68a' }}>
-                Tambola Match Configuration
+              <h3 style={{ margin: 0, fontSize: '18px', fontWeight: 900, color: '#fbbf24' }}>
+                Housie Pavilion Configuration
               </h3>
-              <span style={{ fontSize: '12px', color: '#cbd5e1' }}>
-                Configure tickets per player and auto-call seconds before starting
+              <span style={{ fontSize: '12.5px', color: '#94a3b8' }}>
+                Select ticket bundles and automated caller rhythm before opening the salon
               </span>
             </div>
           </div>
 
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '16px' }}>
-            {/* Number of Tickets per Person */}
+            {/* Tickets Selector */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-              <label style={{ fontSize: '13px', fontWeight: 800, color: '#f472b6' }}>
-                🎟️ Number of Tickets per Person:
+              <label style={{ fontSize: '12.5px', fontWeight: 800, color: '#f8fafc' }}>
+                🎟️ Ticket Bundle per Player:
               </label>
               <div style={{ display: 'flex', gap: '8px' }}>
                 {[1, 2, 3, 6].map((count) => (
@@ -366,26 +365,25 @@ export const TambolaGame: React.FC = () => {
                     style={{
                       flex: 1,
                       padding: '10px',
-                      borderRadius: '12px',
-                      border: ticketCount === count ? '2px solid #ec4899' : '1px solid rgba(255,255,255,0.12)',
-                      background: ticketCount === count ? 'linear-gradient(135deg, #ec4899 0%, #7c3aed 100%)' : 'rgba(255,255,255,0.05)',
-                      color: '#ffffff',
+                      borderRadius: '10px',
+                      border: ticketCount === count ? '1.5px solid #fbbf24' : '1px solid rgba(255, 255, 255, 0.1)',
+                      background: ticketCount === count ? 'rgba(245, 158, 11, 0.2)' : 'rgba(255, 255, 255, 0.04)',
+                      color: ticketCount === count ? '#fbbf24' : '#cbd5e1',
                       fontWeight: 800,
-                      fontSize: '14px',
+                      fontSize: '13px',
                       cursor: 'pointer',
-                      boxShadow: ticketCount === count ? '0 4px 15px rgba(236,72,153,0.4)' : 'none',
                     }}
                   >
-                    {count} {count === 1 ? 'Ticket' : 'Tickets'}
+                    {count} {count === 1 ? 'Sheet' : 'Sheets'}
                   </button>
                 ))}
               </div>
             </div>
 
-            {/* Seconds per Number Call */}
+            {/* Caller Speed */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-              <label style={{ fontSize: '13px', fontWeight: 800, color: '#38bdf8' }}>
-                ⏱️ Seconds Between Calls (Speed):
+              <label style={{ fontSize: '12.5px', fontWeight: 800, color: '#f8fafc' }}>
+                ⏱️ Caller Rhythm (Seconds/Ball):
               </label>
               <div style={{ display: 'flex', gap: '8px' }}>
                 {[2, 3, 5, 8].map((sec) => (
@@ -399,14 +397,13 @@ export const TambolaGame: React.FC = () => {
                     style={{
                       flex: 1,
                       padding: '10px',
-                      borderRadius: '12px',
-                      border: callSpeedSec === sec ? '2px solid #38bdf8' : '1px solid rgba(255,255,255,0.12)',
-                      background: callSpeedSec === sec ? 'linear-gradient(135deg, #0284c7 0%, #06b6d4 100%)' : 'rgba(255,255,255,0.05)',
-                      color: '#ffffff',
+                      borderRadius: '10px',
+                      border: callSpeedSec === sec ? '1.5px solid #38bdf8' : '1px solid rgba(255, 255, 255, 0.1)',
+                      background: callSpeedSec === sec ? 'rgba(56, 189, 248, 0.2)' : 'rgba(255, 255, 255, 0.04)',
+                      color: callSpeedSec === sec ? '#38bdf8' : '#cbd5e1',
                       fontWeight: 800,
-                      fontSize: '14px',
+                      fontSize: '13px',
                       cursor: 'pointer',
-                      boxShadow: callSpeedSec === sec ? '0 4px 15px rgba(56,189,248,0.4)' : 'none',
                     }}
                   >
                     {sec}s
@@ -419,11 +416,10 @@ export const TambolaGame: React.FC = () => {
 
         <GameRoomLobby
           gameId="tambola"
-          gameTitle="Tambola (Housie) Live"
+          gameTitle="Imperial Housie Pavilion"
           gameIcon="🎟️"
           minPlayers={2}
           maxPlayers={12}
-          bannerGradient="linear-gradient(135deg, #f59e0b 0%, #ec4899 100%)"
           onStart={startMatchFromRoom}
         />
       </div>
@@ -433,43 +429,75 @@ export const TambolaGame: React.FC = () => {
   const myPlayer = players[0];
 
   return (
-    <div style={{ maxWidth: '1400px', margin: '0 auto', display: 'flex', flexDirection: 'column', gap: '24px', padding: '0 8px' }}>
+    <div
+      style={{
+        maxWidth: '1380px',
+        margin: '0 auto',
+        padding: '16px',
+        display: 'flex',
+        flexDirection: 'column',
+        gap: '20px',
+        animation: 'fadeInUp 0.35s cubic-bezier(0.16, 1, 0.3, 1)',
+      }}
+    >
+      <VoiceRoomBar gameTitle="Imperial Housie Pavilion" turnRestricted={false} />
+
       {/* Top Header & Caller Controls */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '14px' }}>
+      <div
+        className="glass-panel"
+        style={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          padding: '12px 20px',
+          background: 'rgba(12, 17, 28, 0.85)',
+          border: '1px solid rgba(255, 255, 255, 0.08)',
+          borderRadius: '16px',
+          flexWrap: 'wrap',
+          gap: '12px',
+        }}
+      >
         <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
           <button
             onClick={() => setView('dashboard')}
+            className="btn-tactile-secondary"
             style={{
-              background: 'rgba(255,255,255,0.08)',
-              border: '1px solid rgba(255,255,255,0.15)',
-              color: '#ffffff',
-              padding: '8px 16px',
-              borderRadius: '12px',
-              fontWeight: 700,
-              cursor: 'pointer',
+              padding: '7px 14px',
+              fontSize: '12px',
             }}
           >
             ← Arcade
           </button>
           <div>
-            <h2 style={{ margin: 0, fontSize: '24px', fontWeight: 900, color: '#f59e0b', display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <span>🎟️</span> Tambola (Housie) Live
-            </h2>
-            <span style={{ fontSize: '12px', color: '#94a3b8' }}>
+            <div style={{ fontSize: '18px', fontWeight: 900, color: '#ffffff', display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <span>🎟️</span>
+              <span>Imperial Housie Pavilion</span>
+            </div>
+            <div style={{ fontSize: '12px', color: '#94a3b8' }}>
               {ticketCount} Tickets Active • {callSpeedSec}s Auto Timer
-            </span>
+            </div>
           </div>
         </div>
 
-        <div style={{ display: 'flex', gap: '12px', alignItems: 'center', flexWrap: 'wrap' }}>
+        <div style={{ display: 'flex', gap: '10px', alignItems: 'center', flexWrap: 'wrap' }}>
           {/* Hindi / English Voice Caller Selector */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: '6px', background: 'rgba(255,255,255,0.05)', padding: '4px 10px', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.1)' }}>
-            <span style={{ fontSize: '12px', color: '#cbd5e1' }}>Voice:</span>
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '4px',
+              background: 'rgba(255, 255, 255, 0.05)',
+              padding: '4px 8px',
+              borderRadius: '10px',
+              border: '1px solid rgba(255, 255, 255, 0.1)',
+            }}
+          >
+            <span style={{ fontSize: '11px', color: '#94a3b8', marginRight: '4px' }}>Voice:</span>
             <button
               onClick={() => setVoiceLanguage('hi')}
               style={{
-                background: voiceLanguage === 'hi' ? '#ec4899' : 'transparent',
-                color: voiceLanguage === 'hi' ? '#fff' : '#cbd5e1',
+                background: voiceLanguage === 'hi' ? '#fbbf24' : 'transparent',
+                color: voiceLanguage === 'hi' ? '#000000' : '#cbd5e1',
                 border: 'none',
                 borderRadius: '6px',
                 padding: '3px 8px',
@@ -483,8 +511,8 @@ export const TambolaGame: React.FC = () => {
             <button
               onClick={() => setVoiceLanguage('en')}
               style={{
-                background: voiceLanguage === 'en' ? '#ec4899' : 'transparent',
-                color: voiceLanguage === 'en' ? '#fff' : '#cbd5e1',
+                background: voiceLanguage === 'en' ? '#fbbf24' : 'transparent',
+                color: voiceLanguage === 'en' ? '#000000' : '#cbd5e1',
                 border: 'none',
                 borderRadius: '6px',
                 padding: '3px 8px',
@@ -497,88 +525,50 @@ export const TambolaGame: React.FC = () => {
             </button>
           </div>
 
-          {/* Seconds per Call Selector in Live Match */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: '6px', background: 'rgba(255,255,255,0.05)', padding: '4px 10px', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.1)' }}>
-            <span style={{ fontSize: '12px', color: '#cbd5e1' }}>Timer:</span>
-            {[2, 3, 5, 8].map((s) => (
-              <button
-                key={s}
-                onClick={() => {
-                  setCallSpeedSec(s);
-                  setCountdownSec(s);
-                }}
-                style={{
-                  background: callSpeedSec === s ? '#f59e0b' : 'transparent',
-                  color: callSpeedSec === s ? '#000' : '#cbd5e1',
-                  border: 'none',
-                  borderRadius: '6px',
-                  padding: '3px 7px',
-                  fontSize: '11px',
-                  fontWeight: 800,
-                  cursor: 'pointer',
-                }}
-              >
-                {s}s
-              </button>
-            ))}
-          </div>
-
           <button
             onClick={() => setIsAutoCalling(!isAutoCalling)}
+            className="btn-tactile-secondary"
             style={{
-              padding: '10px 18px',
-              borderRadius: '12px',
-              border: 'none',
-              background: isAutoCalling ? '#ef4444' : '#10b981',
-              color: '#ffffff',
-              fontWeight: 800,
-              fontSize: '13.5px',
-              cursor: 'pointer',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '8px',
-              boxShadow: isAutoCalling ? '0 4px 15px rgba(239,68,68,0.4)' : '0 4px 15px rgba(16,185,129,0.4)',
+              padding: '8px 16px',
+              fontSize: '12px',
+              color: isAutoCalling ? '#fb7185' : '#34d399',
+              borderColor: isAutoCalling ? 'rgba(244, 63, 94, 0.3)' : 'rgba(16, 185, 129, 0.3)',
             }}
           >
-            <span>{isAutoCalling ? `⏸ Pause (${countdownSec}s)` : '▶ Start Auto-Call'}</span>
+            {isAutoCalling ? `⏸ Pause (${countdownSec}s)` : '▶ Auto-Call Numbers'}
           </button>
 
           <button
             onClick={callNextNumber}
             disabled={isAutoCalling || calledNumbers.length >= 90}
+            className="btn-primary-glow"
             style={{
-              padding: '10px 20px',
-              borderRadius: '12px',
-              border: 'none',
-              background: 'linear-gradient(135deg, #f59e0b 0%, #ec4899 100%)',
-              color: '#ffffff',
-              fontWeight: 900,
-              fontSize: '13.5px',
-              cursor: 'pointer',
-              boxShadow: '0 4px 15px rgba(245, 158, 11, 0.4)',
+              padding: '8px 18px',
+              fontSize: '12px',
+              background: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)',
+              boxShadow: '0 4px 14px rgba(245, 158, 11, 0.35)',
             }}
           >
-            🎲 Call Next
+            🎲 Call Next Number
           </button>
         </div>
       </div>
 
-      {/* Boogie Penalty Alert Toast */}
+      {/* Boogie Penalty Toast */}
       {boogieMessage && (
         <div
           style={{
             background: 'linear-gradient(135deg, #ef4444 0%, #b91c1c 100%)',
             color: '#ffffff',
-            padding: '14px 24px',
-            borderRadius: '16px',
+            padding: '12px 20px',
+            borderRadius: '12px',
             fontWeight: 800,
-            fontSize: '14px',
+            fontSize: '13px',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            gap: '10px',
-            boxShadow: '0 8px 30px rgba(239, 68, 68, 0.6)',
-            animation: 'shake 0.3s ease-in-out',
+            gap: '8px',
+            boxShadow: '0 8px 24px rgba(239, 68, 68, 0.5)',
           }}
         >
           <span>🚨</span>
@@ -586,75 +576,89 @@ export const TambolaGame: React.FC = () => {
         </div>
       )}
 
-      <VoiceRoomBar gameTitle="Tambola Housie Room" />
-
-      {/* Main Grid */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'minmax(320px, 1fr) 380px', gap: '24px' }}>
-        
-        {/* Left Column: Number Caller Banner & Tickets */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
-          
-          {/* Current Big Call Display */}
+      {/* Main Grid: Left Column Tickets & Master Board, Right Column Prizes */}
+      <div
+        style={{
+          display: 'grid',
+          gridTemplateColumns: 'minmax(320px, 1fr) 360px',
+          gap: '20px',
+          alignItems: 'start',
+        }}
+      >
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+          {/* Active Number Call Display */}
           <div
+            className="glass-panel"
             style={{
-              background: 'radial-gradient(ellipse at top left, #2d1848 0%, #120924 100%)',
-              borderRadius: '26px',
-              border: '1.5px solid rgba(245, 158, 11, 0.4)',
-              padding: '24px 32px',
+              padding: '20px 28px',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'space-between',
-              boxShadow: '0 20px 50px rgba(0,0,0,0.6)',
-              position: 'relative',
-              overflow: 'hidden',
+              background: 'linear-gradient(135deg, rgba(14, 19, 32, 0.85) 0%, rgba(9, 13, 22, 0.95) 100%)',
+              border: '1px solid rgba(245, 158, 11, 0.3)',
+              borderRadius: '20px',
+              flexWrap: 'wrap',
+              gap: '16px',
             }}
           >
-            <div style={{ display: 'flex', alignItems: 'center', gap: '22px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
               <div
                 style={{
-                  width: '92px',
-                  height: '92px',
+                  width: '84px',
+                  height: '84px',
                   borderRadius: '50%',
-                  background: 'linear-gradient(135deg, #f59e0b 0%, #ef4444 100%)',
-                  border: '4px solid #fde68a',
+                  background: 'radial-gradient(circle at 35% 35%, #fbbf24 0%, #d97706 60%, #78350f 100%)',
+                  border: '3px solid rgba(255, 255, 255, 0.7)',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  fontSize: '46px',
+                  fontSize: '42px',
                   fontWeight: 900,
                   color: '#ffffff',
-                  boxShadow: '0 0 35px rgba(245, 158, 11, 0.7)',
+                  boxShadow: '0 12px 28px rgba(0, 0, 0, 0.7), 0 0 25px rgba(245, 158, 11, 0.5)',
+                  flexShrink: 0,
+                  fontFamily: 'ui-monospace, monospace',
                 }}
               >
                 {currentCall ?? '--'}
               </div>
+
               <div>
-                <span style={{ fontSize: '12px', fontWeight: 800, textTransform: 'uppercase', color: '#f59e0b', letterSpacing: '1px' }}>
+                <span
+                  style={{
+                    fontSize: '11px',
+                    fontWeight: 800,
+                    textTransform: 'uppercase',
+                    color: '#fbbf24',
+                    letterSpacing: '1px',
+                  }}
+                >
                   Latest Drawn Number {isAutoCalling && `• Next in ${countdownSec}s`}
                 </span>
                 <h3 style={{ margin: '4px 0 0 0', fontSize: '22px', fontWeight: 900, color: '#ffffff' }}>
-                  {currentCall ? `Number ${currentCall} Announced!` : 'Click "Call Next"'}
+                  {currentCall ? `Number ${currentCall} Announced!` : 'Press "Call Next Number"'}
                 </h3>
-                <span style={{ fontSize: '13px', color: '#cbd5e1' }}>
+                <span style={{ fontSize: '12.5px', color: '#94a3b8' }}>
                   {calledNumbers.length} / 90 Numbers Drawn
                 </span>
               </div>
             </div>
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', textAlign: 'right' }}>
-              <span style={{ fontSize: '12px', color: '#cbd5e1' }}>Last 5 Drawn:</span>
+              <span style={{ fontSize: '11px', color: '#8492a6' }}>Recent Calls:</span>
               <div style={{ display: 'flex', gap: '6px' }}>
                 {calledNumbers.slice(1, 6).map((num) => (
                   <span
                     key={num}
                     style={{
-                      background: 'rgba(255,255,255,0.08)',
-                      border: '1px solid rgba(255,255,255,0.15)',
-                      padding: '4px 10px',
+                      background: 'rgba(255, 255, 255, 0.06)',
+                      border: '1px solid rgba(255, 255, 255, 0.12)',
+                      padding: '4px 8px',
                       borderRadius: '8px',
-                      fontSize: '14px',
+                      fontSize: '13px',
                       fontWeight: 800,
-                      color: '#fde68a',
+                      color: '#fbbf24',
+                      fontFamily: 'ui-monospace, monospace',
                     }}
                   >
                     {num}
@@ -664,186 +668,140 @@ export const TambolaGame: React.FC = () => {
             </div>
           </div>
 
-          {/* ALL MY TICKETS RENDERED SIMULTANEOUSLY ON SAME SCREEN */}
+          {/* Player Active Tickets */}
           {myPlayer && (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '10px' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <span style={{ fontSize: '18px' }}>🎟️</span>
-                  <h3 style={{ margin: 0, fontSize: '18px', fontWeight: 900, color: '#fde68a' }}>
-                    Your Active Tickets ({myPlayer.grids.length} In Play)
-                  </h3>
-                </div>
-                <span style={{ fontSize: '12px', color: '#94a3b8' }}>
-                  All tickets live on one screen — tap numbers on any ticket to cut!
-                </span>
-              </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+              {myPlayer.grids.map((grid, tIdx) => {
+                const flat = grid.flat().filter((c) => c.num !== null);
+                const marked = flat.filter((c) => c.marked && calledNumbers.includes(c.num!)).length;
 
-              {/* Stacked list of all tickets */}
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '22px' }}>
-                {myPlayer.grids.map((grid, tIdx) => {
-                  const flat = grid.flat().filter((c) => c.num !== null);
-                  const marked = flat.filter((c) => c.marked && calledNumbers.includes(c.num!)).length;
-
-                  return (
-                    <div
-                      key={tIdx}
-                      style={{
-                        background: 'linear-gradient(135deg, #261647 0%, #150b2b 50%, #0d061c 100%)',
-                        borderRadius: '24px',
-                        border: '2px solid rgba(245, 158, 11, 0.45)',
-                        padding: '22px',
-                        display: 'flex',
-                        flexDirection: 'column',
-                        gap: '14px',
-                        boxShadow: '0 16px 40px rgba(0,0,0,0.7), 0 0 30px rgba(245, 158, 11, 0.15)',
-                        position: 'relative',
-                        overflow: 'hidden',
-                      }}
-                    >
-                      {/* Ticket Header Strip */}
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                          <div
-                            style={{
-                              width: '34px',
-                              height: '34px',
-                              borderRadius: '10px',
-                              background: 'linear-gradient(135deg, #f59e0b 0%, #ec4899 100%)',
-                              display: 'flex',
-                              alignItems: 'center',
-                              justifyContent: 'center',
-                              fontSize: '18px',
-                              boxShadow: '0 4px 10px rgba(245, 158, 11, 0.4)',
-                            }}
-                          >
-                            🎟️
-                          </div>
-                          <div>
-                            <h4 style={{ margin: 0, fontSize: '17px', fontWeight: 900, color: '#fde68a' }}>
-                              Ticket #{tIdx + 1}
-                            </h4>
-                            <span style={{ fontSize: '11px', color: '#94a3b8' }}>
-                              Serial: #TB-{myPlayer.id.substring(0, 4).toUpperCase()}-{tIdx + 1} • {marked}/15 Marked
-                            </span>
-                          </div>
-                        </div>
-
-                        <div
-                          style={{
-                            background: marked >= 5 ? 'rgba(16, 185, 129, 0.2)' : 'rgba(255, 255, 255, 0.08)',
-                            border: marked >= 5 ? '1px solid #10b981' : '1px solid rgba(255,255,255,0.15)',
-                            padding: '4px 12px',
-                            borderRadius: '16px',
-                            fontSize: '11.5px',
-                            fontWeight: 800,
-                            color: marked >= 5 ? '#34d399' : '#cbd5e1',
-                          }}
-                        >
-                          {marked === 15 ? '⭐ FULL HOUSE!' : `${marked} / 15 Cut`}
-                        </div>
+                return (
+                  <div
+                    key={tIdx}
+                    className="glass-panel"
+                    style={{
+                      padding: '20px',
+                      borderRadius: '20px',
+                      border: '1.5px solid rgba(245, 158, 11, 0.35)',
+                      background: 'radial-gradient(ellipse at center, #131a2d 0%, #090e1a 100%)',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      gap: '12px',
+                    }}
+                  >
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <span style={{ fontSize: '18px' }}>🎟️</span>
+                        <strong style={{ fontSize: '15px', color: '#fbbf24' }}>
+                          Ticket #{tIdx + 1} • Serial #TB-{myPlayer.id.substring(0, 4).toUpperCase()}-{tIdx + 1}
+                        </strong>
                       </div>
 
-                      {/* 3 x 9 Ticket Grid */}
                       <div
                         style={{
-                          display: 'grid',
-                          gridTemplateRows: 'repeat(3, 1fr)',
-                          gap: '6px',
-                          background: 'rgba(10, 5, 20, 0.85)',
-                          padding: '10px',
-                          borderRadius: '18px',
-                          border: '1px solid rgba(255, 255, 255, 0.1)',
-                          boxShadow: 'inset 0 2px 10px rgba(0,0,0,0.6)',
+                          background: marked >= 5 ? 'rgba(16, 185, 129, 0.18)' : 'rgba(255, 255, 255, 0.05)',
+                          border: marked >= 5 ? '1px solid #10b981' : '1px solid rgba(255, 255, 255, 0.1)',
+                          padding: '3px 10px',
+                          borderRadius: '9999px',
+                          fontSize: '11px',
+                          fontWeight: 800,
+                          color: marked >= 5 ? '#34d399' : '#cbd5e1',
                         }}
                       >
-                        {grid.map((row, rIdx) => (
-                          <div key={rIdx} style={{ display: 'grid', gridTemplateColumns: 'repeat(9, 1fr)', gap: '6px' }}>
-                            {row.map((cell, cIdx) => {
-                              const isDrawn = cell.num !== null && calledNumbers.includes(cell.num);
-                              return (
-                                <button
-                                  key={cIdx}
-                                  onClick={() => toggleMarkCell(tIdx, rIdx, cIdx)}
-                                  disabled={cell.num === null}
-                                  style={{
-                                    aspectRatio: '1.25 / 1',
-                                    borderRadius: '10px',
-                                    border: cell.marked
-                                      ? '2px solid #34d399'
-                                      : cell.num !== null
-                                      ? '1px solid rgba(255,255,255,0.18)'
-                                      : '1px solid rgba(255,255,255,0.03)',
-                                    background: cell.marked
-                                      ? 'radial-gradient(circle, #059669 0%, #064e3b 100%)'
-                                      : cell.num === null
-                                      ? 'rgba(255,255,255,0.01)'
-                                      : 'linear-gradient(180deg, rgba(255,255,255,0.08) 0%, rgba(255,255,255,0.02) 100%)',
-                                    color: cell.marked ? '#ffffff' : cell.num ? '#ffffff' : 'transparent',
-
-                                    fontSize: '18px',
-                                    fontWeight: 900,
-                                    cursor: cell.num ? 'pointer' : 'default',
-                                    display: 'flex',
-                                    position: 'relative',
-                                    alignItems: 'center',
-                                    justifyContent: 'center',
-                                    boxShadow: cell.marked
-                                      ? '0 0 14px rgba(52, 211, 153, 0.6), inset 0 0 6px rgba(255,255,255,0.3)'
-                                      : isDrawn
-                                      ? '0 0 10px rgba(245, 158, 11, 0.4)'
-                                      : 'none',
-                                    transform: cell.marked ? 'scale(0.98)' : 'scale(1)',
-                                    transition: 'all 0.15s cubic-bezier(0.16, 1, 0.3, 1)',
-                                  }}
-                                >
-                                  {cell.num ?? ''}
-                                  {cell.marked && (
-                                    <span
-                                      style={{
-                                        position: 'absolute',
-                                        fontSize: '10px',
-                                        top: '2px',
-                                        right: '3px',
-                                        color: '#a7f3d0',
-                                      }}
-                                    >
-                                      ✓
-                                    </span>
-                                  )}
-                                </button>
-                              );
-                            })}
-                          </div>
-                        ))}
+                        {marked === 15 ? '⭐ FULL HOUSE!' : `${marked} / 15 Cut`}
                       </div>
                     </div>
-                  );
-                })}
-              </div>
+
+                    {/* 3x9 Ticket Grid */}
+                    <div
+                      style={{
+                        display: 'grid',
+                        gridTemplateRows: 'repeat(3, 1fr)',
+                        gap: '6px',
+                        background: 'rgba(5, 10, 20, 0.7)',
+                        padding: '10px',
+                        borderRadius: '14px',
+                        border: '1px solid rgba(255, 255, 255, 0.08)',
+                      }}
+                    >
+                      {grid.map((row, rIdx) => (
+                        <div key={rIdx} style={{ display: 'grid', gridTemplateColumns: 'repeat(9, 1fr)', gap: '6px' }}>
+                          {row.map((cell, cIdx) => {
+                            const isDrawn = cell.num !== null && calledNumbers.includes(cell.num);
+                            return (
+                              <button
+                                key={cIdx}
+                                onClick={() => toggleMarkCell(tIdx, rIdx, cIdx)}
+                                disabled={cell.num === null}
+                                style={{
+                                  aspectRatio: '1.25 / 1',
+                                  borderRadius: '8px',
+                                  border: cell.marked
+                                    ? '2px solid #34d399'
+                                    : cell.num !== null
+                                    ? '1px solid rgba(255,255,255,0.15)'
+                                    : '1px solid rgba(255,255,255,0.02)',
+                                  background: cell.marked
+                                    ? 'radial-gradient(circle, #059669 0%, #064e3b 100%)'
+                                    : cell.num === null
+                                    ? 'rgba(255,255,255,0.01)'
+                                    : 'rgba(255,255,255,0.04)',
+                                  color: cell.marked ? '#ffffff' : cell.num ? '#ffffff' : 'transparent',
+                                  fontSize: '17px',
+                                  fontWeight: 900,
+                                  cursor: cell.num ? 'pointer' : 'default',
+                                  display: 'flex',
+                                  position: 'relative',
+                                  alignItems: 'center',
+                                  justifyContent: 'center',
+                                  boxShadow: cell.marked
+                                    ? '0 0 12px rgba(52, 211, 153, 0.5), inset 0 0 6px rgba(255,255,255,0.3)'
+                                    : isDrawn
+                                    ? '0 0 10px rgba(245, 158, 11, 0.4)'
+                                    : 'none',
+                                  transform: cell.marked ? 'scale(0.98)' : 'scale(1)',
+                                  transition: 'all 0.15s ease',
+                                }}
+                              >
+                                {cell.num ?? ''}
+                                {cell.marked && (
+                                  <span style={{ position: 'absolute', fontSize: '9px', top: '2px', right: '3px', color: '#a7f3d0' }}>
+                                    ✓
+                                  </span>
+                                )}
+                              </button>
+                            );
+                          })}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                );
+              })}
             </div>
           )}
 
-          {/* 1-90 MASTER CALLER BOARD */}
+          {/* 1-90 Master Caller Board */}
           <div
+            className="glass-card"
             style={{
-              background: 'rgba(15, 11, 26, 0.8)',
-              borderRadius: '24px',
-              border: '1px solid rgba(255, 255, 255, 0.1)',
-              padding: '20px',
+              padding: '18px',
               display: 'flex',
               flexDirection: 'column',
-              gap: '12px',
+              gap: '10px',
             }}
           >
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <span style={{ fontSize: '13px', fontWeight: 800, color: '#cbd5e1' }}>
-                📋 Master Numbers Board (1 - 90)
-              </span>
-              <span style={{ fontSize: '12px', color: '#10b981' }}>
-                Green = Called
-              </span>
-            </div>
+            <span
+              style={{
+                fontSize: '11px',
+                fontWeight: 800,
+                color: '#fbbf24',
+                letterSpacing: '1px',
+                textTransform: 'uppercase',
+              }}
+            >
+              Master 90-Number Board
+            </span>
 
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(10, 1fr)', gap: '4px' }}>
               {Array.from({ length: 90 }, (_, i) => i + 1).map((n) => {
@@ -854,15 +812,16 @@ export const TambolaGame: React.FC = () => {
                     key={n}
                     style={{
                       aspectRatio: '1/1',
-                      borderRadius: '6px',
-                      background: isLatest ? '#f59e0b' : isCalled ? '#10b981' : 'rgba(255,255,255,0.04)',
-                      color: isLatest || isCalled ? '#ffffff' : '#64748b',
-                      fontSize: '12px',
+                      borderRadius: '4px',
+                      background: isLatest ? '#f59e0b' : isCalled ? '#10b981' : 'rgba(255,255,255,0.03)',
+                      color: isLatest || isCalled ? '#ffffff' : '#475569',
+                      fontSize: '11px',
                       fontWeight: 800,
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'center',
-                      border: isLatest ? '2px solid #fff' : 'none',
+                      fontFamily: 'ui-monospace, monospace',
+                      border: isLatest ? '1.5px solid #ffffff' : 'none',
                     }}
                   >
                     {n}
@@ -873,70 +832,65 @@ export const TambolaGame: React.FC = () => {
           </div>
         </div>
 
-        {/* Right Column: Awards Claims & Live Activity */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-          
-          {/* Claim Awards Box */}
+        {/* Right Column: Prize Claiming & Log */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
           <div
+            className="glass-panel"
             style={{
-              background: 'rgba(20, 14, 38, 0.95)',
-              borderRadius: '24px',
-              border: '1px solid rgba(255, 255, 255, 0.12)',
-              padding: '22px',
+              padding: '20px',
               display: 'flex',
               flexDirection: 'column',
-              gap: '14px',
+              gap: '12px',
             }}
           >
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <span style={{ fontSize: '20px' }}>🏆</span>
-              <h3 style={{ margin: 0, fontSize: '17px', fontWeight: 900, color: '#fde68a' }}>
-                Claim Tambola Prizes
+              <span style={{ fontSize: '18px' }}>🏆</span>
+              <h3 style={{ margin: 0, fontSize: '15px', fontWeight: 900, color: '#fbbf24' }}>
+                Claim Housie Prizes
               </h3>
             </div>
 
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
               {awards.map((award) => (
                 <div
                   key={award.id}
+                  className="glass-card"
                   style={{
-                    background: award.winner ? 'rgba(16, 185, 129, 0.15)' : 'rgba(255, 255, 255, 0.04)',
-                    border: award.winner ? '1px solid #10b981' : '1px solid rgba(255, 255, 255, 0.08)',
-                    borderRadius: '14px',
-                    padding: '12px 14px',
+                    padding: '10px 14px',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'space-between',
+                    border: award.winner
+                      ? '1px solid #10b981'
+                      : '1px solid rgba(255, 255, 255, 0.08)',
+                    background: award.winner
+                      ? 'rgba(16, 185, 129, 0.12)'
+                      : 'rgba(255, 255, 255, 0.03)',
                   }}
                 >
                   <div>
-                    <div style={{ fontSize: '13.5px', fontWeight: 800, color: '#ffffff' }}>
+                    <div style={{ fontSize: '13px', fontWeight: 800, color: '#f8fafc' }}>
                       {award.title}
                     </div>
-                    <div style={{ fontSize: '11.5px', color: award.winner ? '#4ade80' : '#f59e0b', marginTop: '2px' }}>
-                      {award.winner ? `Won by: ${award.winner}` : `Prize: +${award.coins} Coins`}
+                    <div style={{ fontSize: '11px', color: award.winner ? '#34d399' : '#fbbf24', marginTop: '2px' }}>
+                      {award.winner ? `Won by: ${award.winner}` : `Bounty: +${award.coins} Bullion`}
                     </div>
                   </div>
 
                   {!award.winner ? (
                     <button
                       onClick={() => claimAward(award.id)}
+                      className="btn-primary-glow"
                       style={{
-                        background: 'linear-gradient(135deg, #f59e0b 0%, #ec4899 100%)',
-                        border: 'none',
-                        color: '#fff',
                         padding: '6px 14px',
-                        borderRadius: '8px',
-                        fontSize: '12px',
-                        fontWeight: 900,
-                        cursor: 'pointer',
-                        boxShadow: '0 4px 10px rgba(236,72,153,0.3)',
+                        fontSize: '11.5px',
+                        background: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)',
                       }}
                     >
                       Claim!
                     </button>
                   ) : (
-                    <span style={{ fontSize: '11px', color: '#10b981', fontWeight: 800 }}>
+                    <span style={{ fontSize: '10.5px', color: '#10b981', fontWeight: 800 }}>
                       CLAIMED ✓
                     </span>
                   )}
@@ -945,29 +899,41 @@ export const TambolaGame: React.FC = () => {
             </div>
           </div>
 
-          {/* Caller Event Log */}
+          {/* Game Announcer Log */}
           <div
+            className="glass-card"
             style={{
-              background: 'rgba(10, 6, 20, 0.85)',
-              borderRadius: '24px',
-              border: '1px solid rgba(255, 255, 255, 0.1)',
-              padding: '20px',
-              display: 'flex',
-              flexDirection: 'column',
-              gap: '10px',
-              maxHeight: '340px',
+              padding: '14px 18px',
+              fontSize: '12px',
+              color: '#94a3b8',
+              maxHeight: '260px',
+              overflowY: 'auto',
             }}
           >
-            <div style={{ fontSize: '13px', fontWeight: 800, color: '#cbd5e1' }}>
-              📜 Game Announcer Log
-            </div>
-            <div style={{ overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '8px', fontSize: '12.5px' }}>
-              {log.map((entry, idx) => (
-                <div key={idx} style={{ color: idx === 0 ? '#fde68a' : '#94a3b8', lineHeight: 1.4 }}>
-                  {entry}
-                </div>
-              ))}
-            </div>
+            <strong
+              style={{
+                color: '#38bdf8',
+                display: 'block',
+                marginBottom: '8px',
+                fontSize: '11px',
+                letterSpacing: '0.8px',
+                textTransform: 'uppercase',
+              }}
+            >
+              📜 Announcer Chronicle:
+            </strong>
+            {log.map((entry, idx) => (
+              <div
+                key={idx}
+                style={{
+                  padding: '3px 0',
+                  borderBottom: '1px solid rgba(255,255,255,0.03)',
+                  color: idx === 0 ? '#fbbf24' : '#94a3b8',
+                }}
+              >
+                {entry}
+              </div>
+            ))}
           </div>
         </div>
       </div>
