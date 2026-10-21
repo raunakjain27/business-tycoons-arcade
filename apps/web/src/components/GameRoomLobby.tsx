@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useGameRoomStore } from '../gameRoomStore';
 import { useHubStore } from '../hubStore';
+import { soundFx } from '../soundEffects';
 import { trackEvent } from '../posthog';
 
 interface GameRoomLobbyProps {
@@ -35,6 +36,7 @@ export const GameRoomLobby: React.FC<GameRoomLobbyProps> = ({
   const [copied, setCopied] = useState(false);
 
   const handleCopyInvite = () => {
+    soundFx.playClick();
     const inviteUrl = `${window.location.origin}/#room=${room.roomCode}&game=${gameId}`;
     navigator.clipboard?.writeText(inviteUrl);
     setCopied(true);
@@ -43,11 +45,13 @@ export const GameRoomLobby: React.FC<GameRoomLobbyProps> = ({
 
   const handleAddFriend = () => {
     if (!newPlayerName.trim()) return;
+    soundFx.playClick();
     addPlayer(gameId, newPlayerName.trim(), false);
     setNewPlayerName('');
   };
 
   const handleAddBot = () => {
+    soundFx.playClick();
     addPlayer(gameId, '', true);
   };
 
@@ -57,16 +61,19 @@ export const GameRoomLobby: React.FC<GameRoomLobbyProps> = ({
   return (
     <div
       style={{
-        maxWidth: '880px',
+        maxWidth: '960px',
         margin: '0 auto',
-        padding: '28px 16px',
+        padding: '16px 12px 48px',
         display: 'flex',
         flexDirection: 'column',
-        gap: '24px',
-        animation: 'fadeInUp 0.35s cubic-bezier(0.16, 1, 0.3, 1)',
+        gap: '22px',
+        width: '100%',
+        boxSizing: 'border-box',
+        position: 'relative',
+        zIndex: 1,
       }}
     >
-      {/* Top Breadcrumb & Salon Header */}
+      {/* 1. Navigation Breadcrumb Bar */}
       <div
         style={{
           display: 'flex',
@@ -77,108 +84,81 @@ export const GameRoomLobby: React.FC<GameRoomLobbyProps> = ({
         }}
       >
         <button
-          onClick={() => setView('dashboard')}
-          className="btn-tactile-secondary"
+          onClick={() => {
+            soundFx.playClick();
+            setView('dashboard');
+          }}
+          className="arcade-btn arcade-btn-secondary"
           style={{
-            display: 'inline-flex',
+            padding: '8px 16px',
+            fontSize: '12px',
+            display: 'flex',
             alignItems: 'center',
             gap: '8px',
-            padding: '8px 14px',
-            fontSize: '12.5px',
-            letterSpacing: '0.3px',
           }}
         >
-          <span>←</span>
-          <span>Return to Arcade Salon</span>
+          <span>◀</span>
+          <span>CYBER ARCADE HUB</span>
         </button>
 
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
           <span
+            className="neon-pill neon-pill-cyan"
+            style={{ fontFamily: 'Orbitron, sans-serif' }}
+          >
+            <span className="live-beacon" />
+            BATTLE LOUNGE ONLINE
+          </span>
+          <span
             style={{
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: '6px',
               padding: '4px 12px',
               borderRadius: '9999px',
               fontSize: '11px',
               fontWeight: 800,
-              letterSpacing: '0.6px',
-              textTransform: 'uppercase',
-              background: 'rgba(245, 158, 11, 0.12)',
-              border: '1px solid rgba(245, 158, 11, 0.3)',
-              color: '#fbbf24',
-            }}
-          >
-            <span
-              style={{
-                width: '6px',
-                height: '6px',
-                borderRadius: '50%',
-                background: '#fbbf24',
-                boxShadow: '0 0 8px #fbbf24',
-              }}
-            />
-            Private Gaming Salon
-          </span>
-          <span
-            style={{
-              padding: '4px 10px',
-              borderRadius: '9999px',
-              fontSize: '11px',
-              fontWeight: 700,
-              background: 'rgba(255, 255, 255, 0.05)',
-              border: '1px solid rgba(255, 255, 255, 0.08)',
+              background: 'rgba(255, 255, 255, 0.06)',
+              border: '1px solid rgba(255, 255, 255, 0.12)',
               color: '#94a3b8',
+              fontFamily: 'JetBrains Mono, monospace',
             }}
           >
-            {room.minPlayers}–{room.maxPlayers} Players
+            {room.minPlayers}–{room.maxPlayers} PODS
           </span>
         </div>
       </div>
 
-      {/* Hero Salon Invitation Card */}
+      {/* 2. Hero Cyber Terminal Invitation Card */}
       <div
-        className="glass-panel"
+        className="cyber-panel"
         style={{
-          position: 'relative',
           padding: '28px 32px',
-          background: 'linear-gradient(135deg, rgba(17, 24, 39, 0.85) 0%, rgba(10, 15, 26, 0.95) 100%)',
-          border: '1px solid rgba(245, 158, 11, 0.25)',
-          boxShadow: '0 24px 60px -12px rgba(0, 0, 0, 0.7), 0 0 40px rgba(245, 158, 11, 0.06)',
+          background: 'linear-gradient(135deg, rgba(16, 24, 46, 0.95) 0%, rgba(9, 13, 24, 0.98) 100%)',
+          border: '1.5px solid rgba(0, 240, 255, 0.35)',
+          boxShadow: '0 20px 50px -10px rgba(0, 0, 0, 0.7), 0 0 30px rgba(0, 240, 255, 0.15)',
           display: 'grid',
           gridTemplateColumns: 'minmax(0, 1fr) auto',
           gap: '24px',
           alignItems: 'center',
           overflow: 'hidden',
+          borderRadius: '24px',
         }}
       >
-        {/* Subtle Ambient Gold Accent Line */}
-        <div
-          style={{
-            position: 'absolute',
-            top: 0,
-            left: 0,
-            right: 0,
-            height: '2px',
-            background: 'linear-gradient(90deg, transparent 0%, #f59e0b 50%, transparent 100%)',
-          }}
-        />
+        <div className="marquee-glow-top" />
 
-        {/* Left: Title & Game Branding */}
+        {/* Left: Game Title and Instructions */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '20px', minWidth: 0 }}>
           <div
             style={{
-              width: '72px',
-              height: '72px',
-              borderRadius: '18px',
-              background: 'linear-gradient(135deg, rgba(30, 41, 59, 0.8) 0%, rgba(15, 23, 42, 0.9) 100%)',
-              border: '1px solid rgba(255, 255, 255, 0.15)',
+              width: '76px',
+              height: '76px',
+              borderRadius: '20px',
+              background: 'linear-gradient(135deg, rgba(0, 240, 255, 0.15) 0%, rgba(255, 0, 119, 0.15) 100%)',
+              border: '1.5px solid rgba(0, 240, 255, 0.4)',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              fontSize: '36px',
+              fontSize: '40px',
               flexShrink: 0,
-              boxShadow: '0 12px 28px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.2)',
+              boxShadow: '0 10px 25px rgba(0, 0, 0, 0.5), 0 0 20px rgba(0, 240, 255, 0.25)',
             }}
           >
             {gameIcon}
@@ -188,24 +168,26 @@ export const GameRoomLobby: React.FC<GameRoomLobbyProps> = ({
             <span
               style={{
                 fontSize: '11px',
-                fontWeight: 800,
-                color: '#fbbf24',
-                letterSpacing: '1px',
+                fontWeight: 900,
+                color: '#00f0ff',
+                letterSpacing: '1.5px',
                 textTransform: 'uppercase',
+                fontFamily: 'Orbitron, sans-serif',
                 display: 'block',
                 marginBottom: '4px',
               }}
             >
-              Matchmaking Chamber
+              ★ ARENA MATCHMAKING TERMINAL ★
             </span>
             <h1
               style={{
                 margin: 0,
-                fontSize: 'clamp(24px, 3.5vw, 32px)',
+                fontSize: 'clamp(26px, 3.8vw, 36px)',
                 fontWeight: 900,
                 color: '#ffffff',
-                letterSpacing: '-0.02em',
-                lineHeight: 1.15,
+                fontFamily: 'Space Grotesk, sans-serif',
+                letterSpacing: '-0.5px',
+                lineHeight: 1.1,
               }}
             >
               {gameTitle}
@@ -213,50 +195,51 @@ export const GameRoomLobby: React.FC<GameRoomLobbyProps> = ({
             <p
               style={{
                 margin: '6px 0 0 0',
-                fontSize: '13px',
+                fontSize: '14px',
                 color: '#94a3b8',
                 lineHeight: 1.4,
               }}
             >
-              Take your seat at the table. Invite friends using the salon passphrase or fill empty chairs with autonomous AI bots.
+              Lock in your operator slot. Broadcast your 6-digit access key to associates or deploy autonomous AI tactical combatants.
             </p>
           </div>
         </div>
 
-        {/* Right: Room Passphrase Capsule */}
+        {/* Right: Neon Room Key Hologram */}
         <div
           style={{
-            background: 'rgba(7, 10, 16, 0.8)',
-            border: '1px solid rgba(255, 255, 255, 0.12)',
-            borderRadius: '16px',
-            padding: '16px 20px',
+            background: 'rgba(6, 9, 18, 0.95)',
+            border: '1.5px solid rgba(0, 240, 255, 0.4)',
+            borderRadius: '18px',
+            padding: '16px 22px',
             textAlign: 'center',
             display: 'flex',
             flexDirection: 'column',
             gap: '8px',
-            minWidth: '180px',
-            boxShadow: 'inset 0 2px 8px rgba(0, 0, 0, 0.6)',
+            minWidth: '200px',
+            boxShadow: '0 8px 24px rgba(0, 0, 0, 0.6), inset 0 0 20px rgba(0, 240, 255, 0.1)',
           }}
         >
           <span
             style={{
               fontSize: '10px',
-              fontWeight: 800,
-              letterSpacing: '1.2px',
+              fontWeight: 900,
+              letterSpacing: '1.4px',
               color: '#94a3b8',
               textTransform: 'uppercase',
+              fontFamily: 'Orbitron, sans-serif',
             }}
           >
-            Salon Passphrase
+            ROOM ACCESS KEY
           </span>
           <div
             style={{
-              fontFamily: 'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace',
-              fontSize: '26px',
+              fontFamily: 'JetBrains Mono, monospace',
+              fontSize: '28px',
               fontWeight: 900,
-              letterSpacing: '3px',
-              color: '#38bdf8',
-              textShadow: '0 0 16px rgba(56, 189, 248, 0.4)',
+              letterSpacing: '4px',
+              color: '#00f0ff',
+              textShadow: '0 0 20px rgba(0, 240, 255, 0.6)',
               userSelect: 'all',
             }}
           >
@@ -265,27 +248,26 @@ export const GameRoomLobby: React.FC<GameRoomLobbyProps> = ({
           <div style={{ display: 'flex', gap: '6px', justifyContent: 'center' }}>
             <button
               onClick={handleCopyInvite}
-              className="btn-tactile-secondary"
+              className="arcade-btn"
               style={{
-                padding: '6px 12px',
+                padding: '6px 14px',
                 fontSize: '11px',
-                fontWeight: 700,
-                background: copied ? 'rgba(16, 185, 129, 0.2)' : 'rgba(255, 255, 255, 0.08)',
-                borderColor: copied ? '#10b981' : 'rgba(255, 255, 255, 0.15)',
-                color: copied ? '#34d399' : '#f8fafc',
+                borderRadius: '8px',
+                background: copied ? 'rgba(0, 255, 136, 0.2)' : 'rgba(0, 240, 255, 0.15)',
+                border: copied ? '1px solid #00ff88' : '1px solid rgba(0, 240, 255, 0.4)',
+                color: copied ? '#00ff88' : '#00f0ff',
               }}
             >
-              {copied ? '✓ Link Copied' : '📋 Copy Link'}
+              {copied ? '✓ COPIED' : '📋 COPY KEY'}
             </button>
             <button
-              onClick={() => generateNewRoomCode(gameId)}
-              className="btn-tactile-secondary"
-              style={{
-                padding: '6px 8px',
-                fontSize: '11px',
-                color: '#94a3b8',
+              onClick={() => {
+                soundFx.playClick();
+                generateNewRoomCode(gameId);
               }}
-              title="Generate new passphrase"
+              className="arcade-btn arcade-btn-secondary"
+              style={{ padding: '6px 10px', fontSize: '11px', borderRadius: '8px' }}
+              title="Generate new access key"
             >
               🔄
             </button>
@@ -293,92 +275,77 @@ export const GameRoomLobby: React.FC<GameRoomLobbyProps> = ({
         </div>
       </div>
 
-      {/* Main Table Configuration & Guest Roster */}
+      {/* 3. Match Config & Operator Pods */}
       <div
-        className="glass-panel"
+        className="cyber-panel"
         style={{
-          padding: '24px',
+          padding: '26px 30px',
+          background: 'rgba(12, 17, 32, 0.9)',
+          border: '1px solid rgba(255, 255, 255, 0.1)',
+          borderRadius: '24px',
           display: 'flex',
           flexDirection: 'column',
           gap: '24px',
         }}
       >
-        {/* Salon Mode Switch Bar */}
+        {/* Automated AI Switch */}
         <div
           style={{
             display: 'flex',
             justifyContent: 'space-between',
             alignItems: 'center',
             padding: '16px 20px',
-            borderRadius: '14px',
-            background: 'rgba(11, 16, 27, 0.7)',
-            border: '1px solid rgba(255, 255, 255, 0.07)',
+            borderRadius: '16px',
+            background: 'rgba(7, 10, 20, 0.8)',
+            border: '1px solid rgba(255, 255, 255, 0.08)',
             flexWrap: 'wrap',
             gap: '14px',
           }}
         >
           <div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-              <span style={{ fontSize: '14.5px', fontWeight: 800, color: '#f8fafc' }}>
-                Automated AI Opponents
+              <span style={{ fontSize: '15px', fontWeight: 900, color: '#ffffff', fontFamily: 'Space Grotesk, sans-serif' }}>
+                AI COMBATANT FILLING
               </span>
               <span
-                style={{
-                  fontSize: '10.5px',
-                  fontWeight: 800,
-                  textTransform: 'uppercase',
-                  letterSpacing: '0.5px',
-                  padding: '2px 8px',
-                  borderRadius: '9999px',
-                  background: room.allowBots ? 'rgba(16, 185, 129, 0.15)' : 'rgba(244, 63, 94, 0.15)',
-                  border: `1px solid ${room.allowBots ? 'rgba(16, 185, 129, 0.35)' : 'rgba(244, 63, 94, 0.35)'}`,
-                  color: room.allowBots ? '#34d399' : '#fb7185',
-                }}
+                className={`neon-pill ${room.allowBots ? 'neon-pill-green' : 'neon-pill-magenta'}`}
+                style={{ fontFamily: 'Orbitron, sans-serif' }}
               >
-                {room.allowBots ? 'Active & Filling' : 'Private / Friends Only'}
+                {room.allowBots ? 'ACTIVE' : 'PRIVATE ONLY'}
               </span>
             </div>
-            <p style={{ margin: '4px 0 0 0', fontSize: '12px', color: '#8492a6' }}>
+            <p style={{ margin: '4px 0 0 0', fontSize: '12.5px', color: '#94a3b8' }}>
               {room.allowBots
                 ? 'Vacant chairs will be automatically filled with tactical AI players upon match start.'
-                : 'Only invited human guests with your passphrase may enter the room.'}
+                : 'Only invited human guests with your room key may enter the arena.'}
             </p>
           </div>
 
           <button
-            onClick={() => toggleAllowBots(gameId)}
-            className="btn-tactile-secondary"
-            style={{
-              padding: '8px 16px',
-              fontSize: '12.5px',
-              background: room.allowBots ? 'rgba(16, 185, 129, 0.12)' : 'rgba(255, 255, 255, 0.06)',
-              borderColor: room.allowBots ? 'rgba(16, 185, 129, 0.4)' : 'rgba(255, 255, 255, 0.15)',
-              color: room.allowBots ? '#6ee7b7' : '#cbd5e1',
+            onClick={() => {
+              soundFx.playClick();
+              toggleAllowBots(gameId);
             }}
+            className={`arcade-btn ${room.allowBots ? 'arcade-btn-secondary' : 'arcade-btn-cyan'}`}
+            style={{ padding: '10px 18px', fontSize: '12px' }}
           >
-            {room.allowBots ? '🤖 Disable AI Bots' : '🤖 Enable AI Opponents'}
+            {room.allowBots ? '🤖 DISABLE AI BOTS' : '🤖 ENABLE AI BOTS'}
           </button>
         </div>
 
-        {/* Guest Roster Header */}
+        {/* Operator Pods Header */}
         <div>
-          <div
-            style={{
-              display: 'flex',
-              justifyContent: 'space-between',
-              alignItems: 'baseline',
-              marginBottom: '14px',
-            }}
-          >
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <span style={{ fontSize: '14px', fontWeight: 800, color: '#f8fafc', letterSpacing: '-0.01em' }}>
-                Seated Guests
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+              <span style={{ fontSize: '15px', fontWeight: 900, color: '#ffffff', fontFamily: 'Space Grotesk, sans-serif' }}>
+                SEATED COMBATANTS
               </span>
               <span
                 style={{
                   fontSize: '12px',
-                  color: '#94a3b8',
-                  fontFamily: 'ui-monospace, monospace',
+                  color: '#00f0ff',
+                  fontFamily: 'JetBrains Mono, monospace',
+                  fontWeight: 800,
                 }}
               >
                 ({room.players.length} / {room.maxPlayers})
@@ -388,40 +355,41 @@ export const GameRoomLobby: React.FC<GameRoomLobbyProps> = ({
             <span
               style={{
                 fontSize: '12px',
-                fontWeight: 700,
-                color: canStart ? '#34d399' : '#fb7185',
+                fontWeight: 800,
+                color: canStart ? '#00ff88' : '#ff0077',
                 display: 'flex',
                 alignItems: 'center',
                 gap: '6px',
+                fontFamily: 'JetBrains Mono, monospace',
               }}
             >
               <span
                 style={{
-                  width: '6px',
-                  height: '6px',
+                  width: '8px',
+                  height: '8px',
                   borderRadius: '50%',
-                  background: canStart ? '#34d399' : '#fb7185',
-                  boxShadow: `0 0 8px ${canStart ? '#34d399' : '#fb7185'}`,
+                  background: canStart ? '#00ff88' : '#ff0077',
+                  boxShadow: `0 0 10px ${canStart ? '#00ff88' : '#ff0077'}`,
                 }}
               />
               {canStart
-                ? 'Table quorum ready to launch'
-                : `Awaiting ${emptySlotsCount} more guest${emptySlotsCount === 1 ? '' : 's'}`}
+                ? 'TABLE QUORUM READY TO LAUNCH'
+                : `AWAITING ${emptySlotsCount} MORE COMBATANT(S)`}
             </span>
           </div>
 
-          {/* Player Grid */}
+          {/* Pods Grid */}
           <div
             style={{
               display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fill, minmax(210px, 1fr))',
+              gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))',
               gap: '12px',
             }}
           >
             {room.players.map((p, idx) => (
               <div
                 key={p.id}
-                className="glass-card"
+                className="cyber-card"
                 style={{
                   padding: '14px 16px',
                   display: 'flex',
@@ -429,69 +397,56 @@ export const GameRoomLobby: React.FC<GameRoomLobbyProps> = ({
                   justifyContent: 'space-between',
                   gap: '12px',
                   border: p.isHost
-                    ? '1.5px solid rgba(245, 158, 11, 0.4)'
-                    : '1px solid rgba(255, 255, 255, 0.08)',
+                    ? '1.5px solid rgba(255, 183, 3, 0.5)'
+                    : '1px solid rgba(255, 255, 255, 0.1)',
                   background: p.isHost
-                    ? 'linear-gradient(135deg, rgba(30, 24, 45, 0.6) 0%, rgba(18, 23, 36, 0.8) 100%)'
-                    : 'rgba(255, 255, 255, 0.03)',
-                  boxShadow: p.isHost ? '0 4px 16px rgba(245, 158, 11, 0.1)' : 'none',
+                    ? 'linear-gradient(135deg, rgba(35, 25, 15, 0.7) 0%, rgba(18, 25, 44, 0.85) 100%)'
+                    : 'rgba(15, 22, 38, 0.7)',
+                  boxShadow: p.isHost ? '0 0 20px rgba(255, 183, 3, 0.2)' : 'none',
                 }}
               >
                 <div style={{ display: 'flex', alignItems: 'center', gap: '12px', minWidth: 0 }}>
                   <div
                     style={{
-                      width: '38px',
-                      height: '38px',
-                      borderRadius: '50%',
-                      background: p.color,
+                      width: '42px',
+                      height: '42px',
+                      borderRadius: '12px',
+                      background: p.color || '#3b82f6',
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'center',
-                      fontSize: '18px',
-                      flexShrink: 0,
-                      boxShadow: `0 0 12px ${p.color}66`,
-                      border: '2px solid rgba(255, 255, 255, 0.3)',
+                      fontSize: '20px',
+                      boxShadow: '0 4px 12px rgba(0, 0, 0, 0.4)',
                     }}
                   >
-                    {p.avatar}
+                    {p.avatar || '🎮'}
                   </div>
+
                   <div style={{ minWidth: 0 }}>
-                    <div
-                      style={{
-                        fontSize: '13.5px',
-                        fontWeight: 800,
-                        color: '#f8fafc',
-                        whiteSpace: 'nowrap',
-                        overflow: 'hidden',
-                        textOverflow: 'ellipsis',
-                      }}
-                    >
+                    <div style={{ fontSize: '14px', fontWeight: 900, color: '#ffffff', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                       {p.name}
                     </div>
-                    <span
-                      style={{
-                        fontSize: '10.5px',
-                        fontWeight: 700,
-                        color: p.isHost ? '#fbbf24' : p.isBot ? '#38bdf8' : '#8492a6',
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '4px',
-                      }}
-                    >
-                      {p.isHost ? '👑 Host' : p.isBot ? '🤖 AI Bot' : `Seat #${idx + 1}`}
-                    </span>
+                    <div style={{ fontSize: '11px', color: p.isHost ? '#fde047' : '#94a3b8', fontWeight: 700 }}>
+                      {p.isHost ? '👑 HOST' : p.isBot ? '🤖 AI BOT' : '🎮 GUEST'}
+                    </div>
                   </div>
                 </div>
 
                 {!p.isHost && (
                   <button
-                    onClick={() => removePlayer(gameId, p.id)}
-                    className="btn-danger-action"
-                    style={{
-                      padding: '4px 8px',
-                      fontSize: '11px',
+                    onClick={() => {
+                      soundFx.playClick();
+                      removePlayer(gameId, p.id);
                     }}
-                    title="Dismiss guest"
+                    style={{
+                      background: 'none',
+                      border: 'none',
+                      color: '#ef4444',
+                      cursor: 'pointer',
+                      fontSize: '13px',
+                      padding: '4px',
+                    }}
+                    title="Remove player"
                   >
                     ✕
                   </button>
@@ -499,91 +454,73 @@ export const GameRoomLobby: React.FC<GameRoomLobbyProps> = ({
               </div>
             ))}
 
-            {/* Empty Seat Placeholders */}
-            {Array.from({ length: emptySlotsCount }).map((_, i) => (
+            {/* Empty Pod Slots */}
+            {Array.from({ length: Math.max(0, room.minPlayers - room.players.length) }).map((_, i) => (
               <div
                 key={`empty-${i}`}
                 style={{
-                  border: '1.5px dashed rgba(255, 255, 255, 0.1)',
-                  borderRadius: '12px',
-                  padding: '14px',
+                  border: '1.5px dashed rgba(255, 255, 255, 0.12)',
+                  borderRadius: '16px',
+                  padding: '14px 16px',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
                   gap: '8px',
                   color: '#64748b',
                   fontSize: '12px',
-                  fontWeight: 600,
-                  minHeight: '66px',
-                  background: 'rgba(0, 0, 0, 0.15)',
+                  fontFamily: 'JetBrains Mono, monospace',
                 }}
               >
-                <span>🪑</span>
-                <span>Awaiting Guest...</span>
+                <span>🪑 VACANT POD {room.players.length + i + 1}</span>
               </div>
             ))}
           </div>
         </div>
 
-        {/* Guest Invite & Bot Bar */}
+        {/* Add Guest Controls */}
         <div
           style={{
             display: 'flex',
-            flexWrap: 'wrap',
             gap: '10px',
-            padding: '14px',
-            borderRadius: '12px',
-            background: 'rgba(11, 16, 27, 0.5)',
-            border: '1px solid rgba(255, 255, 255, 0.06)',
             alignItems: 'center',
+            flexWrap: 'wrap',
           }}
         >
           <input
             type="text"
             value={newPlayerName}
-            onChange={(e: React.ChangeEvent<HTMLInputElement>) => setNewPlayerName(e.target.value)}
-            onKeyDown={(e: React.KeyboardEvent) => e.key === 'Enter' && handleAddFriend()}
-            placeholder="Guest Name (e.g. Raunak, Victoria, Maya)"
+            onChange={(e) => setNewPlayerName(e.target.value)}
+            onKeyDown={(e) => e.key === 'Enter' && handleAddFriend()}
+            placeholder="Type player callsign..."
             style={{
-              flex: '1 1 200px',
+              flex: 1,
+              minWidth: '200px',
+              background: 'rgba(8, 12, 22, 0.85)',
+              border: '1px solid rgba(255, 255, 255, 0.15)',
+              borderRadius: '12px',
               padding: '10px 14px',
-              borderRadius: '10px',
-              border: '1px solid rgba(255, 255, 255, 0.12)',
-              background: '#090d16',
               color: '#ffffff',
               fontSize: '13px',
               outline: 'none',
-              boxSizing: 'border-box',
             }}
           />
+
           <button
             onClick={handleAddFriend}
             disabled={!newPlayerName.trim() || room.players.length >= room.maxPlayers}
-            className="btn-tactile-secondary"
-            style={{
-              padding: '10px 18px',
-              fontSize: '12.5px',
-              fontWeight: 800,
-              opacity: !newPlayerName.trim() || room.players.length >= room.maxPlayers ? 0.5 : 1,
-              cursor: !newPlayerName.trim() || room.players.length >= room.maxPlayers ? 'not-allowed' : 'pointer',
-            }}
+            className="arcade-btn arcade-btn-secondary"
+            style={{ padding: '10px 18px', fontSize: '12px' }}
           >
-            + Add Guest
+            + ADD GUEST
           </button>
 
           {room.allowBots && room.players.length < room.maxPlayers && (
             <button
               onClick={handleAddBot}
-              className="btn-tactile-secondary"
-              style={{
-                padding: '10px 16px',
-                fontSize: '12.5px',
-                borderColor: 'rgba(56, 189, 248, 0.35)',
-                color: '#38bdf8',
-                background: 'rgba(56, 189, 248, 0.08)',
-              }}
+              className="arcade-btn arcade-btn-cyan"
+              style={{ padding: '10px 18px', fontSize: '12px' }}
             >
-              + Add Tactical Bot 🤖
+              + ADD TACTICAL BOT 🤖
             </button>
           )}
         </div>
@@ -594,16 +531,16 @@ export const GameRoomLobby: React.FC<GameRoomLobbyProps> = ({
             display: 'flex',
             justifyContent: 'space-between',
             alignItems: 'center',
-            paddingTop: '8px',
-            borderTop: '1px solid rgba(255, 255, 255, 0.06)',
+            paddingTop: '16px',
+            borderTop: '1px solid rgba(255, 255, 255, 0.08)',
             flexWrap: 'wrap',
             gap: '14px',
           }}
         >
-          <div style={{ fontSize: '12.5px', color: '#8492a6' }}>
+          <div style={{ fontSize: '13px', color: '#94a3b8' }}>
             {canStart ? (
-              <span style={{ color: '#34d399', fontWeight: 600 }}>
-                Ready to initiate session in Room {room.roomCode}.
+              <span style={{ color: '#00ff88', fontWeight: 800, fontFamily: 'JetBrains Mono, monospace' }}>
+                ● READY TO INITIATE ARENA IN ROOM {room.roomCode}
               </span>
             ) : (
               <span>Invite more guests or enable AI bots to begin.</span>
@@ -612,6 +549,7 @@ export const GameRoomLobby: React.FC<GameRoomLobbyProps> = ({
 
           <button
             onClick={() => {
+              soundFx.playClick();
               trackEvent('match_started', {
                 gameId,
                 roomCode: room.roomCode,
@@ -621,23 +559,17 @@ export const GameRoomLobby: React.FC<GameRoomLobbyProps> = ({
               onStart();
             }}
             disabled={!canStart}
-            className="btn-primary-glow"
+            className="arcade-btn arcade-btn-green"
             style={{
-              padding: '14px 38px',
-              fontSize: '15px',
-              fontWeight: 900,
-              letterSpacing: '0.4px',
-              opacity: canStart ? 1 : 0.45,
+              padding: '16px 44px',
+              fontSize: '16px',
+              letterSpacing: '1px',
+              fontFamily: 'Orbitron, sans-serif',
+              opacity: canStart ? 1 : 0.4,
               cursor: canStart ? 'pointer' : 'not-allowed',
-              background: canStart
-                ? 'linear-gradient(135deg, #10b981 0%, #059669 100%)'
-                : '#334155',
-              boxShadow: canStart
-                ? '0 8px 24px rgba(16, 185, 129, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.3)'
-                : 'none',
             }}
           >
-            {canStart ? '🚀 Initiate Match' : `Waiting for Quorum (${room.players.length}/${room.minPlayers})`}
+            {canStart ? '⚡ INITIATE ARENA MATCH 🚀' : `WAITING FOR QUORUM (${room.players.length}/${room.minPlayers})`}
           </button>
         </div>
       </div>

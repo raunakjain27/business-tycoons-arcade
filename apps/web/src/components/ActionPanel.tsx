@@ -274,76 +274,96 @@ export const ActionPanel: React.FC<ActionPanelProps> = ({ gameState }) => {
   const currentPlayer = gameState.players[turnPlayerId];
   const myPlayer = gameState.players[myPlayerId];
 
-  // Helper button styling
+  // Helper button styling with 3D tactile push feel
   const primaryButtonStyle: React.CSSProperties = {
-    padding: isMobile ? '10px 16px' : '12px 20px',
-    borderRadius: '10px',
+    padding: isMobile ? '12px 18px' : '14px 24px',
+    borderRadius: '12px',
     border: 'none',
-    background: 'linear-gradient(135deg, #8b5cf6 0%, #ec4899 100%)',
+    borderBottom: '4px solid #8d0801',
+    background: 'linear-gradient(135deg, #ff0077 0%, #d90429 100%)',
     color: '#ffffff',
-    fontWeight: 800,
-    fontSize: isMobile ? '12.5px' : '14px',
+    fontFamily: 'Space Grotesk, Outfit, sans-serif',
+    fontWeight: 900,
+    fontSize: isMobile ? '13px' : '14.5px',
+    letterSpacing: '0.8px',
+    textTransform: 'uppercase',
     cursor: 'pointer',
-    boxShadow: '0 4px 18px rgba(139, 92, 246, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.3)',
-    transition: 'all 0.15s cubic-bezier(0.16, 1, 0.3, 1)',
+    boxShadow: '0 6px 20px rgba(255, 0, 119, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.4)',
+    textShadow: '0 1px 2px rgba(0, 0, 0, 0.6)',
+    transition: 'all 0.12s cubic-bezier(0.2, 0.8, 0.2, 1)',
   };
 
   const secondaryButtonStyle: React.CSSProperties = {
-    padding: isMobile ? '8px 12px' : '10px 16px',
-    borderRadius: '10px',
-    background: 'rgba(255, 255, 255, 0.06)',
-    color: '#e2e8f0',
-    border: '1px solid rgba(255, 255, 255, 0.12)',
-    fontWeight: 700,
-    fontSize: isMobile ? '11.5px' : '13px',
+    padding: isMobile ? '10px 14px' : '12px 18px',
+    borderRadius: '12px',
+    background: 'rgba(12, 18, 34, 0.85)',
+    color: '#f1f5f9',
+    border: '1px solid rgba(0, 240, 255, 0.35)',
+    borderBottom: '3px solid rgba(0, 240, 255, 0.5)',
+    fontFamily: 'Space Grotesk, Outfit, sans-serif',
+    fontWeight: 800,
+    fontSize: isMobile ? '12px' : '13px',
+    letterSpacing: '0.6px',
+    textTransform: 'uppercase',
     cursor: 'pointer',
-    transition: 'all 0.15s ease',
+    boxShadow: '0 4px 14px rgba(0, 0, 0, 0.4)',
+    transition: 'all 0.12s ease',
   };
 
   return (
     <div
-      className="glass-panel"
+      className="cyber-panel"
       style={{
-        padding: isMobile ? '16px' : '20px',
+        padding: isMobile ? '18px' : '22px',
+        background: 'linear-gradient(135deg, rgba(16, 24, 46, 0.95) 0%, rgba(9, 13, 24, 0.98) 100%)',
+        border: '1.5px solid rgba(0, 240, 255, 0.3)',
+        borderRadius: '20px',
         display: 'flex',
         flexDirection: 'column',
-        gap: isMobile ? '12px' : '16px',
+        gap: isMobile ? '14px' : '18px',
         width: '100%',
         boxSizing: 'border-box',
         minHeight: isMobile ? '260px' : '320px',
+        boxShadow: '0 16px 40px rgba(0, 0, 0, 0.7), 0 0 25px rgba(0, 240, 255, 0.12)',
+        position: 'relative',
+        overflow: 'hidden',
       }}
     >
+      <div className="marquee-glow-top" />
+
       {/* Turn Header Banner */}
       <div
         style={{
           display: 'flex',
           justifyContent: 'space-between',
           alignItems: 'center',
-          borderBottom: '1px solid #243356',
-          paddingBottom: '12px',
+          borderBottom: '1px solid rgba(255, 255, 255, 0.1)',
+          paddingBottom: '14px',
         }}
       >
         <div>
-          <span style={{ fontSize: '11px', color: '#94a3b8', textTransform: 'uppercase', fontWeight: 600 }}>
-            Round {gameState.round} • Turn
+          <span style={{ fontSize: '11px', color: '#67e8f9', textTransform: 'uppercase', fontWeight: 800, letterSpacing: '1px', fontFamily: 'Orbitron, sans-serif' }}>
+            ROUND {gameState.round} • COMBAT TURN
           </span>
-          <h3 style={{ fontSize: '18px', fontWeight: 700, color: isMyTurn ? '#e94560' : '#38bdf8' }}>
-            {isMyTurn ? 'Your Turn' : `${currentPlayer?.name ?? 'Opponent'}'s Turn`}
+          <h3
+            style={{
+              fontSize: '22px',
+              fontWeight: 900,
+              fontFamily: 'Space Grotesk, sans-serif',
+              color: isMyTurn ? '#ff0077' : '#00f0ff',
+              textShadow: isMyTurn ? '0 0 16px rgba(255, 0, 119, 0.5)' : '0 0 16px rgba(0, 240, 255, 0.5)',
+              margin: '2px 0 0 0',
+              lineHeight: 1.15,
+            }}
+          >
+            {isMyTurn ? '⚡ YOUR TURN' : `${currentPlayer?.name ?? 'OPPONENT'}'S TURN`}
           </h3>
         </div>
         <div
-          style={{
-            padding: '4px 10px',
-            borderRadius: '16px',
-            backgroundColor: isMyTurn ? '#e9456022' : '#0f3460',
-            border: `1px solid ${isMyTurn ? '#e94560' : '#243356'}`,
-            fontSize: '11px',
-            fontWeight: 700,
-            color: isMyTurn ? '#e94560' : '#94a3b8',
-            textTransform: 'uppercase',
-          }}
+          className={`neon-pill ${isMyTurn ? 'neon-pill-magenta' : 'neon-pill-cyan'}`}
+          style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: '11px' }}
         >
-          Phase: {phase}
+          PHASE: {phase}
         </div>
       </div>
 

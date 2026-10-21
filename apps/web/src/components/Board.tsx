@@ -247,18 +247,19 @@ export const Board: React.FC<BoardProps> = ({ gameState }) => {
           gridTemplateColumns: 'minmax(72px, 1.35fr) repeat(9, minmax(42px, 1fr)) minmax(72px, 1.35fr)',
           gridTemplateRows: 'minmax(72px, 1.35fr) repeat(9, minmax(42px, 1fr)) minmax(72px, 1.35fr)',
           gap: '2.5px',
-          background: 'radial-gradient(ellipse at center, #0f1526 0%, #080c16 100%)',
+          background: 'radial-gradient(ellipse at center, #0e1529 0%, #060913 100%)',
           padding: '10px',
-          borderRadius: '18px',
-          border: '1px solid rgba(255, 255, 255, 0.09)',
-          boxShadow: '0 24px 64px -12px rgba(0, 0, 0, 0.7), 0 0 40px rgba(139, 92, 246, 0.12)',
+          borderRadius: '20px',
+          border: '2px solid rgba(0, 240, 255, 0.35)',
+          boxShadow: '0 28px 72px -8px rgba(0, 0, 0, 0.85), 0 0 45px rgba(0, 240, 255, 0.22), inset 0 0 35px rgba(0, 0, 0, 0.6)',
           width: '100%',
           maxWidth: 'min(820px, calc(100vh - 170px))',
           aspectRatio: '1 / 1',
           userSelect: 'none',
           margin: '0 auto',
-          fontFamily: "'Outfit', system-ui, -apple-system, sans-serif",
+          fontFamily: "'Space Grotesk', 'Outfit', sans-serif",
           boxSizing: 'border-box',
+          position: 'relative',
         }}
       >
         {/* 40 Tiles */}
@@ -939,94 +940,72 @@ export const Board: React.FC<BoardProps> = ({ gameState }) => {
           {/* Roll Action Button in Center */}
           {gameState.phase === 'awaitRoll' && gameState.turnPlayerId === myPlayerId && (
             <button
-              onClick={() => dispatchAction({ type: 'ROLL' })}
+              onClick={() => {
+                soundFx.playClick();
+                dispatchAction({ type: 'ROLL' });
+              }}
+              className="arcade-btn arcade-btn-primary"
               style={{
-                padding: '9px 22px',
-                borderRadius: '8px',
-                border: 'none',
-                backgroundColor: '#7c3aed',
-                color: '#ffffff',
-                fontSize: '13px',
-                fontWeight: 700,
-                cursor: 'pointer',
-                boxShadow: '0 4px 16px rgba(124, 58, 237, 0.5)',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '8px',
-                transition: 'all 0.15s ease',
+                padding: '12px 30px',
+                fontSize: '14px',
                 marginBottom: '8px',
+                fontFamily: 'Orbitron, sans-serif',
+                letterSpacing: '1px',
               }}
             >
               <span>🎲</span>
-              <span>Roll Dice</span>
+              <span>ROLL DICE</span>
             </button>
           )}
 
           {/* Resolve Event Action Button in Center */}
           {gameState.phase === 'resolveEvent' && gameState.turnPlayerId === myPlayerId && (
             <button
-              onClick={dismissEventCard}
+              onClick={() => {
+                soundFx.playClick();
+                dismissEventCard();
+              }}
+              className="arcade-btn arcade-btn-green"
               style={{
-                padding: '9px 20px',
-                borderRadius: '8px',
-                border: 'none',
-                background:
-                  gameState.players[gameState.turnPlayerId]?.doublesStreak > 0 &&
-                  !gameState.players[gameState.turnPlayerId]?.inJail
-                    ? 'linear-gradient(135deg, #10b981 0%, #059669 100%)'
-                    : 'linear-gradient(135deg, #fcd581 0%, #f59e0b 100%)',
-                color:
-                  gameState.players[gameState.turnPlayerId]?.doublesStreak > 0 &&
-                  !gameState.players[gameState.turnPlayerId]?.inJail
-                    ? '#ffffff'
-                    : '#0f172a',
+                padding: '12px 26px',
                 fontSize: '13px',
-                fontWeight: 800,
-                cursor: 'pointer',
-                boxShadow: '0 4px 16px rgba(0,0,0,0.4)',
                 marginBottom: '8px',
               }}
             >
               {gameState.players[gameState.turnPlayerId]?.doublesStreak > 0 &&
               !gameState.players[gameState.turnPlayerId]?.inJail
-                ? '🎲 Roll Again (Doubles!)'
-                : 'Next Player ➔'}
+                ? '🎲 ROLL AGAIN (DOUBLES!)'
+                : 'NEXT COMBATANT ➔'}
             </button>
           )}
 
           {/* Buy Decision Action Buttons in Center */}
           {gameState.phase === 'awaitBuyDecision' && gameState.turnPlayerId === myPlayerId && (
-            <div style={{ display: 'flex', gap: '8px', marginBottom: '8px' }}>
+            <div style={{ display: 'flex', gap: '10px', marginBottom: '8px' }}>
               <button
-                onClick={() => dispatchAction({ type: 'BUY' })}
-                style={{
-                  padding: '9px 18px',
-                  borderRadius: '8px',
-                  border: 'none',
-                  background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
-                  color: '#ffffff',
-                  fontSize: '13px',
-                  fontWeight: 800,
-                  cursor: 'pointer',
-                  boxShadow: '0 4px 14px rgba(16, 185, 129, 0.4)',
+                onClick={() => {
+                  soundFx.playClick();
+                  dispatchAction({ type: 'BUY' });
                 }}
+                className="arcade-btn arcade-btn-green"
+                style={{ padding: '10px 22px', fontSize: '13px' }}
               >
-                Buy Property
+                BUY PROPERTY
               </button>
               <button
-                onClick={() => dispatchAction({ type: 'DECLINE_BUY' })}
+                onClick={() => {
+                  soundFx.playClick();
+                  dispatchAction({ type: 'DECLINE_BUY' });
+                }}
+                className="arcade-btn arcade-btn-secondary"
                 style={{
-                  padding: '9px 16px',
-                  borderRadius: '8px',
-                  border: '1px solid rgba(255,255,255,0.2)',
-                  backgroundColor: 'rgba(239, 68, 68, 0.25)',
-                  color: '#fca5a5',
+                  padding: '10px 18px',
                   fontSize: '13px',
-                  fontWeight: 700,
-                  cursor: 'pointer',
+                  borderColor: 'rgba(239, 68, 68, 0.45)',
+                  color: '#fca5a5',
                 }}
               >
-                Pass / Auction
+                PASS / AUCTION
               </button>
             </div>
           )}
@@ -1034,24 +1013,18 @@ export const Board: React.FC<BoardProps> = ({ gameState }) => {
           {/* End Turn Action Button in Center */}
           {gameState.phase === 'awaitEndTurn' && gameState.turnPlayerId === myPlayerId && (
             <button
-              onClick={() => dispatchAction({ type: 'END_TURN' })}
+              onClick={() => {
+                soundFx.playClick();
+                dispatchAction({ type: 'END_TURN' });
+              }}
+              className="arcade-btn arcade-btn-cyan"
               style={{
-                padding: '9px 22px',
-                borderRadius: '8px',
-                border: 'none',
-                background: 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)',
-                color: '#ffffff',
+                padding: '12px 28px',
                 fontSize: '13px',
-                fontWeight: 800,
-                cursor: 'pointer',
-                boxShadow: '0 4px 16px rgba(59, 130, 246, 0.4)',
                 marginBottom: '8px',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '8px',
               }}
             >
-              <span>End Turn ➔</span>
+              <span>END TURN ➔</span>
             </button>
           )}
 

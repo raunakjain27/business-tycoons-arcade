@@ -90,60 +90,57 @@ export function App() {
   }, [gameState, initLocalGame]);
 
   return (
-    <div
-      style={{
-        minHeight: '100vh',
-        background: 'radial-gradient(ellipse at top, #1a1625 0%, #0f0b1a 100%)',
-        color: '#f8fafc',
-        display: 'flex',
-        flexDirection: 'column',
-      }}
-    >
-      {/* 1. Top Global Navigation Header - Sleek Glassmorphic Gaming Bar */}
+    <div className="cyber-arena-bg">
+      {/* 1. Top Global Navigation Header - High-Energy Cyber Marquee Bar */}
       <header
         style={{
-          background: 'rgba(10, 14, 26, 0.85)',
-          backdropFilter: 'blur(20px) saturate(180%)',
-          WebkitBackdropFilter: 'blur(20px) saturate(180%)',
-          borderBottom: '1px solid rgba(255, 255, 255, 0.08)',
-          padding: '10px 20px',
+          background: 'rgba(9, 13, 26, 0.92)',
+          backdropFilter: 'blur(24px) saturate(200%)',
+          WebkitBackdropFilter: 'blur(24px) saturate(200%)',
+          borderBottom: '1.5px solid rgba(0, 240, 255, 0.25)',
+          padding: '10px 24px',
           display: 'flex',
           justifyContent: 'space-between',
           alignItems: 'center',
-          boxShadow: '0 4px 20px rgba(0, 0, 0, 0.4)',
+          boxShadow: '0 6px 30px rgba(0, 0, 0, 0.6), 0 0 20px rgba(0, 240, 255, 0.1)',
           position: 'sticky',
           top: 0,
           zIndex: 50,
-          minHeight: '56px',
+          minHeight: '60px',
         }}
       >
         {/* Left: Brand & Match Breadcrumb */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
           <div
-            onClick={() => setView('dashboard')}
+            onClick={() => {
+              soundFx.playClick();
+              setView('dashboard');
+            }}
             style={{
               display: 'flex',
               alignItems: 'center',
-              gap: '10px',
+              gap: '12px',
               cursor: 'pointer',
             }}
           >
             <div
               style={{
-                width: '36px',
-                height: '36px',
-                borderRadius: '10px',
-                background: 'linear-gradient(135deg, #8b5cf6 0%, #ec4899 100%)',
+                width: '40px',
+                height: '40px',
+                borderRadius: '12px',
+                background: 'linear-gradient(135deg, #00f0ff 0%, #ff0077 100%)',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
                 fontWeight: 900,
-                fontSize: '16px',
+                fontSize: '18px',
+                fontFamily: 'Orbitron, sans-serif',
                 color: '#ffffff',
-                boxShadow: '0 0 16px rgba(139, 92, 246, 0.5)',
+                boxShadow: '0 0 20px rgba(0, 240, 255, 0.6)',
+                border: '1.5px solid rgba(255, 255, 255, 0.4)',
                 transition: 'transform 0.15s ease',
               }}
-              onMouseEnter={(e: any) => (e.currentTarget.style.transform = 'scale(1.05)')}
+              onMouseEnter={(e: any) => (e.currentTarget.style.transform = 'scale(1.08)')}
               onMouseLeave={(e: any) => (e.currentTarget.style.transform = 'scale(1)')}
             >
               BT
@@ -151,17 +148,20 @@ export function App() {
             <div>
               <div
                 style={{
+                  fontFamily: 'Orbitron, sans-serif',
                   fontSize: '16px',
                   fontWeight: 900,
-                  letterSpacing: '0.5px',
+                  letterSpacing: '1px',
                   color: '#ffffff',
                   lineHeight: 1.1,
+                  textShadow: '0 0 12px rgba(0, 240, 255, 0.4)',
                 }}
               >
                 BUSINESS TYCOONS
               </div>
-              <div style={{ fontSize: '10.5px', color: '#94a3b8', fontWeight: 600 }}>
-                {view === 'dashboard' ? 'Arcade Hub & Party Platform' : `Playing: ${activeGame === 'cornerstone' ? 'Monopoly' : activeGame.toUpperCase()}`}
+              <div style={{ fontSize: '11px', color: '#67e8f9', fontWeight: 700, fontFamily: 'Space Grotesk, sans-serif', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <span className="live-beacon" />
+                {view === 'dashboard' ? 'CYBER ARCADE ARENA' : `PLAYING: ${activeGame === 'cornerstone' ? 'MONOPOLY BATTLE' : activeGame.toUpperCase()}`}
               </div>
             </div>
           </div>
@@ -174,35 +174,22 @@ export function App() {
                 display: 'flex',
                 alignItems: 'center',
                 gap: '8px',
-                marginLeft: '12px',
-                paddingLeft: '14px',
-                borderLeft: '1px solid rgba(255, 255, 255, 0.1)',
+                marginLeft: '14px',
+                paddingLeft: '16px',
+                borderLeft: '1px solid rgba(255, 255, 255, 0.12)',
               }}
             >
               <div
-                className="glass-pill"
-                style={{
-                  background: 'rgba(139, 92, 246, 0.15)',
-                  border: '1px solid rgba(139, 92, 246, 0.35)',
-                  color: '#c4b5fd',
-                  fontSize: '11px',
-                  padding: '3px 10px',
-                }}
+                className="neon-pill neon-pill-magenta"
+                style={{ fontFamily: 'JetBrains Mono, monospace' }}
               >
-                <span>Round</span>
+                <span>ROUND</span>
                 <strong style={{ color: '#ffffff' }}>{gameState.round}</strong>
               </div>
 
               <div
-                className="glass-pill"
-                style={{
-                  background: gameMode === 'online' ? 'rgba(56, 189, 248, 0.15)' : 'rgba(16, 185, 129, 0.15)',
-                  border: `1px solid ${gameMode === 'online' ? 'rgba(56, 189, 248, 0.35)' : 'rgba(16, 185, 129, 0.35)'}`,
-                  color: gameMode === 'online' ? '#7dd3fc' : '#6ee7b7',
-                  fontSize: '11px',
-                  padding: '3px 10px',
-                  textTransform: 'uppercase',
-                }}
+                className="neon-pill neon-pill-green"
+                style={{ fontFamily: 'JetBrains Mono, monospace' }}
               >
                 <span>{gameMode}</span>
               </div>
@@ -246,27 +233,25 @@ export function App() {
           </button>
         </div>
 
-        {/* Right: Unified Sleek Action Cluster (Desktop) */}
+        {/* Right: Unified High-Energy Cyber Action Cluster (Desktop) */}
         <div
           className="desktop-header-controls"
           style={{ display: 'flex', alignItems: 'center', gap: '10px' }}
         >
-          {/* Hub / Game Toggle Pill */}
+          {/* Hub / Game Toggle Button */}
           <button
             onClick={() => {
               soundFx.playClick();
               setView(view === 'dashboard' ? 'game' : 'dashboard');
             }}
-            className={view === 'dashboard' ? 'btn-primary-glow' : 'btn-tactile-secondary'}
+            className={`arcade-btn ${view === 'dashboard' ? 'arcade-btn-primary' : 'arcade-btn-cyan'}`}
             style={{
-              padding: '6px 14px',
+              padding: '8px 18px',
               fontSize: '12px',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '6px',
+              letterSpacing: '0.8px',
             }}
           >
-            <span>{view === 'dashboard' ? '🎮 Return to Match' : '🕹️ Arcade Hub'}</span>
+            <span>{view === 'dashboard' ? '🎮 RETURN TO ARENA' : '🕹️ CYBER ARCADE'}</span>
           </button>
 
           {/* Coins Counter */}
@@ -275,24 +260,18 @@ export function App() {
               soundFx.playClick();
               useUserStore.getState().setShowStoreModal(true);
             }}
+            className="neon-pill neon-pill-gold"
             style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '5px',
-              background: 'rgba(245, 158, 11, 0.12)',
-              border: '1px solid rgba(245, 158, 11, 0.3)',
-              padding: '5px 12px',
-              borderRadius: '20px',
-              fontSize: '12px',
-              fontWeight: 800,
-              color: '#fbbf24',
               cursor: 'pointer',
+              padding: '6px 14px',
+              fontSize: '12px',
+              fontFamily: 'JetBrains Mono, monospace',
               transition: 'all 0.15s ease',
             }}
-            title="Click to open In-Game Store"
+            title="Click to open Cyber Store"
           >
             <span>🪙</span>
-            <span>{user.coins}</span>
+            <span>{user.coins} BULLION</span>
           </div>
 
           {/* Daily Streak Reward */}
@@ -301,19 +280,16 @@ export function App() {
               soundFx.playClick();
               useUserStore.getState().setShowDailyModal(true);
             }}
-            className="btn-tactile-secondary"
+            className="arcade-btn arcade-btn-secondary"
             style={{
-              padding: '5px 12px',
-              fontSize: '12px',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '5px',
-              borderColor: 'rgba(245, 158, 11, 0.4)',
-              color: '#fef08a',
+              padding: '7px 12px',
+              fontSize: '11px',
+              borderColor: 'rgba(255, 183, 3, 0.4)',
+              color: '#fde047',
             }}
           >
             <span>🎁</span>
-            <span>Daily</span>
+            <span>DAILY</span>
           </button>
 
           {/* Rules Guide Modal */}

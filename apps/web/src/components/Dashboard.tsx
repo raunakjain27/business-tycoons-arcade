@@ -1,55 +1,45 @@
 import React, { useState } from 'react';
-import {
-  useHubStore,
-  GAME_CATALOG,
-  GameMetadata,
-  GameId,
-} from '../hubStore';
-import { useGameRoomStore } from '../gameRoomStore';
+import { useHubStore, GAME_CATALOG, GameId, GameMetadata } from '../hubStore';
 import { useUserStore } from '../userStore';
-
-const CATEGORIES = [
-  'All',
-  'Strategy',
-  'Card Game',
-  'Social Deduction',
-  'Classic',
-  'Party',
-];
+import { useGameRoomStore } from '../gameRoomStore';
+import { soundFx } from '../soundEffects';
+import { trackEvent } from '../posthog';
 
 export const Dashboard: React.FC = () => {
   const {
     activeGame,
     setActiveGame,
-    selectedCategory,
-    setSelectedCategory,
     searchQuery,
     setSearchQuery,
+    selectedCategory,
+    setSelectedCategory,
   } = useHubStore();
 
-  const { user, setShowAccountModal } = useUserStore();
-  const [joinCodeInput, setJoinCodeInput] = useState('');
+  const { user, openRulesModal, setShowStoreModal, setShowDailyModal, setShowLeaderboardModal } = useUserStore();
+  const [joinCode, setJoinCode] = useState('');
   const [joinError, setJoinError] = useState('');
+
+  const categories = ['All', 'Strategy', 'Card Game', 'Social Deduction', 'Classic', 'Party'];
 
   const filteredGames = GAME_CATALOG.filter((game) => {
     const matchesCategory =
       selectedCategory === 'All' || game.category === selectedCategory;
-    const query = searchQuery.toLowerCase();
     const matchesSearch =
-      game.title.toLowerCase().includes(query) ||
-      game.description.toLowerCase().includes(query);
+      game.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      game.description.toLowerCase().includes(searchQuery.toLowerCase());
     return matchesCategory && matchesSearch;
   });
 
-  const handleJoinByCode = (e?: React.FormEvent) => {
-    if (e) e.preventDefault();
-    const trimmed = joinCodeInput.trim().toUpperCase();
+  const handleQuickJoin = (e: React.FormEvent) => {
+    e.preventDefault();
+    soundFx.playClick();
+    const trimmed = joinCode.trim().toUpperCase();
     if (!trimmed) {
-      setJoinError('Please enter a 6-character room code.');
+      setJoinError('ENTER A VALID ACCESS CODE');
       return;
     }
     if (trimmed.length < 4) {
-      setJoinError('Passphrase is too short.');
+      setJoinError('ACCESS CODE TOO SHORT (MIN 4 CHARS)');
       return;
     }
     setJoinError('');
@@ -66,382 +56,354 @@ export const Dashboard: React.FC = () => {
     const gameToJoin: GameId = foundGame || 'cornerstone';
     const targetRoom = useGameRoomStore.getState().getOrCreateRoom(gameToJoin, 'Host');
     targetRoom.roomCode = trimmed;
-    useGameRoomStore.getState().addPlayer(gameToJoin, user.username || 'Friend', false);
+    useGameRoomStore.getState().addPlayer(gameToJoin, user.username || 'CyberRider', false);
     setActiveGame(gameToJoin);
+  };
+
+  const getGameEnergyTag = (g: GameMetadata) => {
+    if (g.id === 'cornerstone') return { text: 'HIGH OCTANE', color: '#ffb703', border: 'rgba(255,183,3,0.5)' };
+    if (g.id === 'uno') return { text: 'HYPER SPEED', color: '#ff0077', border: 'rgba(255,0,119,0.5)' };
+    if (g.id === 'ludo') return { text: 'ROYAL CLASH', color: '#00ff88', border: 'rgba(0,255,136,0.5)' };
+    if (g.id === 'traitors') return { text: '18+ DECEPTION', color: '#ef4444', border: 'rgba(239,68,68,0.5)' };
+    if (g.id === 'imposter') return { text: 'VIRAL MINDGAME', color: '#a855f7', border: 'rgba(168,85,247,0.5)' };
+    if (g.id === 'tambola') return { text: 'MEGA JACKPOT', color: '#f59e0b', border: 'rgba(245,158,11,0.5)' };
+    if (g.id === 'bingo') return { text: 'LASER SPEED', color: '#00f0ff', border: 'rgba(0,240,255,0.5)' };
+    if (g.id === 'sequence') return { text: 'TACTICAL PRO', color: '#3b82f6', border: 'rgba(59,130,246,0.5)' };
+    if (g.id === 'snakes') return { text: 'NEON ASCENT', color: '#10b981', border: 'rgba(16,185,129,0.5)' };
+    return { text: 'TURBO DUEL', color: '#eab308', border: 'rgba(234,179,8,0.5)' };
   };
 
   return (
     <div
-      className="dashboard-container"
       style={{
-        maxWidth: '1440px',
+        maxWidth: '1480px',
         margin: '0 auto',
         display: 'flex',
         flexDirection: 'column',
-        gap: '28px',
-        padding: '0 12px 36px',
+        gap: '24px',
+        padding: '0 8px 48px',
         width: '100%',
         boxSizing: 'border-box',
-        overflowX: 'hidden',
-        animation: 'fadeInUp 0.35s cubic-bezier(0.16, 1, 0.3, 1)',
+        position: 'relative',
+        zIndex: 1,
       }}
     >
-      {/* Top Metropolitan Arcadia Strip */}
+      {/* 1. Live Cyber Marquee Streamer */}
       <div
-        className="glass-panel"
         style={{
-          position: 'relative',
-          padding: '28px 32px',
-          background: 'linear-gradient(135deg, rgba(14, 19, 32, 0.9) 0%, rgba(9, 13, 22, 0.95) 100%)',
-          border: '1px solid rgba(255, 255, 255, 0.08)',
-          boxShadow: '0 20px 50px -10px rgba(0, 0, 0, 0.6)',
-          display: 'grid',
-          gridTemplateColumns: 'minmax(0, 1fr) auto',
-          gap: '24px',
+          background: 'rgba(10, 15, 29, 0.9)',
+          border: '1px solid rgba(0, 240, 255, 0.25)',
+          borderRadius: '12px',
+          padding: '8px 16px',
+          display: 'flex',
           alignItems: 'center',
+          gap: '12px',
           overflow: 'hidden',
+          boxShadow: '0 4px 20px rgba(0, 0, 0, 0.4), inset 0 0 15px rgba(0, 240, 255, 0.08)',
         }}
       >
-        {/* Ambient Top Gold Hairline */}
         <div
           style={{
-            position: 'absolute',
-            top: 0,
-            left: 0,
-            right: 0,
-            height: '2px',
-            background: 'linear-gradient(90deg, transparent 0%, #f59e0b 35%, #10b981 70%, transparent 100%)',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '8px',
+            background: 'linear-gradient(135deg, #ff0077, #7928ca)',
+            padding: '3px 10px',
+            borderRadius: '6px',
+            fontSize: '11px',
+            fontWeight: 900,
+            fontFamily: 'Orbitron, sans-serif',
+            color: '#fff',
+            letterSpacing: '1px',
+            whiteSpace: 'nowrap',
           }}
-        />
+        >
+          <span className="live-beacon" />
+          LIVE ARENA FEED
+        </div>
 
-        {/* Brand Headline */}
-        <div style={{ minWidth: 0 }}>
-          <div
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '10px',
-              marginBottom: '10px',
-              flexWrap: 'wrap',
-            }}
-          >
+        <div
+          style={{
+            fontFamily: 'JetBrains Mono, monospace',
+            fontSize: '12px',
+            color: '#94a3b8',
+            whiteSpace: 'nowrap',
+            overflow: 'hidden',
+            textOverflow: 'ellipsis',
+          }}
+        >
+          ⚡ <strong style={{ color: '#00f0ff' }}>1,840 PLAYERS IN ARENA</strong> • 🏆 <strong style={{ color: '#ffb703' }}>$1,450,000 BULLION JACKPOT</strong> • 🔥 <strong style={{ color: '#ff0077' }}>TOKYO HIGH-ROLLER RING ACTIVE</strong> • 🎲 MULTIPLAYER LOBBIES OPEN
+        </div>
+      </div>
+
+      {/* 2. Electrifying Hero Banner: THE NEO-CYBER ARCADE ARENA */}
+      <div
+        className="cyber-panel"
+        style={{
+          padding: '32px 36px',
+          background: 'linear-gradient(135deg, rgba(16, 24, 46, 0.95) 0%, rgba(9, 13, 24, 0.98) 100%)',
+          border: '1.5px solid rgba(0, 240, 255, 0.3)',
+          boxShadow: '0 20px 60px -10px rgba(0, 0, 0, 0.7), 0 0 30px rgba(0, 240, 255, 0.15)',
+          display: 'grid',
+          gridTemplateColumns: 'minmax(0, 1.4fr) minmax(280px, 1fr)',
+          gap: '28px',
+          alignItems: 'center',
+          overflow: 'hidden',
+          borderRadius: '24px',
+        }}
+      >
+        {/* Animated Neon Marquee Top Beam */}
+        <div className="marquee-glow-top" />
+
+        {/* Left Column: Electrifying Headline & Quick Play */}
+        <div style={{ minWidth: 0, position: 'relative', zIndex: 2 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '12px', flexWrap: 'wrap' }}>
             <span
-              style={{
-                color: '#fbbf24',
-                background: 'rgba(245, 158, 11, 0.12)',
-                border: '1px solid rgba(245, 158, 11, 0.28)',
-                padding: '4px 10px',
-                borderRadius: '9999px',
-                fontSize: '11px',
-                fontWeight: 800,
-                letterSpacing: '0.8px',
-                textTransform: 'uppercase',
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: '6px',
-              }}
+              className="neon-pill neon-pill-cyan"
+              style={{ fontFamily: 'Orbitron, sans-serif', letterSpacing: '1.2px' }}
             >
-              <span
-                style={{
-                  width: '6px',
-                  height: '6px',
-                  borderRadius: '50%',
-                  background: '#fbbf24',
-                  boxShadow: '0 0 6px #fbbf24',
-                }}
-              />
-              The Metropolitan Arcadia
+              ★ CYBER ARCADE BATTLEGROUNDS ★
             </span>
-            <span style={{ color: '#8492a6', fontSize: '13px' }}>
-              Elite Tabletop & Parlor Gaming Salons
+            <span style={{ fontSize: '12px', color: '#67e8f9', fontWeight: 700, letterSpacing: '0.5px' }}>
+              REALTIME MULTIPLAYER & SMART AI BOTS
             </span>
           </div>
 
           <h1
             style={{
-              fontSize: 'clamp(24px, 3.8vw, 36px)',
+              fontFamily: 'Orbitron, Space Grotesk, sans-serif',
+              fontSize: 'clamp(28px, 4vw, 44px)',
               fontWeight: 900,
               color: '#ffffff',
-              margin: '0 0 8px 0',
-              letterSpacing: '-0.025em',
-              lineHeight: 1.15,
+              margin: '0 0 10px 0',
+              letterSpacing: '-0.02em',
+              lineHeight: 1.1,
+              textShadow: '0 0 25px rgba(0, 240, 255, 0.4), 0 2px 4px rgba(0,0,0,0.8)',
             }}
           >
-            Curated High-Stakes Tabletop & Parlor Games
+            HIGH-OCTANE <span style={{ color: '#00f0ff' }}>TABLETOP</span> & <span style={{ color: '#ff0077' }}>ARCADE</span> ARENA
           </h1>
 
           <p
             style={{
               color: '#94a3b8',
-              fontSize: '14px',
-              margin: 0,
-              maxWidth: '720px',
-              lineHeight: 1.5,
+              fontSize: '15px',
+              margin: '0 0 24px 0',
+              lineHeight: 1.6,
+              maxWidth: '680px',
             }}
           >
-            Take your seat at the private tables. Host exclusive sessions for associates or challenge autonomous tactical AI bots with zero setup delay.
+            Step into the high-stakes cyber gaming ring. Roll the dice in metropolitan property markets, duel in laser-speed card games, or battle tactical bots across 10 multiplayer arenas with zero setup lag.
           </p>
-        </div>
 
-        {/* VIP Account & Quick Utility Dock */}
-        <div
-          style={{
-            display: 'flex',
-            gap: '12px',
-            alignItems: 'stretch',
-            flexShrink: 0,
-            flexWrap: 'wrap',
-          }}
-        >
-          {/* Executive Profile Capsule */}
-          <button
-            onClick={() => setShowAccountModal(true)}
-            className="glass-card"
+          {/* Holographic Fast Access Terminal (Enter Room Code) */}
+          <form
+            onSubmit={handleQuickJoin}
             style={{
               display: 'flex',
               alignItems: 'center',
-              gap: '12px',
-              padding: '10px 16px',
-              cursor: 'pointer',
-              textAlign: 'left',
-              border: user.isVip
-                ? '1px solid rgba(245, 158, 11, 0.45)'
-                : '1px solid rgba(255, 255, 255, 0.12)',
-              background: user.isVip
-                ? 'linear-gradient(135deg, rgba(245, 158, 11, 0.12) 0%, rgba(18, 23, 36, 0.7) 100%)'
-                : 'rgba(255, 255, 255, 0.04)',
-              boxShadow: user.isVip ? '0 0 20px rgba(245, 158, 11, 0.15)' : 'none',
+              gap: '10px',
+              background: 'rgba(8, 12, 22, 0.95)',
+              border: '1.5px solid rgba(0, 240, 255, 0.4)',
+              borderRadius: '16px',
+              padding: '6px 8px 6px 16px',
+              maxWidth: '540px',
+              boxShadow: '0 8px 24px rgba(0, 0, 0, 0.5), inset 0 0 20px rgba(0, 240, 255, 0.08)',
             }}
           >
-            <div
+            <span style={{ fontSize: '16px' }}>🔑</span>
+            <input
+              type="text"
+              value={joinCode}
+              onChange={(e) => setJoinCode(e.target.value)}
+              placeholder="ENTER 6-DIGIT ROOM KEY..."
+              maxLength={8}
               style={{
-                width: '44px',
-                height: '44px',
-                borderRadius: '12px',
-                background: user.isVip
-                  ? 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)'
-                  : 'linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%)',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                fontSize: '22px',
-                flexShrink: 0,
-                boxShadow: '0 4px 12px rgba(0, 0, 0, 0.4)',
-                border: '1px solid rgba(255, 255, 255, 0.3)',
+                background: 'transparent',
+                border: 'none',
+                color: '#00f0ff',
+                fontFamily: 'JetBrains Mono, monospace',
+                fontSize: '14px',
+                fontWeight: 800,
+                letterSpacing: '2px',
+                outline: 'none',
+                flex: 1,
+                padding: '8px 0',
+              }}
+            />
+            <button
+              type="submit"
+              className="arcade-btn arcade-btn-cyan"
+              style={{
+                padding: '10px 22px',
+                fontSize: '13px',
+                whiteSpace: 'nowrap',
               }}
             >
-              {user.avatar || '👑'}
+              WARP IN ▶
+            </button>
+          </form>
+          {joinError && (
+            <div style={{ color: '#ff4d6d', fontSize: '12px', fontWeight: 700, marginTop: '6px', fontFamily: 'JetBrains Mono, monospace' }}>
+              ⚠️ {joinError}
             </div>
+          )}
+        </div>
 
-            <div style={{ minWidth: 0 }}>
+        {/* Right Column: Player Cyber Telemetry Pod */}
+        <div
+          style={{
+            background: 'linear-gradient(180deg, rgba(22, 30, 56, 0.9) 0%, rgba(12, 17, 34, 0.9) 100%)',
+            border: '1px solid rgba(255, 183, 3, 0.3)',
+            borderRadius: '20px',
+            padding: '24px',
+            boxShadow: '0 12px 32px rgba(0, 0, 0, 0.6), inset 0 0 24px rgba(255, 183, 3, 0.1)',
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '16px',
+            position: 'relative',
+          }}
+        >
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
               <div
                 style={{
+                  width: '48px',
+                  height: '48px',
+                  borderRadius: '14px',
+                  background: 'linear-gradient(135deg, #ff0077, #7928ca)',
                   display: 'flex',
                   alignItems: 'center',
-                  gap: '6px',
-                  color: '#ffffff',
-                  fontWeight: 800,
-                  fontSize: '14px',
+                  justifyContent: 'center',
+                  fontSize: '24px',
+                  boxShadow: '0 0 20px rgba(255, 0, 119, 0.5)',
+                  border: '1.5px solid rgba(255, 255, 255, 0.3)',
                 }}
               >
-                <span>{user.username}</span>
-                {user.isVip && (
-                  <span
-                    style={{
-                      fontSize: '9.5px',
-                      background: '#fbbf24',
-                      color: '#000000',
-                      fontWeight: 900,
-                      padding: '1px 5px',
-                      borderRadius: '4px',
-                      letterSpacing: '0.4px',
-                    }}
-                  >
-                    VIP
-                  </span>
-                )}
+                {user.avatar || '👑'}
               </div>
-              <div
-                style={{
-                  fontSize: '12px',
-                  color: '#94a3b8',
-                  marginTop: '2px',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '4px',
-                }}
-              >
-                <span
-                  style={{
-                    color: '#34d399',
-                    fontWeight: 800,
-                    fontFamily: 'ui-monospace, monospace',
-                  }}
-                >
-                  {user.coins.toLocaleString()}
-                </span>
-                <span>bullion</span>
+              <div>
+                <div style={{ fontSize: '11px', fontWeight: 800, color: '#94a3b8', letterSpacing: '0.8px', textTransform: 'uppercase' }}>
+                  OPERATOR PROFILE
+                </div>
+                <div style={{ fontSize: '17px', fontWeight: 900, color: '#ffffff', fontFamily: 'Space Grotesk, sans-serif' }}>
+                  {user.username}
+                </div>
               </div>
             </div>
-          </button>
 
-          {/* Quick Actions Stack */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', flexShrink: 0 }}>
+            <div
+              className="neon-pill neon-pill-gold"
+              style={{ fontFamily: 'Orbitron, sans-serif' }}
+            >
+              VIP LEVEL 4
+            </div>
+          </div>
+
+          {/* Stats Bar */}
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
+            <div
+              onClick={() => {
+                soundFx.playClick();
+                setShowStoreModal(true);
+              }}
+              style={{
+                background: 'rgba(255, 183, 3, 0.1)',
+                border: '1px solid rgba(255, 183, 3, 0.35)',
+                borderRadius: '12px',
+                padding: '10px 14px',
+                cursor: 'pointer',
+                transition: 'all 0.15s ease',
+              }}
+            >
+              <div style={{ fontSize: '10px', color: '#fde047', fontWeight: 800, letterSpacing: '0.6px' }}>BULLION VAULT</div>
+              <div style={{ fontSize: '20px', fontWeight: 900, color: '#ffffff', fontFamily: 'JetBrains Mono, monospace' }}>
+                🪙 {user.coins}
+              </div>
+            </div>
+
+            <div
+              onClick={() => {
+                soundFx.playClick();
+                setShowDailyModal(true);
+              }}
+              style={{
+                background: 'rgba(255, 0, 119, 0.1)',
+                border: '1px solid rgba(255, 0, 119, 0.35)',
+                borderRadius: '12px',
+                padding: '10px 14px',
+                cursor: 'pointer',
+                transition: 'all 0.15s ease',
+              }}
+            >
+              <div style={{ fontSize: '10px', color: '#ff66aa', fontWeight: 800, letterSpacing: '0.6px' }}>DAILY STREAK</div>
+              <div style={{ fontSize: '20px', fontWeight: 900, color: '#ffffff', fontFamily: 'JetBrains Mono, monospace' }}>
+                🔥 {user.streakDays || 1} DAYS
+              </div>
+            </div>
+          </div>
+
+          {/* Action Row */}
+          <div style={{ display: 'flex', gap: '8px' }}>
             <button
               onClick={() => {
-                const res = useUserStore.getState().claimDailyReward();
-                if (res.success) {
-                  alert(`🎉 Day ${res.streak} Streak! Claimed +${res.reward} Coins!`);
-                } else {
-                  alert(`✨ Daily reward already claimed today! Current Streak: ${res.streak} days.`);
-                }
+                soundFx.playClick();
+                setShowLeaderboardModal(true);
               }}
-              className="btn-tactile-secondary"
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '6px',
-                padding: '7px 12px',
-                fontSize: '11.5px',
-                borderColor: 'rgba(245, 158, 11, 0.3)',
-                color: '#fbbf24',
-                background: 'rgba(245, 158, 11, 0.08)',
-              }}
+              className="arcade-btn arcade-btn-secondary"
+              style={{ flex: 1, padding: '8px 12px', fontSize: '11px' }}
             >
-              <span>🔥</span>
-              <span>{streakLabel(user.dailyStreak)}</span>
+              🏆 HALL OF FAME
             </button>
-
             <button
-              onClick={() => useUserStore.getState().setShowStoreModal(true)}
-              className="btn-primary-glow"
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '6px',
-                padding: '7px 14px',
-                fontSize: '11.5px',
-                background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+              onClick={() => {
+                soundFx.playClick();
+                setShowStoreModal(true);
               }}
+              className="arcade-btn arcade-btn-gold"
+              style={{ flex: 1, padding: '8px 12px', fontSize: '11px' }}
             >
-              <span>🛍️</span>
-              <span>Boutique</span>
+              🛍️ CYBER STORE
             </button>
           </div>
         </div>
       </div>
 
-      {/* Private Room Passphrase Vault Bar */}
-      <form
-        onSubmit={handleJoinByCode}
-        className="glass-card"
-        style={{
-          display: 'flex',
-          flexWrap: 'wrap',
-          alignItems: 'center',
-          gap: '12px',
-          padding: '14px 20px',
-          background: 'rgba(10, 15, 26, 0.75)',
-        }}
-      >
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <span style={{ fontSize: '15px' }}>🔑</span>
-          <span style={{ color: '#f8fafc', fontSize: '13px', fontWeight: 800 }}>
-            Enter Private Salon:
-          </span>
-        </div>
-
-        <input
-          type="text"
-          placeholder="PASSPHRASE"
-          value={joinCodeInput}
-          onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
-            setJoinCodeInput(e.target.value.toUpperCase());
-            setJoinError('');
-          }}
-          maxLength={8}
-          style={{
-            flex: '0 1 160px',
-            background: 'rgba(0, 0, 0, 0.5)',
-            border: '1px solid rgba(255, 255, 255, 0.16)',
-            borderRadius: '10px',
-            padding: '8px 14px',
-            color: '#38bdf8',
-            fontSize: '14px',
-            fontWeight: 800,
-            fontFamily: 'ui-monospace, monospace',
-            letterSpacing: '2px',
-            outline: 'none',
-          }}
-        />
-
-        <button
-          type="submit"
-          className="btn-primary-glow"
-          style={{
-            padding: '8px 20px',
-            fontSize: '12.5px',
-            background: 'linear-gradient(135deg, #38bdf8 0%, #0284c7 100%)',
-            boxShadow: '0 4px 14px rgba(56, 189, 248, 0.35)',
-          }}
-        >
-          Unlock & Join
-        </button>
-
-        {joinError && (
-          <span style={{ color: '#fb7185', fontSize: '12px', fontWeight: 700 }}>
-            {joinError}
-          </span>
-        )}
-
-        <span style={{ marginLeft: 'auto', color: '#64748b', fontSize: '12px' }}>
-          Got an invite? Paste the 6-character room code to join instantly.
-        </span>
-      </form>
-
-      {/* Catalog Filtering & Search Strip */}
+      {/* 3. Category Filter Rails & Search Bar */}
       <div
         style={{
           display: 'flex',
           justifyContent: 'space-between',
           alignItems: 'center',
-          flexWrap: 'wrap',
           gap: '16px',
+          flexWrap: 'wrap',
         }}
       >
-        {/* Category Filter Pills */}
-        <div
-          style={{
-            display: 'flex',
-            gap: '8px',
-            overflowX: 'auto',
-            paddingBottom: '2px',
-          }}
-        >
-          {CATEGORIES.map((cat) => {
+        {/* Category Pills */}
+        <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+          {categories.map((cat) => {
             const isSelected = selectedCategory === cat;
             return (
               <button
                 key={cat}
-                onClick={() => setSelectedCategory(cat)}
+                onClick={() => {
+                  soundFx.playClick();
+                  setSelectedCategory(cat);
+                }}
+                className="arcade-btn"
                 style={{
-                  padding: '8px 18px',
-                  borderRadius: '9999px',
-                  border: isSelected
-                    ? '1px solid #fbbf24'
-                    : '1px solid rgba(255, 255, 255, 0.08)',
+                  padding: '8px 16px',
+                  fontSize: '12px',
+                  borderRadius: '24px',
                   background: isSelected
-                    ? 'linear-gradient(135deg, rgba(245, 158, 11, 0.2) 0%, rgba(217, 119, 6, 0.15) 100%)'
-                    : 'rgba(255, 255, 255, 0.03)',
-                  color: isSelected ? '#fbbf24' : '#94a3b8',
-                  fontSize: '12.5px',
-                  fontWeight: isSelected ? 800 : 600,
-                  cursor: 'pointer',
-                  whiteSpace: 'nowrap',
-                  boxShadow: isSelected
-                    ? '0 0 16px rgba(245, 158, 11, 0.2)'
-                    : 'none',
-                  transition: 'all 0.15s ease',
+                    ? 'linear-gradient(135deg, #00f0ff 0%, #0096c7 100%)'
+                    : 'rgba(255, 255, 255, 0.05)',
+                  color: isSelected ? '#03045e' : '#cbd5e1',
+                  border: isSelected
+                    ? '1.5px solid #00f0ff'
+                    : '1px solid rgba(255, 255, 255, 0.1)',
+                  boxShadow: isSelected ? '0 0 20px rgba(0, 240, 255, 0.5)' : 'none',
+                  fontFamily: 'Space Grotesk, sans-serif',
                 }}
               >
                 {cat}
@@ -451,248 +413,208 @@ export const Dashboard: React.FC = () => {
         </div>
 
         {/* Search Input */}
-        <div style={{ position: 'relative', width: '260px' }}>
+        <div
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '8px',
+            background: 'rgba(12, 17, 32, 0.85)',
+            border: '1px solid rgba(255, 255, 255, 0.12)',
+            borderRadius: '20px',
+            padding: '6px 14px',
+            minWidth: '260px',
+          }}
+        >
+          <span style={{ fontSize: '14px', color: '#64748b' }}>🔍</span>
           <input
             type="text"
-            placeholder="Search catalogs..."
             value={searchQuery}
-            onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSearchQuery(e.target.value)}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder="Search battle catalogs..."
             style={{
-              width: '100%',
-              background: 'rgba(255, 255, 255, 0.04)',
-              border: '1px solid rgba(255, 255, 255, 0.1)',
-              borderRadius: '12px',
-              padding: '9px 14px 9px 36px',
+              background: 'transparent',
+              border: 'none',
               color: '#ffffff',
               fontSize: '13px',
               outline: 'none',
-              boxSizing: 'border-box',
+              width: '100%',
+              fontFamily: 'Outfit, sans-serif',
             }}
           />
-          <span
-            style={{
-              position: 'absolute',
-              left: '12px',
-              top: '50%',
-              transform: 'translateY(-50%)',
-              opacity: 0.5,
-              fontSize: '13px',
-              pointerEvents: 'none',
-            }}
-          >
-            🔍
-          </span>
+          {searchQuery && (
+            <button
+              onClick={() => setSearchQuery('')}
+              style={{ background: 'none', border: 'none', color: '#94a3b8', cursor: 'pointer', padding: 0 }}
+            >
+              ✕
+            </button>
+          )}
         </div>
       </div>
 
-      {/* Collector-Edition Game Showcase Grid */}
+      {/* 4. Arcade Cabinet Game Grid (10 Showcases) */}
       <div
         style={{
           display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fill, minmax(310px, 1fr))',
-          gap: '20px',
+          gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))',
+          gap: '22px',
         }}
       >
         {filteredGames.map((game) => {
-          const isCurrent = activeGame === game.id;
+          const isCurrentActive = activeGame === game.id;
+          const energy = getGameEnergyTag(game);
+
           return (
             <div
               key={game.id}
               data-game-id={game.id}
-              className="glass-card"
-              onClick={() => setActiveGame(game.id)}
+              onClick={() => {
+                soundFx.playClick();
+                trackEvent('game_selected', { gameId: game.id });
+                setActiveGame(game.id);
+              }}
+              className="arcade-cabinet-card"
               style={{
-                position: 'relative',
-                padding: '22px',
-                borderRadius: '18px',
-                border: isCurrent
-                  ? '1.5px solid #fbbf24'
-                  : '1px solid rgba(255, 255, 255, 0.09)',
-                background: isCurrent
-                  ? 'linear-gradient(135deg, rgba(245, 158, 11, 0.08) 0%, rgba(14, 19, 32, 0.85) 100%)'
-                  : 'linear-gradient(135deg, rgba(20, 26, 42, 0.6) 0%, rgba(11, 16, 27, 0.8) 100%)',
-                boxShadow: isCurrent
-                  ? '0 12px 36px rgba(245, 158, 11, 0.15), inset 0 0 20px rgba(245, 158, 11, 0.05)'
-                  : '0 8px 24px rgba(0, 0, 0, 0.4)',
                 cursor: 'pointer',
-                display: 'flex',
-                flexDirection: 'column',
-                justifyContent: 'space-between',
-                gap: '14px',
+                border: isCurrentActive
+                  ? '2px solid #00f0ff'
+                  : '1.5px solid rgba(255, 255, 255, 0.1)',
+                boxShadow: isCurrentActive
+                  ? '0 0 35px rgba(0, 240, 255, 0.45), 0 16px 40px rgba(0, 0, 0, 0.7)'
+                  : undefined,
               }}
             >
-              {/* Top Accent Rim */}
+              {/* Marquee Top Accent */}
               <div
                 style={{
-                  position: 'absolute',
-                  top: 0,
-                  left: 0,
-                  right: 0,
-                  height: '2px',
-                  background: game.bannerGradient || 'linear-gradient(90deg, #8b5cf6, #ec4899)',
-                  borderRadius: '18px 18px 0 0',
-                  opacity: 0.8,
+                  height: '4px',
+                  background: isCurrentActive
+                    ? 'linear-gradient(90deg, #00f0ff, #ff0077)'
+                    : game.bannerGradient || 'linear-gradient(90deg, #7c3aed, #ec4899)',
                 }}
               />
 
-              {/* Game Icon & Category Metadata */}
-              <div>
-                <div
-                  style={{
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                    alignItems: 'flex-start',
-                    gap: '12px',
-                    marginBottom: '14px',
-                  }}
-                >
-                  <div
-                    style={{
-                      width: '54px',
-                      height: '54px',
-                      borderRadius: '14px',
-                      background: 'rgba(11, 16, 27, 0.8)',
-                      border: '1px solid rgba(255, 255, 255, 0.15)',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      fontSize: '28px',
-                      flexShrink: 0,
-                      boxShadow: '0 8px 18px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.15)',
-                    }}
-                  >
-                    {game.icon}
-                  </div>
-
-                  <div style={{ display: 'flex', gap: '6px', alignItems: 'center', flexWrap: 'wrap' }}>
-                    {game.badge && (
-                      <span
-                        style={{
-                          background: 'rgba(245, 158, 11, 0.15)',
-                          color: '#fbbf24',
-                          border: '1px solid rgba(245, 158, 11, 0.35)',
-                          fontSize: '10px',
-                          fontWeight: 800,
-                          padding: '2px 7px',
-                          borderRadius: '6px',
-                          textTransform: 'uppercase',
-                          letterSpacing: '0.5px',
-                        }}
-                      >
-                        {game.badge}
-                      </span>
-                    )}
-                    <span
+              <div style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                {/* Header: Icon, Title, and Energy Pill */}
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
+                    <div
                       style={{
-                        background: 'rgba(255, 255, 255, 0.05)',
-                        color: '#94a3b8',
-                        border: '1px solid rgba(255, 255, 255, 0.08)',
-                        fontSize: '10.5px',
-                        fontWeight: 700,
-                        padding: '2px 8px',
-                        borderRadius: '6px',
+                        width: '52px',
+                        height: '52px',
+                        borderRadius: '16px',
+                        background: 'linear-gradient(135deg, rgba(255,255,255,0.08) 0%, rgba(255,255,255,0.02) 100%)',
+                        border: '1px solid rgba(255, 255, 255, 0.15)',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        fontSize: '28px',
+                        boxShadow: '0 8px 20px rgba(0, 0, 0, 0.4)',
                       }}
                     >
-                      {game.category}
-                    </span>
-                  </div>
-                </div>
+                      {game.icon}
+                    </div>
 
-                {/* Title */}
-                <h3
-                  style={{
-                    fontSize: '17.5px',
-                    fontWeight: 900,
-                    color: '#ffffff',
-                    margin: '0 0 6px 0',
-                    lineHeight: 1.25,
-                    letterSpacing: '-0.02em',
-                  }}
-                >
-                  {game.title}
-                </h3>
+                    <div>
+                      <h3
+                        style={{
+                          fontSize: '19px',
+                          fontWeight: 900,
+                          color: '#ffffff',
+                          margin: 0,
+                          fontFamily: 'Space Grotesk, sans-serif',
+                          letterSpacing: '-0.3px',
+                        }}
+                      >
+                        {game.title}
+                      </h3>
+                      <div style={{ fontSize: '12px', color: '#94a3b8', display: 'flex', alignItems: 'center', gap: '6px', marginTop: '2px' }}>
+                        <span>👥 {game.minPlayers}–{game.maxPlayers} Players</span>
+                        <span>•</span>
+                        <span style={{ color: '#ffb703', fontWeight: 700 }}>★ {game.rating}</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Energy Badge */}
+                  <span
+                    style={{
+                      fontSize: '10px',
+                      fontWeight: 900,
+                      color: energy.color,
+                      border: `1px solid ${energy.border}`,
+                      background: 'rgba(0, 0, 0, 0.4)',
+                      padding: '3px 8px',
+                      borderRadius: '8px',
+                      fontFamily: 'Orbitron, sans-serif',
+                      letterSpacing: '0.8px',
+                    }}
+                  >
+                    {energy.text}
+                  </span>
+                </div>
 
                 {/* Description */}
                 <p
                   style={{
-                    fontSize: '13px',
-                    color: '#94a3b8',
-                    lineHeight: 1.45,
+                    color: '#cbd5e1',
+                    fontSize: '13.5px',
+                    lineHeight: 1.5,
                     margin: 0,
-                    display: '-webkit-box',
-                    WebkitLineClamp: 2,
-                    WebkitBoxOrient: 'vertical',
-                    overflow: 'hidden',
+                    minHeight: '40px',
                   }}
                 >
                   {game.description}
                 </p>
-              </div>
 
-              {/* Specs & Capabilities Bar */}
-              <div>
+                {/* Cabinet Telemetry Bar */}
                 <div
                   style={{
+                    background: 'rgba(0, 0, 0, 0.35)',
+                    borderRadius: '10px',
+                    padding: '8px 12px',
                     display: 'flex',
                     justifyContent: 'space-between',
                     alignItems: 'center',
-                    padding: '8px 0',
-                    borderTop: '1px solid rgba(255, 255, 255, 0.06)',
-                    fontSize: '12px',
-                    color: '#8492a6',
+                    border: '1px solid rgba(255, 255, 255, 0.06)',
+                    fontSize: '11px',
+                    fontFamily: 'JetBrains Mono, monospace',
                   }}
                 >
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                    <span>👥</span>
-                    <span style={{ fontWeight: 700, color: '#cbd5e1' }}>
-                      {game.minPlayers}–{game.maxPlayers} Seated
-                    </span>
-                  </div>
-
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                    <span style={{ color: '#fbbf24', fontWeight: 800 }}>★ {game.rating}</span>
-                    <span style={{ color: '#475569' }}>•</span>
-                    <span>{game.plays} matches</span>
-                  </div>
+                  <span style={{ color: '#64748b' }}>CATEGORY: <strong style={{ color: '#cbd5e1' }}>{game.category.toUpperCase()}</strong></span>
+                  <span style={{ color: '#00ff88', fontWeight: 700 }}>● {game.plays} PLAYED</span>
                 </div>
 
-                {/* Tactical Actions Strip */}
-                <div
-                  style={{
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                    alignItems: 'center',
-                    marginTop: '8px',
-                    paddingTop: '8px',
-                  }}
-                >
+                {/* Actions: Rules Button & Play Button */}
+                <div style={{ display: 'grid', gridTemplateColumns: 'auto 1fr', gap: '10px', marginTop: '4px' }}>
                   <button
-                    onClick={(e: React.MouseEvent) => {
+                    onClick={(e) => {
                       e.stopPropagation();
-                      useUserStore.getState().openRulesModal(game.id);
+                      soundFx.playClick();
+                      openRulesModal(game.id);
                     }}
-                    className="btn-tactile-secondary"
-                    style={{
-                      padding: '5px 10px',
-                      fontSize: '11px',
-                      fontWeight: 700,
-                    }}
+                    className="arcade-btn arcade-btn-secondary"
+                    style={{ padding: '12px 16px', fontSize: '13px' }}
+                    title="Read Game Instructions & Strategy"
                   >
                     📖 Rules
                   </button>
 
-                  <span
+                  <button
+                    onClick={() => {
+                      soundFx.playClick();
+                      trackEvent('game_selected', { gameId: game.id });
+                      setActiveGame(game.id);
+                    }}
+                    className={`arcade-btn ${isCurrentActive ? 'arcade-btn-primary' : 'arcade-btn-cyan'}`}
                     style={{
+                      padding: '12px 18px',
                       fontSize: '13px',
-                      fontWeight: 900,
-                      color: isCurrent ? '#fbbf24' : '#38bdf8',
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '4px',
+                      letterSpacing: '0.8px',
                     }}
                   >
-                    {isCurrent ? 'Current Salon' : 'Take Seat'} →
-                  </span>
+                    {isCurrentActive ? '🎮 RESUME ARENA' : 'INSERT COIN & PLAY ▶'}
+                  </button>
                 </div>
               </div>
             </div>
@@ -702,10 +624,3 @@ export const Dashboard: React.FC = () => {
     </div>
   );
 };
-
-function streakLabel(streak: number | undefined): string {
-  const days = streak || 1;
-  if (days >= 7) return `🔥 ${days}d streak`;
-  if (days >= 3) return `✨ ${days}d streak`;
-  return `Streak: ${days}d`;
-}
