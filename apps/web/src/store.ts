@@ -48,6 +48,7 @@ export interface GameStoreState {
   selectedTile: TileId | null;
   tradeTargetTile: TileId | null;
   showTradeModal: boolean;
+  selectedTradePartner: string | null;
   showInfluenceModal: boolean;
   showAbilityModal: boolean;
   activeEventCard: EventCardDef | null;
@@ -72,6 +73,7 @@ export interface GameStoreState {
   setSelectedTile: (tileId: TileId | null) => void;
   setTradeTargetTile: (tileId: TileId | null) => void;
   setShowTradeModal: (show: boolean) => void;
+  setSelectedTradePartner: (pId: string | null) => void;
   setShowInfluenceModal: (show: boolean) => void;
   setShowAbilityModal: (show: boolean) => void;
   dismissEventCard: () => void;
@@ -127,6 +129,7 @@ export const useGameStore = create<GameStoreState>((set, get) => ({
   selectedTile: null,
   tradeTargetTile: null,
   showTradeModal: false,
+  selectedTradePartner: null,
   showInfluenceModal: false,
   showAbilityModal: false,
   activeEventCard: null,
@@ -166,6 +169,7 @@ export const useGameStore = create<GameStoreState>((set, get) => ({
   setSelectedTile: (tileId: TileId | null) => set({ selectedTile: tileId }),
   setTradeTargetTile: (tileId: TileId | null) => set({ tradeTargetTile: tileId }),
   setShowTradeModal: (show: boolean) => set({ showTradeModal: show }),
+  setSelectedTradePartner: (pId: string | null) => set({ selectedTradePartner: pId }),
   setShowInfluenceModal: (show: boolean) => set({ showInfluenceModal: show }),
   setShowAbilityModal: (show: boolean) => set({ showAbilityModal: show }),
   clearError: () => set({ errorMessage: null }),

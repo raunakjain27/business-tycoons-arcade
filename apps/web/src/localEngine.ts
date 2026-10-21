@@ -1431,33 +1431,350 @@ function handleBankruptcy(state: GameState, playerId: PlayerId, events: GameEven
   }
 }
 
+import { useChatStore } from './chatStore';
+
+interface DistrictStats {
+  districtId: string;
+  totalTiles: number;
+  tileIds: number[];
+  ownerCounts: Record<PlayerId, number>;
+  unownedCount: number;
+  monopolyOwner: PlayerId | null;
+  nearMonopolies: { playerId: PlayerId; missingTileIds: number[] }[];
+}
+
+function analyzeDistrictsLocal(state: GameState): Record<string, DistrictStats> {
+  const analysis: Record<string, DistrictStats> = {};
+
+  for (const [districtId, def] of Object.entries(BOARD_DATA.districts)) {
+    const tileIds = def.tileIds;
+    const ownerCounts: Record<PlayerId, number> = {};
+    let unownedCount = 0;
+
+    for (const tId of tileIds) {
+      const owner = state.tiles[tId]?.ownerId;
+      if (owner) {
+        ownerCounts[owner] = (ownerCounts[owner] || 0) + 1;
+      } else {
+        unownedCount++;
+      }
+    }
+
+    let monopolyOwner: PlayerId | null = null;
+    for (const [owner, count] of Object.entries(ownerCounts)) {
+      if (count === tileIds.length) {
+        monopolyOwner = owner;
+        break;
+      }
+    }
+
+    const nearMonopolies: { playerId: PlayerId; missingTileIds: number[] }[] = [];
+    for (const [owner, count] of Object.entries(ownerCounts)) {
+      if (count === tileIds.length - 1) {
+        const missing = tileIds.filter(id => state.tiles[id]?.ownerId !== owner);
+        nearMonopolies.push({ playerId: owner, missingTileIds: missing });
+      }
+    }
+
+    analysis[districtId] = {
+      districtId,
+      totalTiles: tileIds.length,
+      tileIds,
+      ownerCounts,
+      unownedCount,
+      monopolyOwner,
+      nearMonopolies,
+    };
+  }
+
+  return analysis;
+}
+
+function evaluateTileStrategicValueLocal(
+  state: GameState,
+  tileId: number,
+  evalPlayerId: PlayerId,
+  isAcquiring: boolean,
+  districts?: Record<string, DistrictStats>
+): number {
+  const def = getTileDef(tileId);
+  const basePrice = def.price ?? 100;
+  const tState = state.tiles[tileId];
+  const isMortgaged = tState?.mortgaged ?? false;
+  let val = isMortgaged ? Math.round(basePrice * 0.5) : basePrice;
+
+  if (def.type === 'hub') {
+    const ownedHubs = [5, 15, 25, 35].filter(id => state.tiles[id]?.ownerId === evalPlayerId).length;
+    const count = isAcquiring ? ownedHubs + 1 : ownedHubs;
+    const hubScale = [200, 300, 450, 650];
+    return hubScale[Math.min(3, Math.max(0, count - 1))] ?? 250;
+  }
+
+  if (def.type === 'utility') {
+    const ownedUtils = [12, 28].filter(id => state.tiles[id]?.ownerId === evalPlayerId).length;
+    return isAcquiring && ownedUtils === 1 ? 320 : 180;
+  }
+
+  if (!def.districtId) return val;
+
+  const dists = districts || analyzeDistrictsLocal(state);
+  const dist = dists[def.districtId];
+  if (!dist) return val;
+
+  const currentOwned = dist.ownerCounts[evalPlayerId] || 0;
+  const buildCost = BOARD_DATA.districts[def.districtId]?.buildCost ?? 100;
+
+  if (isAcquiring) {
+    if (currentOwned === dist.totalTiles - 1) {
+      val += basePrice * 1.6 + buildCost * 1.2;
+    } else if (currentOwned >= 1) {
+      val += basePrice * 0.45;
+    }
+  } else {
+    if (dist.monopolyOwner === evalPlayerId) {
+      val += basePrice * 2.8 + buildCost * 1.8;
+    }
+    for (const nm of dist.nearMonopolies) {
+      if (nm.playerId !== evalPlayerId && nm.missingTileIds.includes(tileId)) {
+        val += basePrice * 2.2 + buildCost * 1.2 + 150;
+      }
+    }
+  }
+
+  return Math.round(val);
+}
+
+function evaluateIncomingTradeLocal(
+  state: GameState,
+  botId: PlayerId,
+  trade: TradeOffer
+): { response: 'accept' | 'decline'; banter: string } {
+  const bot = state.players[botId];
+  if (!bot) return { response: 'decline', banter: 'No deal.' };
+
+  const districts = analyzeDistrictsLocal(state);
+
+  const cashGain = trade.give.cash;
+  let tileGain = 0;
+  for (const tId of trade.give.tileIds) {
+    tileGain += evaluateTileStrategicValueLocal(state, tId, botId, true, districts);
+  }
+  const totalGain = cashGain + tileGain;
+
+  const cashLoss = trade.want.cash;
+  let tileLoss = 0;
+  for (const tId of trade.want.tileIds) {
+    tileLoss += evaluateTileStrategicValueLocal(state, tId, botId, false, districts);
+  }
+  const totalLoss = cashLoss + tileLoss;
+
+  let completesBotMonopoly = false;
+  for (const tId of trade.give.tileIds) {
+    const def = getTileDef(tId);
+    if (def.districtId) {
+      const d = districts[def.districtId];
+      if (d && (d.ownerCounts[botId] || 0) === d.totalTiles - 1) {
+        completesBotMonopoly = true;
+        break;
+      }
+    }
+  }
+
+  let completesOpponentMonopoly = false;
+  for (const tId of trade.want.tileIds) {
+    const def = getTileDef(tId);
+    if (def.districtId) {
+      const d = districts[def.districtId];
+      if (d && (d.ownerCounts[trade.fromId] || 0) === d.totalTiles - 1) {
+        completesOpponentMonopoly = true;
+        break;
+      }
+    }
+  }
+
+  if (completesOpponentMonopoly && !completesBotMonopoly) {
+    if (totalGain < totalLoss * 2.2) {
+      return { response: 'decline', banter: 'No deal! That property gives you a monopoly, which is too dangerous.' };
+    }
+  }
+
+  if (completesBotMonopoly) {
+    if (totalGain >= totalLoss * 0.88 && bot.cash - trade.want.cash >= 100) {
+      return { response: 'accept', banter: 'Deal accepted! That completes my district monopoly 🤝' };
+    }
+  }
+
+  if (totalGain >= totalLoss * 0.98 && (trade.want.cash <= bot.cash - 120 || trade.want.cash === 0)) {
+    return { response: 'accept', banter: 'Trade accepted! Good doing business with you 🤝' };
+  }
+
+  return { response: 'decline', banter: 'Trade declined. The numbers don\'t work in my favor ✋' };
+}
+
+function findSmartTradeProposalLocal(state: GameState, botId: PlayerId): { action: Action; banter: string } | null {
+  const bot = state.players[botId];
+  if (!bot || bot.status !== 'active') return null;
+
+  if (state.trades?.some(t => t.fromId === botId && t.status === 'pending')) {
+    return null;
+  }
+
+  const districts = analyzeDistrictsLocal(state);
+
+  for (const d of Object.values(districts)) {
+    if ((d.ownerCounts[botId] || 0) === d.totalTiles - 1) {
+      const missingTileId = d.tileIds.find(id => state.tiles[id]?.ownerId !== botId);
+      if (missingTileId === undefined) continue;
+
+      const ownerId = state.tiles[missingTileId]?.ownerId;
+      if (!ownerId || ownerId === botId) continue;
+
+      const targetPlayer = state.players[ownerId];
+      if (!targetPlayer || targetPlayer.status !== 'active') continue;
+
+      const missingDef = getTileDef(missingTileId);
+      const missingPrice = missingDef.price ?? 100;
+
+      let candidateGiveTileId: TileId | null = null;
+      for (const [idStr, tState] of Object.entries(state.tiles)) {
+        const tId = Number(idStr);
+        if (tState.ownerId === botId && tState.tier === 0) {
+          const def = getTileDef(tId);
+          if (def && def.districtId) {
+            const otherDist = districts[def.districtId];
+            if (otherDist && (otherDist.ownerCounts[botId] || 0) <= 1) {
+              if ((otherDist.ownerCounts[ownerId] || 0) < otherDist.totalTiles - 1) {
+                candidateGiveTileId = tId;
+                break;
+              }
+            }
+          }
+        }
+      }
+
+      if (candidateGiveTileId !== null) {
+        const giveDef = getTileDef(candidateGiveTileId);
+        const giveTilePrice = giveDef.price ?? 100;
+        const cashDiff = Math.max(0, missingPrice - giveTilePrice) + 40;
+        if (bot.cash >= cashDiff + 150) {
+          return {
+            action: {
+              type: 'PROPOSE_TRADE',
+              offer: {
+                fromId: botId,
+                toId: ownerId,
+                give: {
+                  tileIds: [candidateGiveTileId],
+                  cash: cashDiff,
+                  influence: 0,
+                  cards: [],
+                  rentContracts: [],
+                },
+                want: {
+                  tileIds: [missingTileId],
+                  cash: 0,
+                  influence: 0,
+                  cards: [],
+                  rentContracts: [],
+                },
+              },
+            },
+            banter: `Hey ${targetPlayer.name}, I'll give you ${giveDef.name} + $${cashDiff} for ${missingDef.name}! Deal? 🤝`,
+          };
+        }
+      } else {
+        const generousCash = Math.round(missingPrice * 1.45);
+        if (bot.cash >= generousCash + 250) {
+          return {
+            action: {
+              type: 'PROPOSE_TRADE',
+              offer: {
+                fromId: botId,
+                toId: ownerId,
+                give: {
+                  tileIds: [],
+                  cash: generousCash,
+                  influence: 0,
+                  cards: [],
+                  rentContracts: [],
+                },
+                want: {
+                  tileIds: [missingTileId],
+                  cash: 0,
+                  influence: 0,
+                  cards: [],
+                  rentContracts: [],
+                },
+              },
+            },
+            banter: `Hey ${targetPlayer.name}, I'm offering $${generousCash} cash to buy ${missingDef.name}! Check your trade desk 🤝`,
+          };
+        }
+      }
+    }
+  }
+
+  return null;
+}
+
 /**
  * Automates one action step for a bot player during local games.
+ * Powered by full monopoly strategic intelligence.
  */
 export function botStep(state: GameState, botId: PlayerId): { action: Action; delayMs: number } | null {
   const bot = state.players[botId];
   if (!bot || bot.status !== 'active') return null;
 
+  // 1. Live Auction Decision
   if (state.phase === 'auction' && state.auction) {
     const tileDef = getTileDef(state.auction.tileId);
-    const maxVal = Math.round((tileDef.price ?? 100) * 0.7);
-    if (state.auction.highBid < maxVal && bot.cash >= state.auction.highBid + 20) {
+    const districts = analyzeDistrictsLocal(state);
+    let maxBid = Math.round((tileDef.price ?? 100) * 0.75);
+
+    if (tileDef.districtId) {
+      const d = districts[tileDef.districtId];
+      if (d && (d.ownerCounts[botId] || 0) === d.totalTiles - 1) {
+        maxBid = Math.min(bot.cash - 60, Math.round((tileDef.price ?? 100) * 1.8));
+      } else if (d) {
+        for (const nm of d.nearMonopolies) {
+          if (nm.playerId !== botId) {
+            maxBid = Math.min(bot.cash - 100, Math.round((tileDef.price ?? 100) * 1.25));
+            break;
+          }
+        }
+      }
+    } else if (tileDef.type === 'hub') {
+      maxBid = Math.min(bot.cash - 80, Math.round((tileDef.price ?? 100) * 1.1));
+    }
+
+    if (state.auction.highBid + 10 <= maxBid && bot.cash >= state.auction.highBid + 10) {
       return { action: { type: 'BID', amount: state.auction.highBid + 10 }, delayMs: 800 };
     }
     return { action: { type: 'PASS_BID' }, delayMs: 600 };
   }
 
-  // Respond to pending trades proposed to this bot
+  // 2. Respond to pending trades proposed to this bot
   const pendingTrade = state.trades.find(t => t.toId === botId && t.status === 'pending');
   if (pendingTrade) {
+    const evaluation = evaluateIncomingTradeLocal(state, botId, pendingTrade);
+    try {
+      useChatStore.getState().sendMessage(evaluation.banter, true, {
+        id: bot.id,
+        name: bot.name,
+        avatar: '🤖',
+        color: '#38bdf8',
+      });
+    } catch (_) {}
+
     return {
-      action: { type: 'RESPOND_TRADE', tradeId: pendingTrade.id, response: 'accept' },
-      delayMs: 800,
+      action: { type: 'RESPOND_TRADE', tradeId: pendingTrade.id, response: evaluation.response },
+      delayMs: 900,
     };
   }
 
   if (state.turnPlayerId !== botId) return null;
 
+  // 3. Current Turn Actions
   switch (state.phase) {
     case 'awaitRoll':
       return { action: { type: 'ROLL' }, delayMs: 600 };
@@ -1466,15 +1783,21 @@ export function botStep(state: GameState, botId: PlayerId): { action: Action; de
       if (bot.heldCards.includes('jail_card')) {
         return { action: { type: 'USE_JAIL_CARD' }, delayMs: 500 };
       }
-      if (bot.cash >= 300) {
+      if (bot.cash >= 280) {
         return { action: { type: 'PAY_JAIL_FEE' }, delayMs: 500 };
       }
       return { action: { type: 'ROLL' }, delayMs: 600 };
 
     case 'awaitBuyDecision': {
       const tileDef = getTileDef(bot.lastLandedTile);
-      if (tileDef.price && bot.cash >= tileDef.price * 1.1) {
-        return { action: { type: 'BUY' }, delayMs: 700 };
+      const price = tileDef.price ?? 100;
+      const effectivePrice = bot.roleId === 'Broker' ? Math.round(price * 0.85) : price;
+
+      if (bot.cash >= effectivePrice) {
+        const val = evaluateTileStrategicValueLocal(state, bot.lastLandedTile, botId, true);
+        if (val >= effectivePrice * 0.9 || bot.cash > effectivePrice + 180) {
+          return { action: { type: 'BUY' }, delayMs: 700 };
+        }
       }
       return { action: { type: 'DECLINE_BUY' }, delayMs: 700 };
     }
@@ -1486,18 +1809,52 @@ export function botStep(state: GameState, botId: PlayerId): { action: Action; de
       return { action: { type: 'END_TURN' }, delayMs: 600 };
 
     case 'awaitDebtSettlement': {
-      // Mortgage first unmortgaged property
-      const owned = Object.entries(state.tiles).find(
+      // Sell buildings first
+      for (const [idStr, t] of Object.entries(state.tiles)) {
+        if (t.ownerId === botId && t.tier > 0) {
+          return { action: { type: 'SELL_BUILDING', tileId: Number(idStr) }, delayMs: 600 };
+        }
+      }
+      // Mortgage orphan properties first
+      const districts = analyzeDistrictsLocal(state);
+      const orphan = Object.entries(state.tiles).find(([idStr, t]) => {
+        if (t.ownerId !== botId || t.mortgaged || t.tier > 0) return false;
+        const def = getTileDef(Number(idStr));
+        if (def.districtId) {
+          const d = districts[def.districtId];
+          return d && d.monopolyOwner !== botId;
+        }
+        return true;
+      });
+      if (orphan) {
+        return { action: { type: 'MORTGAGE', tileId: Number(orphan[0]) }, delayMs: 600 };
+      }
+      // Mortgage any remaining
+      const anyProp = Object.entries(state.tiles).find(
         ([_, t]) => t.ownerId === botId && !t.mortgaged && t.tier === 0
       );
-      if (owned) {
-        return { action: { type: 'MORTGAGE', tileId: Number(owned[0]) }, delayMs: 600 };
+      if (anyProp) {
+        return { action: { type: 'MORTGAGE', tileId: Number(anyProp[0]) }, delayMs: 600 };
       }
       return { action: { type: 'RAISE_FUNDS_DONE' }, delayMs: 600 };
     }
 
     case 'awaitEndTurn': {
-      // Attempt building if bot owns a full district and has ample cash, respecting even-build
+      // 1. Check if bot can propose a smart trade
+      const smartTrade = findSmartTradeProposalLocal(state, botId);
+      if (smartTrade) {
+        try {
+          useChatStore.getState().sendMessage(smartTrade.banter, true, {
+            id: bot.id,
+            name: bot.name,
+            avatar: '🤖',
+            color: '#38bdf8',
+          });
+        } catch (_) {}
+        return { action: smartTrade.action, delayMs: 900 };
+      }
+
+      // 2. Attempt building upgrades if bot owns a full district and has safe cash buffer
       for (const [idStr, tState] of Object.entries(state.tiles)) {
         const tileId = Number(idStr);
         const def = getTileDef(tileId);
@@ -1513,12 +1870,26 @@ export function botStep(state: GameState, botId: PlayerId): { action: Action; de
           const minTier = Math.min(...districtTileIds.map(id => state.tiles[id]?.tier ?? 0));
           if (tState.tier === minTier) {
             const district = BOARD_DATA.districts[def.districtId];
-            if (district && bot.cash > district.buildCost + 300) {
+            if (district && bot.cash > district.buildCost + 260) {
               return { action: { type: 'BUILD', tileId }, delayMs: 700 };
             }
           }
         }
       }
+
+      // 3. Unmortgage properties if surplus cash
+      if (bot.cash > 500) {
+        for (const [idStr, tState] of Object.entries(state.tiles)) {
+          if (tState.ownerId === botId && tState.mortgaged) {
+            const def = getTileDef(Number(idStr));
+            const cost = Math.round(((def.price ?? 100) / 2) * 1.1);
+            if (bot.cash >= cost + 300) {
+              return { action: { type: 'UNMORTGAGE', tileId: Number(idStr) }, delayMs: 700 };
+            }
+          }
+        }
+      }
+
       return { action: { type: 'END_TURN' }, delayMs: 800 };
     }
 
@@ -1526,3 +1897,4 @@ export function botStep(state: GameState, botId: PlayerId): { action: Action; de
       return null;
   }
 }
+

@@ -369,6 +369,159 @@ export const ActionPanel: React.FC<ActionPanelProps> = ({ gameState }) => {
         </div>
       </div>
 
+      {/* 1. Pending Trade Alert Banner for Human Player */}
+      {(() => {
+        const pendingTradeToMe = gameState.trades?.find(t => t.toId === myPlayerId && t.status === 'pending');
+        if (!pendingTradeToMe) return null;
+        const sender = gameState.players[pendingTradeToMe.fromId];
+
+        return (
+          <div
+            style={{
+              background: 'linear-gradient(135deg, rgba(234, 179, 8, 0.22) 0%, rgba(202, 138, 4, 0.32) 100%)',
+              border: '1.5px solid #eab308',
+              borderRadius: '12px',
+              padding: '12px 14px',
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              gap: '10px',
+              boxShadow: '0 4px 20px rgba(234, 179, 8, 0.35)',
+              animation: 'pulse 2s infinite',
+            }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <span style={{ fontSize: '22px' }}>🔔</span>
+              <div>
+                <div style={{ fontSize: '13px', fontWeight: 800, color: '#fef08a' }}>
+                  INCOMING TRADE OFFER from {sender?.name ?? 'Opponent'}!
+                </div>
+                <div style={{ fontSize: '11px', color: '#cbd5e1' }}>
+                  Offers: ${pendingTradeToMe.give.cash} {pendingTradeToMe.give.tileIds.length > 0 ? `+ ${pendingTradeToMe.give.tileIds.length} properties` : ''} • Wants: ${pendingTradeToMe.want.cash} {pendingTradeToMe.want.tileIds.length > 0 ? `+ ${pendingTradeToMe.want.tileIds.length} properties` : ''}
+                </div>
+              </div>
+            </div>
+
+            <div style={{ display: 'flex', gap: '6px' }}>
+              <button
+                onClick={() => {
+                  soundFx.playCashRegister();
+                  dispatchAction({ type: 'RESPOND_TRADE', tradeId: pendingTradeToMe.id, response: 'accept' });
+                }}
+                className="arcade-btn arcade-btn-green"
+                style={{ padding: '6px 12px', fontSize: '11px' }}
+                title="Accept this trade immediately"
+              >
+                ACCEPT
+              </button>
+              <button
+                onClick={() => {
+                  soundFx.playClick();
+                  dispatchAction({ type: 'RESPOND_TRADE', tradeId: pendingTradeToMe.id, response: 'decline' });
+                }}
+                className="arcade-btn arcade-btn-secondary"
+                style={{ padding: '6px 10px', fontSize: '11px', color: '#fca5a5', borderColor: '#ef4444' }}
+                title="Decline this trade"
+              >
+                DECLINE
+              </button>
+              <button
+                onClick={() => {
+                  soundFx.playClick();
+                  setShowTradeModal(true);
+                }}
+                className="arcade-btn arcade-btn-magenta"
+                style={{ padding: '6px 10px', fontSize: '11px' }}
+                title="View full trade details"
+              >
+                INSPECT
+              </button>
+            </div>
+          </div>
+        );
+      })()}
+
+      {/* 2. Permanent Quick Tactical Actions Bar (Visible Across All Game Phases) */}
+      <div
+        style={{
+          display: 'flex',
+          gap: '8px',
+          alignItems: 'center',
+          flexWrap: 'wrap',
+          backgroundColor: 'rgba(0, 0, 0, 0.35)',
+          padding: '8px 12px',
+          borderRadius: '12px',
+          border: '1px solid rgba(255, 255, 255, 0.08)',
+        }}
+      >
+        <button
+          onClick={() => {
+            soundFx.playClick();
+            setShowTradeModal(true);
+          }}
+          className="arcade-btn arcade-btn-magenta"
+          style={{
+            padding: '8px 14px',
+            fontSize: '11.5px',
+            borderRadius: '8px',
+            fontWeight: 800,
+            display: 'flex',
+            alignItems: 'center',
+            gap: '6px',
+            fontFamily: 'Orbitron, sans-serif',
+            letterSpacing: '0.5px',
+          }}
+          title="Open Trading Desk to buy, sell, or swap properties with any opponent"
+        >
+          <span>🤝</span>
+          <span>PROPOSE TRADE</span>
+        </button>
+
+        <button
+          onClick={() => {
+            soundFx.playClick();
+            setShowInfluenceModal(true);
+          }}
+          className="arcade-btn arcade-btn-secondary"
+          style={{
+            padding: '8px 12px',
+            fontSize: '11.5px',
+            borderRadius: '8px',
+            fontWeight: 700,
+            display: 'flex',
+            alignItems: 'center',
+            gap: '5px',
+          }}
+          title="Open Influence perk and lobby store"
+        >
+          <span>⭐</span>
+          <span>Influence (★{myPlayer?.influence ?? 0})</span>
+        </button>
+
+        <button
+          onClick={() => {
+            if (window.confirm('Are you sure you want to surrender / forfeit this match? Your properties will be liquidated.')) {
+              soundFx.playClick();
+              dispatchAction({ type: 'RESIGN' });
+            }
+          }}
+          className="arcade-btn arcade-btn-secondary"
+          style={{
+            padding: '8px 10px',
+            fontSize: '11px',
+            borderRadius: '8px',
+            fontWeight: 700,
+            color: '#fca5a5',
+            borderColor: 'rgba(239, 68, 68, 0.4)',
+            marginLeft: 'auto',
+          }}
+          title="Surrender and forfeit the match (Richup.io feature)"
+        >
+          <span>🏳️</span>
+          <span>Forfeit</span>
+        </button>
+      </div>
+
       {/* PHASE 1: Await Roll */}
       {phase === 'awaitRoll' && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>

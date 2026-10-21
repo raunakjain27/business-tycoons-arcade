@@ -667,3 +667,185 @@ describe('eventCards module', () => {
     expect(state.players.p1.influence).toBe(3);
   });
 });
+
+import { BotAI, BotDifficulty } from '../bots/ai';
+
+describe('Smart Bot AI Trading and Monopoly Intelligence', () => {
+  function makeState(): any {
+    const tiles: any = {};
+    for (let i = 0; i < 40; i++) {
+      tiles[i] = { ownerId: null, tier: 0, mortgaged: false };
+    }
+    return {
+      id: 'g1',
+      seed: 'seed1',
+      rules: {
+        startingCash: 1500,
+        paydayAmount: 200,
+        auctionOnDecline: true,
+        evenBuild: true,
+        marketCycle: true,
+        roles: true,
+        influence: true,
+        eventDeck: true,
+        turnTimerSec: 30,
+        suddenGrowthRound: null,
+        bankruptcyGraceSec: 60,
+        maxPlayers: 4,
+        teamMode: false,
+      },
+      round: 1,
+      turnPlayerId: 'p1',
+      turnOrder: ['p1', 'p2'],
+      phase: 'awaitRoll',
+      players: {
+        p1: {
+          id: 'p1',
+          name: 'Bot 1',
+          tokenId: 'hat',
+          roleId: null,
+          cash: 1500,
+          influence: 2,
+          position: 0,
+          inJail: false,
+          jailTurns: 0,
+          doublesStreak: 0,
+          heldCards: [],
+          teamId: null,
+          abilityReadyRound: 0,
+          status: 'active',
+        },
+        p2: {
+          id: 'p2',
+          name: 'Bot 2',
+          tokenId: 'car',
+          roleId: null,
+          cash: 1500,
+          influence: 2,
+          position: 0,
+          inJail: false,
+          jailTurns: 0,
+          doublesStreak: 0,
+          heldCards: [],
+          teamId: null,
+          abilityReadyRound: 0,
+          status: 'active',
+        },
+      },
+      tiles,
+      communityFund: 0,
+      market: { current: 'steady', forecast: 'boom', cycleRound: 4 },
+      eventDeck: [],
+      eventDiscard: [],
+      lastDice: null,
+      auction: null,
+      trades: [],
+      pendingDebt: null,
+      log: [],
+      version: 0,
+    };
+  }
+
+  it('correctly analyzes district monopolies and near-monopolies', () => {
+    const ai = new BotAI(BotDifficulty.Hard);
+    const state = makeState();
+
+    // Give bot 'p1' tiles 1 and 3 (Harbor district is complete monopoly)
+    state.tiles[1].ownerId = 'p1';
+    state.tiles[3].ownerId = 'p1';
+
+    // Give opponent 'p2' tiles 6 and 8 of Cyan (tiles 6, 8, 9), tile 9 unowned
+    state.tiles[6].ownerId = 'p2';
+    state.tiles[8].ownerId = 'p2';
+
+    const analysis = ai.analyzeDistricts(state);
+
+    expect(analysis['Brazil'].monopolyOwner).toBe('p1');
+    expect(analysis['Israel'].nearMonopolies.length).toBe(1);
+    expect(analysis['Israel'].nearMonopolies[0].playerId).toBe('p2');
+    expect(analysis['Israel'].nearMonopolies[0].missingTileIds).toEqual([9]);
+  });
+
+  it('evaluates monopoly-completing tiles with high strategic premium', () => {
+    const ai = new BotAI(BotDifficulty.Hard);
+    const state = makeState();
+
+    // Bot 'p1' owns tiles 6 and 8 of canal (Cyan)
+    state.tiles[6].ownerId = 'p1';
+    state.tiles[8].ownerId = 'p1';
+
+    // Tile 9 face price is 120
+    const normalVal = ai.evaluateTileStrategicValue(state, 9, 'p2', true);
+    const monopolyVal = ai.evaluateTileStrategicValue(state, 9, 'p1', true);
+
+    // To p1, acquiring tile 9 completes a full monopoly!
+    expect(monopolyVal).toBeGreaterThan(normalVal * 1.5);
+  });
+
+  it('declines scam trades that offer 0 or negligible cash for properties', () => {
+    const ai = new BotAI(BotDifficulty.Hard);
+    const state = makeState();
+
+    state.tiles[1].ownerId = 'p2'; // p2 owns tile 1 (worth $60)
+    const scamTrade = {
+      id: 'trade-scam',
+      fromId: 'p1',
+      toId: 'p2',
+      give: { tileIds: [], cash: 5, influence: 0, cards: [], rentContracts: [] },
+      want: { tileIds: [1], cash: 0, influence: 0, cards: [], rentContracts: [] },
+      status: 'pending' as const,
+      expiresAt: Date.now() + 60000,
+    };
+
+    const action = ai.evaluateIncomingTrade(state, 'p2', scamTrade);
+    expect(action.type).toBe('RESPOND_TRADE');
+    if (action.type === 'RESPOND_TRADE') {
+      expect(action.response).toBe('decline');
+    }
+  });
+
+  it('accepts fair trades that complete a district monopoly for the bot', () => {
+    const ai = new BotAI(BotDifficulty.Hard);
+    const state = makeState();
+
+    // Bot p2 owns tile 1 of harbor (district has tiles 1 and 3)
+    state.tiles[1].ownerId = 'p2';
+    // p1 offers tile 3 + $50 in exchange for $100
+    const winningTrade = {
+      id: 'trade-win',
+      fromId: 'p1',
+      toId: 'p2',
+      give: { tileIds: [3], cash: 50, influence: 0, cards: [], rentContracts: [] },
+      want: { tileIds: [], cash: 70, influence: 0, cards: [], rentContracts: [] },
+      status: 'pending' as const,
+      expiresAt: Date.now() + 60000,
+    };
+
+    const action = ai.evaluateIncomingTrade(state, 'p2', winningTrade);
+    expect(action.type).toBe('RESPOND_TRADE');
+    if (action.type === 'RESPOND_TRADE') {
+      expect(action.response).toBe('accept');
+    }
+  });
+
+  it('generates proactive trade proposals when holding near-monopolies', () => {
+    const ai = new BotAI(BotDifficulty.Hard);
+    const state = makeState();
+    state.phase = 'awaitEndTurn';
+    state.turnPlayerId = 'p1';
+
+    // Bot p1 owns tile 1 of harbor (tiles 1, 3)
+    state.tiles[1].ownerId = 'p1';
+    // Opponent p2 owns tile 3 of harbor
+    state.tiles[3].ownerId = 'p2';
+    // Bot has plenty of cash to buy it
+    state.players.p1.cash = 1000;
+
+    const smartTrade = ai.findSmartTradeProposal(state, 'p1');
+    expect(smartTrade).not.toBeNull();
+    if (smartTrade && smartTrade.type === 'PROPOSE_TRADE') {
+      expect(smartTrade.offer.toId).toBe('p2');
+      expect(smartTrade.offer.want.tileIds).toEqual([3]);
+    }
+  });
+});

@@ -2,13 +2,14 @@ import React from 'react';
 import type { GameState, TileId, TileState } from '../../../../packages/engine/types';
 import { getTileDef, getDistrictDef, PLAYER_COLORS, formatCurrency } from '../boardData';
 import { useGameStore } from '../store';
+import { soundFx } from '../soundEffects';
 
 interface PlayerDashboardProps {
   gameState: GameState;
 }
 
 export const PlayerDashboard: React.FC<PlayerDashboardProps> = ({ gameState }) => {
-  const { myPlayerId } = useGameStore();
+  const { myPlayerId, setShowTradeModal, setSelectedTradePartner } = useGameStore();
   const isMobile = typeof window !== 'undefined' && (navigator.maxTouchPoints > 1 || window.innerWidth < 768);
 
   // Find owned tiles per player
@@ -128,26 +129,56 @@ export const PlayerDashboard: React.FC<PlayerDashboardProps> = ({ gameState }) =
                 </div>
               </div>
 
-              {/* Turn Indicator or Timer */}
-              {isCurrentTurn ? (
-                <div
-                  style={{
-                    fontSize: '10px',
-                    fontWeight: 800,
-                    padding: '3px 8px',
-                    borderRadius: '12px',
-                    background: `${playerColor}25`,
-                    color: playerColor,
-                    border: `1px solid ${playerColor}55`,
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '4px',
-                  }}
-                >
-                  <span style={{ width: '6px', height: '6px', borderRadius: '50%', backgroundColor: playerColor }} />
-                  <span>ACTIVE</span>
-                </div>
-              ) : null}
+              {/* Actions & Turn Indicator */}
+              <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                {!isMe && !isBankrupt && (
+                  <button
+                    onClick={() => {
+                      soundFx.playClick();
+                      setSelectedTradePartner(pId);
+                      setShowTradeModal(true);
+                    }}
+                    style={{
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: '4px',
+                      background: 'linear-gradient(135deg, rgba(168, 85, 247, 0.25) 0%, rgba(124, 58, 237, 0.35) 100%)',
+                      border: '1px solid rgba(168, 85, 247, 0.6)',
+                      color: '#d8b4fe',
+                      borderRadius: '6px',
+                      padding: '3px 8px',
+                      fontSize: '10.5px',
+                      fontWeight: 800,
+                      cursor: 'pointer',
+                      boxShadow: '0 2px 6px rgba(124, 58, 237, 0.25)',
+                    }}
+                    title={`Initiate trade negotiation with ${player.name}`}
+                  >
+                    <span>🤝</span>
+                    <span>TRADE</span>
+                  </button>
+                )}
+
+                {isCurrentTurn ? (
+                  <div
+                    style={{
+                      fontSize: '10px',
+                      fontWeight: 800,
+                      padding: '3px 8px',
+                      borderRadius: '12px',
+                      background: `${playerColor}25`,
+                      color: playerColor,
+                      border: `1px solid ${playerColor}55`,
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '4px',
+                    }}
+                  >
+                    <span style={{ width: '6px', height: '6px', borderRadius: '50%', backgroundColor: playerColor }} />
+                    <span>ACTIVE</span>
+                  </div>
+                ) : null}
+              </div>
             </div>
 
             {/* Cash & Influence Display */}

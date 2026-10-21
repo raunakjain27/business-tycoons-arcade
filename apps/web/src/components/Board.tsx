@@ -42,6 +42,7 @@ export const Board: React.FC<BoardProps> = ({ gameState }) => {
     turboSpeed,
     toggleAutoRoll,
     toggleTurboSpeed,
+    setShowTradeModal,
   } = useGameStore();
 
   const [editingTileId, setEditingTileId] = useState<TileId | null>(null);
@@ -966,52 +967,100 @@ export const Board: React.FC<BoardProps> = ({ gameState }) => {
             ))}
           </div>
 
-          {/* Richup-grade Auto-Roll & Turbo Speed Controls */}
-          <div style={{ display: 'flex', gap: '8px', marginBottom: '8px', flexWrap: 'wrap', justifyContent: 'center' }}>
-            <button
-              onClick={() => {
-                soundFx.playClick();
-                toggleAutoRoll();
-              }}
-              className={`arcade-btn ${autoRoll ? 'arcade-btn-green' : 'arcade-btn-secondary'}`}
-              style={{
-                padding: '4px 10px',
-                fontSize: '10.5px',
-                borderRadius: '8px',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '5px',
-                fontFamily: 'Orbitron, sans-serif',
-                letterSpacing: '0.5px',
-              }}
-              title="Automatically roll dice when it is your turn"
-            >
-              <span>⚡</span>
-              <span>AUTO-ROLL: {autoRoll ? 'ON' : 'OFF'}</span>
-            </button>
+          {/* Richup-grade Auto-Roll, Turbo Speed & Propose Trade Controls */}
+          {(() => {
+            const hasPendingTradeToMe = gameState.trades?.some(t => t.toId === myPlayerId && t.status === 'pending');
+            return (
+              <div style={{ display: 'flex', gap: '8px', marginBottom: '8px', flexWrap: 'wrap', justifyContent: 'center' }}>
+                <button
+                  onClick={() => {
+                    soundFx.playClick();
+                    toggleAutoRoll();
+                  }}
+                  className={`arcade-btn ${autoRoll ? 'arcade-btn-green' : 'arcade-btn-secondary'}`}
+                  style={{
+                    padding: '4px 10px',
+                    fontSize: '10.5px',
+                    borderRadius: '8px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '5px',
+                    fontFamily: 'Orbitron, sans-serif',
+                    letterSpacing: '0.5px',
+                  }}
+                  title="Automatically roll dice when it is your turn"
+                >
+                  <span>⚡</span>
+                  <span>AUTO-ROLL: {autoRoll ? 'ON' : 'OFF'}</span>
+                </button>
 
-            <button
-              onClick={() => {
-                soundFx.playClick();
-                toggleTurboSpeed();
-              }}
-              className={`arcade-btn ${turboSpeed ? 'arcade-btn-cyan' : 'arcade-btn-secondary'}`}
-              style={{
-                padding: '4px 10px',
-                fontSize: '10.5px',
-                borderRadius: '8px',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '5px',
-                fontFamily: 'Orbitron, sans-serif',
-                letterSpacing: '0.5px',
-              }}
-              title="Automatically dismiss resolved events to speed up gameplay"
-            >
-              <span>⏩</span>
-              <span>TURBO: {turboSpeed ? 'ON' : 'OFF'}</span>
-            </button>
-          </div>
+                <button
+                  onClick={() => {
+                    soundFx.playClick();
+                    toggleTurboSpeed();
+                  }}
+                  className={`arcade-btn ${turboSpeed ? 'arcade-btn-cyan' : 'arcade-btn-secondary'}`}
+                  style={{
+                    padding: '4px 10px',
+                    fontSize: '10.5px',
+                    borderRadius: '8px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '5px',
+                    fontFamily: 'Orbitron, sans-serif',
+                    letterSpacing: '0.5px',
+                  }}
+                  title="Automatically dismiss resolved events to speed up gameplay"
+                >
+                  <span>⏩</span>
+                  <span>TURBO: {turboSpeed ? 'ON' : 'OFF'}</span>
+                </button>
+
+                <button
+                  onClick={() => {
+                    soundFx.playClick();
+                    setShowTradeModal(true);
+                  }}
+                  className={`arcade-btn ${hasPendingTradeToMe ? 'arcade-btn-green' : 'arcade-btn-magenta'}`}
+                  style={{
+                    padding: '4px 12px',
+                    fontSize: '10.5px',
+                    borderRadius: '8px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '5px',
+                    fontFamily: 'Orbitron, sans-serif',
+                    letterSpacing: '0.5px',
+                    position: 'relative',
+                    boxShadow: hasPendingTradeToMe ? '0 0 16px #10b981' : undefined,
+                  }}
+                  title="Open the Trading Desk to negotiate and propose deals"
+                >
+                  <span>🤝</span>
+                  <span>{hasPendingTradeToMe ? 'TRADE (OFFER!)' : 'PROPOSE TRADE'}</span>
+                  {hasPendingTradeToMe && (
+                    <span
+                      style={{
+                        position: 'absolute',
+                        top: '-6px',
+                        right: '-6px',
+                        backgroundColor: '#ef4444',
+                        color: '#ffffff',
+                        borderRadius: '10px',
+                        padding: '1px 6px',
+                        fontSize: '9px',
+                        fontWeight: 900,
+                        animation: 'pulse 1s infinite',
+                        border: '1.5px solid #ffffff',
+                      }}
+                    >
+                      !
+                    </span>
+                  )}
+                </button>
+              </div>
+            );
+          })()}
 
           {/* Roll Action Button in Center */}
           {gameState.phase === 'awaitRoll' && gameState.turnPlayerId === myPlayerId && (

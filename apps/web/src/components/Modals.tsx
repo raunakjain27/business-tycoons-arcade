@@ -24,6 +24,8 @@ export const Modals: React.FC<ModalsProps> = ({ gameState }) => {
     setSelectedTile,
     tradeTargetTile,
     setTradeTargetTile,
+    selectedTradePartner,
+    setSelectedTradePartner,
     dispatchAction,
   } = useGameStore();
 
@@ -39,6 +41,14 @@ export const Modals: React.FC<ModalsProps> = ({ gameState }) => {
   const [wantCash, setWantCash] = useState<number>(0);
   const [giveTiles, setGiveTiles] = useState<TileId[]>([]);
   const [wantTiles, setWantTiles] = useState<TileId[]>([]);
+  const [dismissedTradeIds, setDismissedTradeIds] = useState<string[]>([]);
+
+  // When selectedTradePartner is clicked from PlayerDashboard or action buttons
+  useEffect(() => {
+    if (selectedTradePartner) {
+      setTradeToId(selectedTradePartner);
+    }
+  }, [selectedTradePartner]);
 
   // When tradeTargetTile is set from Title Deed modal, auto-populate partner & requested tile
   useEffect(() => {
@@ -97,6 +107,247 @@ export const Modals: React.FC<ModalsProps> = ({ gameState }) => {
 
   return (
     <>
+      {/* 0. RICHUP-STYLE INCOMING TRADE OFFER POPUP MODAL */}
+      {(() => {
+        const incomingTrade = gameState.trades?.find(
+          t => t.toId === myPlayerId && t.status === 'pending' && !dismissedTradeIds.includes(t.id)
+        );
+        if (!incomingTrade) return null;
+        const sender = gameState.players[incomingTrade.fromId];
+        const senderName = sender?.name ?? 'Opponent';
+
+        let offeredTilesValue = 0;
+        for (const tId of incomingTrade.give.tileIds) {
+          const def = getTileDef(tId);
+          offeredTilesValue += def.price ?? 100;
+        }
+        const totalOfferedValue = incomingTrade.give.cash + offeredTilesValue;
+
+        let requestedTilesValue = 0;
+        for (const tId of incomingTrade.want.tileIds) {
+          const def = getTileDef(tId);
+          requestedTilesValue += def.price ?? 100;
+        }
+        const totalRequestedValue = incomingTrade.want.cash + requestedTilesValue;
+        const netValueDiff = totalOfferedValue - totalRequestedValue;
+
+        return (
+          <div style={backdropStyle}>
+            <div
+              style={{
+                ...modalContainerStyle,
+                border: '2px solid #eab308',
+                boxShadow: '0 30px 80px rgba(0, 0, 0, 0.95), 0 0 50px rgba(234, 179, 8, 0.35)',
+                maxWidth: '540px',
+              }}
+              onClick={(e: any) => e.stopPropagation()}
+            >
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid rgba(255, 255, 255, 0.1)', paddingBottom: '12px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                  <span style={{ fontSize: '28px' }}>🤝</span>
+                  <div>
+                    <h3 style={{ fontSize: '18px', fontWeight: 900, color: '#fef08a', margin: 0, letterSpacing: '0.5px' }}>
+                      INCOMING TRADE PROPOSAL
+                    </h3>
+                    <span style={{ fontSize: '12.5px', color: '#cbd5e1' }}>
+                      <strong style={{ color: '#ffffff' }}>{senderName}</strong> has sent you a business offer!
+                    </span>
+                  </div>
+                </div>
+
+                <button
+                  onClick={() => setDismissedTradeIds(prev => [...prev, incomingTrade.id])}
+                  style={{
+                    background: 'rgba(255, 255, 255, 0.08)',
+                    border: 'none',
+                    color: '#94a3b8',
+                    fontSize: '15px',
+                    borderRadius: '50%',
+                    width: '28px',
+                    height: '28px',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                  }}
+                  title="Dismiss popup for now"
+                >
+                  ✕
+                </button>
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                <div
+                  style={{
+                    backgroundColor: 'rgba(16, 185, 129, 0.08)',
+                    borderRadius: '10px',
+                    border: '1.5px solid rgba(16, 185, 129, 0.4)',
+                    padding: '12px',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: '8px',
+                  }}
+                >
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <span style={{ fontSize: '12px', fontWeight: 800, color: '#6ee7b7', textTransform: 'uppercase' }}>
+                      YOU RECEIVE:
+                    </span>
+                    <span style={{ fontSize: '11px', color: '#10b981', fontWeight: 700 }}>
+                      +${totalOfferedValue}
+                    </span>
+                  </div>
+
+                  {incomingTrade.give.cash > 0 && (
+                    <div style={{ fontSize: '15px', fontWeight: 900, color: '#10b981' }}>
+                      💵 +{formatCurrency(incomingTrade.give.cash, gameState.boardKey)}
+                    </div>
+                  )}
+
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', maxHeight: '160px', overflowY: 'auto' }}>
+                    {incomingTrade.give.tileIds.length === 0 && incomingTrade.give.cash === 0 ? (
+                      <span style={{ fontSize: '12px', color: '#64748b', fontStyle: 'italic' }}>Nothing offered</span>
+                    ) : (
+                      incomingTrade.give.tileIds.map(tId => {
+                        const def = getTileDef(tId);
+                        const district = getDistrictDef(def.districtId);
+                        return (
+                          <div
+                            key={tId}
+                            style={{
+                              padding: '6px 8px',
+                              backgroundColor: 'rgba(0,0,0,0.4)',
+                              borderRadius: '6px',
+                              border: `1px solid ${district?.color ?? 'rgba(255,255,255,0.1)'}`,
+                              display: 'flex',
+                              justifyContent: 'space-between',
+                              alignItems: 'center',
+                              fontSize: '11.5px',
+                            }}
+                          >
+                            <span style={{ color: '#ffffff', fontWeight: 700 }}>{def.name}</span>
+                            <span style={{ color: '#38bdf8' }}>${def.price ?? 0}</span>
+                          </div>
+                        );
+                      })
+                    )}
+                  </div>
+                </div>
+
+                <div
+                  style={{
+                    backgroundColor: 'rgba(239, 68, 68, 0.08)',
+                    borderRadius: '10px',
+                    border: '1.5px solid rgba(239, 68, 68, 0.4)',
+                    padding: '12px',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: '8px',
+                  }}
+                >
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <span style={{ fontSize: '12px', fontWeight: 800, color: '#fca5a5', textTransform: 'uppercase' }}>
+                      YOU GIVE:
+                    </span>
+                    <span style={{ fontSize: '11px', color: '#ef4444', fontWeight: 700 }}>
+                      -${totalRequestedValue}
+                    </span>
+                  </div>
+
+                  {incomingTrade.want.cash > 0 && (
+                    <div style={{ fontSize: '15px', fontWeight: 900, color: '#ef4444' }}>
+                      💵 -{formatCurrency(incomingTrade.want.cash, gameState.boardKey)}
+                    </div>
+                  )}
+
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', maxHeight: '160px', overflowY: 'auto' }}>
+                    {incomingTrade.want.tileIds.length === 0 && incomingTrade.want.cash === 0 ? (
+                      <span style={{ fontSize: '12px', color: '#64748b', fontStyle: 'italic' }}>Nothing requested</span>
+                    ) : (
+                      incomingTrade.want.tileIds.map(tId => {
+                        const def = getTileDef(tId);
+                        const district = getDistrictDef(def.districtId);
+                        return (
+                          <div
+                            key={tId}
+                            style={{
+                              padding: '6px 8px',
+                              backgroundColor: 'rgba(0,0,0,0.4)',
+                              borderRadius: '6px',
+                              border: `1px solid ${district?.color ?? 'rgba(255,255,255,0.1)'}`,
+                              display: 'flex',
+                              justifyContent: 'space-between',
+                              alignItems: 'center',
+                              fontSize: '11.5px',
+                            }}
+                          >
+                            <span style={{ color: '#ffffff', fontWeight: 700 }}>{def.name}</span>
+                            <span style={{ color: '#f87171' }}>${def.price ?? 0}</span>
+                          </div>
+                        );
+                      })
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              <div
+                style={{
+                  padding: '8px 12px',
+                  borderRadius: '8px',
+                  backgroundColor: 'rgba(0, 0, 0, 0.4)',
+                  border: '1px solid rgba(255, 255, 255, 0.08)',
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center',
+                  fontSize: '12px',
+                }}
+              >
+                <span style={{ color: '#94a3b8' }}>Strategic Asset Valuation:</span>
+                <strong style={{ color: netValueDiff >= 0 ? '#10b981' : '#f87171' }}>
+                  {netValueDiff >= 0 ? `+${formatCurrency(netValueDiff, gameState.boardKey)} (Favorable)` : `${formatCurrency(netValueDiff, gameState.boardKey)} (Favors Opponent)`}
+                </strong>
+              </div>
+
+              <div style={{ display: 'flex', gap: '10px', marginTop: '4px' }}>
+                <button
+                  onClick={() => {
+                    soundFx.playCashRegister();
+                    dispatchAction({ type: 'RESPOND_TRADE', tradeId: incomingTrade.id, response: 'accept' });
+                  }}
+                  className="arcade-btn arcade-btn-green"
+                  style={{
+                    flex: 1,
+                    padding: '12px',
+                    fontSize: '13px',
+                    fontWeight: 900,
+                  }}
+                >
+                  ✅ ACCEPT PROPOSAL
+                </button>
+
+                <button
+                  onClick={() => {
+                    soundFx.playClick();
+                    dispatchAction({ type: 'RESPOND_TRADE', tradeId: incomingTrade.id, response: 'decline' });
+                  }}
+                  className="arcade-btn arcade-btn-secondary"
+                  style={{
+                    flex: 1,
+                    padding: '12px',
+                    fontSize: '13px',
+                    fontWeight: 800,
+                    borderColor: '#ef4444',
+                    color: '#fca5a5',
+                  }}
+                >
+                  ❌ DECLINE
+                </button>
+              </div>
+            </div>
+          </div>
+        );
+      })()}
+
       {/* 1. RICHUP-STYLE SIDE-BY-SIDE TRADE DESK */}
       {showTradeModal && (
         <div
@@ -104,6 +355,7 @@ export const Modals: React.FC<ModalsProps> = ({ gameState }) => {
           onClick={() => {
             setShowTradeModal(false);
             setTradeTargetTile(null);
+            setSelectedTradePartner(null);
           }}
         >
           <div style={modalContainerStyle} onClick={(e: any) => e.stopPropagation()}>
@@ -123,6 +375,7 @@ export const Modals: React.FC<ModalsProps> = ({ gameState }) => {
                 onClick={() => {
                   setShowTradeModal(false);
                   setTradeTargetTile(null);
+                  setSelectedTradePartner(null);
                 }}
                 style={{
                   background: 'rgba(255,255,255,0.08)',

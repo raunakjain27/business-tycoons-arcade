@@ -189,3 +189,8 @@ export const useHubStore = create<HubStoreState>((set) => ({
   setSelectedCategory: (cat: string) => set({ selectedCategory: cat }),
   setShowPublicRoomsModal: (show: boolean) => set({ showPublicRoomsModal: show }),
 }));
+
+if (typeof window !== 'undefined') {
+  (window as any).useHubStore = useHubStore;
+}
+
