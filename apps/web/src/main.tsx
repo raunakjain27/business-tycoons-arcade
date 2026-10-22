@@ -29,7 +29,6 @@ import { BingoGame } from './games/BingoGame';
 import { CornerstoneGame } from './games/CornerstoneGame';
 import { HowToPlayModal } from './components/HowToPlayModal';
 import { DailyRewardModal } from './components/DailyRewardModal';
-import { ReactionOverlay } from './components/ReactionOverlay';
 import { VictoryCelebrationModal } from './components/VictoryCelebrationModal';
 import { LeaderboardModal } from './components/LeaderboardModal';
 import { PublicRoomsModal } from './components/PublicRoomsModal';
@@ -655,9 +654,6 @@ export function App() {
 
       {/* Daily Streak Chest & Free Coins Modal */}
       <DailyRewardModal />
-
-      {/* Global In-Game Floating Reactions & Party Chat Wheel */}
-      <ReactionOverlay />
 
       {/* Universal Victory Celebration & Confetti Shower Podium */}
       <VictoryCelebrationModal />

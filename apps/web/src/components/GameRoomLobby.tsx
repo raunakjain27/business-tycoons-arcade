@@ -853,8 +853,8 @@ export const GameRoomLobby: React.FC<GameRoomLobbyProps> = ({
                     <div style={{ fontSize: '14px', fontWeight: 900, color: '#ffffff', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                       {p.name}
                     </div>
-                    <div style={{ fontSize: '11px', color: p.isHost ? '#fde047' : '#94a3b8', fontWeight: 700 }}>
-                      {p.isHost ? '👑 HOST' : p.isBot ? '🤖 AI BOT' : '🎮 GUEST'}
+                    <div style={{ fontSize: '11px', color: p.isHost ? '#00f0ff' : '#94a3b8', fontWeight: 700, fontFamily: 'JetBrains Mono, monospace' }}>
+                      {p.isHost ? '★ ROOM HOST' : p.isBot ? '● AUTONOMOUS AI' : '● GUEST'}
                     </div>
                   </div>
                 </div>

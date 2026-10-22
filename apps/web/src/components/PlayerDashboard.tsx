@@ -96,17 +96,20 @@ export const PlayerDashboard: React.FC<PlayerDashboardProps> = ({ gameState }) =
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
-                    fontSize: '13px',
+                    fontSize: '11px',
+                    fontFamily: 'Orbitron, sans-serif',
+                    fontWeight: 900,
+                    color: '#ffffff',
                     boxShadow: isCurrentTurn ? `0 0 10px ${playerColor}` : 'none',
-                    border: '1.5px solid rgba(255, 255, 255, 0.2)',
+                    border: '1.5px solid rgba(255, 255, 255, 0.3)',
                   }}
                 >
-                  {idx === 0 ? '👑' : idx === 1 ? '🤖' : idx === 2 ? '⚡' : '🎩'}
+                  P{idx + 1}
                 </div>
                 <div>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
                     <span style={{ fontSize: '13.5px', fontWeight: 800, color: '#f8fafc', lineHeight: 1.1 }}>
-                      {player.name}
+                      {player.name.replace(/[\p{Emoji_Presentation}\p{Extended_Pictographic}]/gu, '').trim()}
                     </span>
                     {isMe && (
                       <span

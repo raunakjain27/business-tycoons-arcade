@@ -107,14 +107,17 @@ export const useChatStore = create<ChatStoreState>((set, get) => {
     closeChat: () => set({ isOpen: false }),
 
     sendMessage: (text: string, isShoutout = false, senderInfo) => {
-      const cleanText = text.trim();
+      const cleanText = text.replace(/[\p{Emoji_Presentation}\p{Extended_Pictographic}]/gu, '').replace(/\s+/g, ' ').trim();
       if (!cleanText) return;
+
+      const cleanName = (senderInfo?.name || 'You').replace(/[\p{Emoji_Presentation}\p{Extended_Pictographic}]/gu, '').trim() || 'You';
+      const cleanAvatar = (senderInfo?.avatar || 'YOU').replace(/[\p{Emoji_Presentation}\p{Extended_Pictographic}]/gu, '').trim() || 'OP';
 
       const newMsg: ChatMessage = {
         id: `msg-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
         senderId: senderInfo?.id || 'player-1',
-        senderName: senderInfo?.name || 'You',
-        senderAvatar: senderInfo?.avatar || 'YOU',
+        senderName: cleanName,
+        senderAvatar: cleanAvatar,
         senderColor: senderInfo?.color || '#00f0ff',
         text: cleanText,
         timestamp: Date.now(),
@@ -159,13 +162,14 @@ export const useChatStore = create<ChatStoreState>((set, get) => {
     },
 
     addSystemMessage: (text: string) => {
+      const cleanText = text.replace(/[\p{Emoji_Presentation}\p{Extended_Pictographic}]/gu, '').replace(/\s+/g, ' ').trim();
       const sysMsg: ChatMessage = {
         id: `sys-${Date.now()}`,
         senderId: 'system',
         senderName: 'ARENA',
         senderAvatar: 'SYS',
         senderColor: '#00f0ff',
-        text,
+        text: cleanText,
         timestamp: Date.now(),
         isSystem: true,
       };

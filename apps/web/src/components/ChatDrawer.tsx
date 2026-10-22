@@ -4,6 +4,9 @@ import { useUserStore } from '../userStore';
 import { useGameStore } from '../store';
 import { soundFx } from '../soundEffects';
 
+const cleanNoEmojis = (str: string): string =>
+  (str || '').replace(/[\p{Emoji_Presentation}\p{Extended_Pictographic}]/gu, '').replace(/\s+/g, ' ').trim();
+
 export const ChatDrawer: React.FC = () => {
   const { isOpen, unreadCount, messages, toggleChat, closeChat, sendMessage } = useChatStore();
   const { user } = useUserStore();
@@ -15,7 +18,7 @@ export const ChatDrawer: React.FC = () => {
   const myPlayer = gameState?.players[myPlayerId];
   const senderInfo = {
     id: myPlayerId,
-    name: myPlayer?.name || user?.username || 'Operator',
+    name: cleanNoEmojis(myPlayer?.name || user?.username || 'Operator'),
     avatar: 'YOU',
     color: '#00f0ff',
   };
@@ -247,7 +250,7 @@ export const ChatDrawer: React.FC = () => {
                       fontFamily: 'JetBrains Mono, monospace',
                     }}
                   >
-                    [SYSTEM] {msg.text}
+                    [SYSTEM] {cleanNoEmojis(msg.text)}
                   </div>
                 );
               }
@@ -277,7 +280,7 @@ export const ChatDrawer: React.FC = () => {
                     >
                       {isMe ? 'YOU' : msg.senderAvatar || 'OP'}
                     </span>
-                    <strong style={{ color: msg.senderColor }}>{msg.senderName}</strong>
+                    <strong style={{ color: msg.senderColor }}>{cleanNoEmojis(msg.senderName)}</strong>
                     <span>
                       {new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                     </span>
@@ -296,7 +299,7 @@ export const ChatDrawer: React.FC = () => {
                       boxShadow: '0 2px 8px rgba(0, 0, 0, 0.3)',
                     }}
                   >
-                    {msg.text}
+                    {cleanNoEmojis(msg.text)}
                   </div>
                 </div>
               );

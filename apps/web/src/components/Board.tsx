@@ -845,7 +845,7 @@ export const Board: React.FC<BoardProps> = ({ gameState }) => {
                                 zIndex: 25,
                               }}
                             >
-                              [{em.emoji}]
+                              [{em.emoji.replace(/[\p{Emoji_Presentation}\p{Extended_Pictographic}]/gu, '').trim() || 'PING'}]
                             </div>
                           ))}
                       </div>

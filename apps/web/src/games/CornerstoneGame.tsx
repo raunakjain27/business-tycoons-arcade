@@ -15,6 +15,9 @@ import { useChatStore, QUICK_SHOUTOUTS } from '../chatStore';
 import { soundFx } from '../soundEffects';
 import { useUserStore } from '../userStore';
 
+const cleanNoEmojis = (str: string): string =>
+  (str || '').replace(/[\p{Emoji_Presentation}\p{Extended_Pictographic}]/gu, '').replace(/\s+/g, ' ').trim();
+
 export const CornerstoneGame: React.FC = () => {
   const { getOrCreateRoom } = useGameRoomStore();
   const { connectVoice } = useVoiceStore();
@@ -30,7 +33,7 @@ export const CornerstoneGame: React.FC = () => {
     turnTimerRemaining,
   } = useGameStore();
 
-  const room = getOrCreateRoom('cornerstone', 'You (Tycoon 👑)', 8, 2);
+  const room = getOrCreateRoom('cornerstone', 'You (Tycoon)', 8, 2);
   const [inLobby, setInLobby] = useState<boolean>(!room.isGameStarted);
   const [sideTab, setSideTab] = useState<'feed' | 'comms'>('feed');
   const [chatInput, setChatInput] = useState('');
@@ -52,7 +55,7 @@ export const CornerstoneGame: React.FC = () => {
       useCelebrationStore.getState().triggerVictory({
         gameTitle: 'Business Tycoons',
         winnerName: winner?.name || 'Tycoon Champion',
-        winnerAvatar: '🎩',
+        winnerAvatar: 'TY',
         coinsAwarded: 300,
         xpAwarded: 250,
         reason: `${winner?.name || 'Winner'} achieved global monopoly domination!`,
@@ -68,9 +71,9 @@ export const CornerstoneGame: React.FC = () => {
       const idx = participantList.length;
       participantList.push({
         id: `bot-${idx}`,
-        name: `Tycoon Bot ${idx} 🤖`,
+        name: `Tycoon Bot ${idx}`,
         isBot: true,
-        avatar: '🤖',
+        avatar: 'AI',
         isHost: false,
         color: '#f59e0b',
       });
@@ -380,7 +383,7 @@ export const CornerstoneGame: React.FC = () => {
                               fontFamily: 'JetBrains Mono, monospace',
                             }}
                           >
-                            [SYSTEM] {msg.text}
+                            [SYSTEM] {cleanNoEmojis(msg.text)}
                           </div>
                         );
                       }
@@ -409,7 +412,7 @@ export const CornerstoneGame: React.FC = () => {
                             >
                               {isMe ? 'YOU' : msg.senderAvatar || 'OP'}
                             </span>
-                            <strong style={{ color: msg.senderColor }}>{msg.senderName}</strong>
+                            <strong style={{ color: msg.senderColor }}>{cleanNoEmojis(msg.senderName)}</strong>
                             <span style={{ fontSize: '9px' }}>
                               {new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                             </span>
@@ -426,7 +429,7 @@ export const CornerstoneGame: React.FC = () => {
                               lineHeight: 1.35,
                             }}
                           >
-                            {msg.text}
+                            {cleanNoEmojis(msg.text)}
                           </div>
                         </div>
                       );
@@ -437,11 +440,12 @@ export const CornerstoneGame: React.FC = () => {
                   <form
                     onSubmit={(e) => {
                       e.preventDefault();
-                      if (!chatInput.trim()) return;
+                      const sanitized = cleanNoEmojis(chatInput);
+                      if (!sanitized) return;
                       soundFx.playClick();
-                      sendMessage(chatInput.trim(), false, {
+                      sendMessage(sanitized, false, {
                         id: myPlayerId,
-                        name: gameState.players[myPlayerId]?.name || user?.username || 'Operator',
+                        name: cleanNoEmojis(gameState.players[myPlayerId]?.name || user?.username || 'Operator'),
                         avatar: 'YOU',
                         color: '#00f0ff',
                       });
