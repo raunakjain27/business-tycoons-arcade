@@ -9,3 +9,4 @@ dist/
 tsconfig.tsbuildinfo
 .turbo/
 .arcade_database.json
+youpi-pg/

@@ -357,7 +357,7 @@ export const GameRoomLobby: React.FC<GameRoomLobbyProps> = ({
           </button>
         </div>
 
-        {/* 3b. Richup Custom House Rules & Arena Config */}
+        {/* 3b. Custom House Rules & Arena Config */}
         <div
           style={{
             borderRadius: '18px',
@@ -410,7 +410,7 @@ export const GameRoomLobby: React.FC<GameRoomLobbyProps> = ({
                       letterSpacing: '-0.2px',
                     }}
                   >
-                    RICHUP HOUSE RULES & CONFIG
+                    TYCOON HOUSE RULES & ARENA CONFIG
                   </span>
                   <span className="neon-pill neon-pill-gold" style={{ fontSize: '10px' }}>
                     CUSTOMIZABLE
@@ -624,7 +624,7 @@ export const GameRoomLobby: React.FC<GameRoomLobbyProps> = ({
                 </div>
               </div>
 
-              {/* Row 3: Richup Signature Gameplay Mechanics */}
+              {/* Row 3: Signature Gameplay Mechanics */}
               <div
                 style={{
                   display: 'grid',

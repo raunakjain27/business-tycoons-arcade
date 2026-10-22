@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useUserStore } from '../userStore';
 import { soundFx } from '../soundEffects';
+import { useYoupiStore, PAYMENT_PACKAGES } from '../youpiStore';
 
 interface StoreItem {
   id: string;
@@ -197,10 +198,24 @@ export const StoreModal: React.FC = () => {
 
   const handleConfirmPayment = (method: 'upi' | 'card' | 'netbanking') => {
     if (!checkoutModal) return;
+    if (method === 'upi') {
+      const pkg = PAYMENT_PACKAGES.find((p) => p.priceInr === checkoutModal.inr) || {
+        id: `pack_${checkoutModal.inr}`,
+        name: checkoutModal.title,
+        bullions: checkoutModal.coins ?? 500,
+        bonusCoins: 50,
+        priceInr: checkoutModal.inr,
+        description: `Top-up of ${checkoutModal.coins ?? 500} Bullions`,
+      };
+      setCheckoutModal(null);
+      setShowStoreModal(false);
+      useYoupiStore.getState().openCheckout(pkg);
+      return;
+    }
     soundFx.playCashRegister();
     soundFx.vibrate([40, 40, 80]);
     addCoins(checkoutModal.coins ?? 0);
-    showNotification(`Paid ${checkoutModal.inr} INR via ${method.toUpperCase()} — coins added.`);
+    showNotification(`Paid ₹${checkoutModal.inr} via ${method.toUpperCase()} — coins added.`);
     setCheckoutModal(null);
   };
 

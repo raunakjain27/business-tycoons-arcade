@@ -180,6 +180,26 @@ export const CornerstoneGame: React.FC = () => {
           <span>🌐</span>
           <span>ALL ROOMS BROWSER</span>
         </button>
+
+        <button
+          onClick={() => {
+            soundFx.playClick();
+            useUserStore.getState().setShowAccountModal(true);
+          }}
+          className="arcade-btn arcade-btn-secondary"
+          style={{
+            padding: '6px 14px',
+            fontSize: '11px',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '6px',
+            borderColor: 'rgba(0, 240, 255, 0.4)',
+            color: '#00f0ff',
+          }}
+        >
+          <span>👤</span>
+          <span>ACCOUNT & BULLION</span>
+        </button>
       </div>
 
       {/* Live Voice Status Dock */}

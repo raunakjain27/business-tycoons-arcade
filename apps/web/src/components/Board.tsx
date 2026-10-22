@@ -342,7 +342,7 @@ export const Board: React.FC<BoardProps> = ({ gameState }) => {
               }}
               title={`${tile.name}${tile.price ? ` - ${formatCurrency(tile.price, gameState.boardKey)}` : ''}`}
             >
-              {/* Richup-style District Color Bar with Houses & Hotel */}
+              {/* District Color Bar with Houses & Hotel */}
               {stripeColor && (
                 <div
                   style={{
@@ -943,7 +943,7 @@ export const Board: React.FC<BoardProps> = ({ gameState }) => {
           )}
 
 
-          {/* Richup-grade Auto-Roll, Turbo Speed & Propose Trade Controls */}
+          {/* Auto-Roll, Turbo Speed & Propose Trade Controls */}
           {(() => {
             const hasPendingTradeToMe = gameState.trades?.some(t => t.toId === myPlayerId && t.status === 'pending');
             return (

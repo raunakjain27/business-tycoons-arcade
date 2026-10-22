@@ -24,7 +24,12 @@
     "dev:server": "pnpm --filter cornerstone-server dev",
     "start": "turbo start",
     "start:web": "pnpm --filter cornerstone-web start",
-    "start:server": "pnpm --filter cornerstone-server start"
+    "start:server": "pnpm --filter cornerstone-server start",
+    "youpi:install": "cd youpi-pg && npm install",
+    "youpi:setup": "cd youpi-pg && node scripts/init-db.cjs",
+    "youpi:api": "cd youpi-pg && node apps/payment-api/src/index.js",
+    "youpi:portal": "cd youpi-pg && node apps/checkout-portal/src/index.js",
+    "youpi:dev": "cd youpi-pg && npm run dev"
   },
   "dependencies": {
     "@colyseus/core": "^0.15.57",

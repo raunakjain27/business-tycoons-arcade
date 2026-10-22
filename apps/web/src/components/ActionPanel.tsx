@@ -515,7 +515,7 @@ export const ActionPanel: React.FC<ActionPanelProps> = ({ gameState }) => {
             borderColor: 'rgba(239, 68, 68, 0.4)',
             marginLeft: 'auto',
           }}
-          title="Surrender and forfeit the match (Richup.io feature)"
+          title="Surrender and forfeit the match"
         >
           <span>🏳️</span>
           <span>Forfeit</span>

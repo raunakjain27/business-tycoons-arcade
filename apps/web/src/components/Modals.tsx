@@ -107,7 +107,7 @@ export const Modals: React.FC<ModalsProps> = ({ gameState }) => {
 
   return (
     <>
-      {/* 0. RICHUP-STYLE INCOMING TRADE OFFER POPUP MODAL */}
+      {/* 0. INCOMING TRADE OFFER POPUP MODAL */}
       {(() => {
         const incomingTrade = gameState.trades?.find(
           t => t.toId === myPlayerId && t.status === 'pending' && !dismissedTradeIds.includes(t.id)
@@ -348,7 +348,7 @@ export const Modals: React.FC<ModalsProps> = ({ gameState }) => {
         );
       })()}
 
-      {/* 1. RICHUP-STYLE SIDE-BY-SIDE TRADE DESK */}
+      {/* 1. SIDE-BY-SIDE TRADE DESK */}
       {showTradeModal && (
         <div
           style={backdropStyle}

@@ -312,7 +312,7 @@ export const useGameRoomStore = create<RoomStore>((set, get) => {
       }
     }
 
-    // 2. Add rich live community multiplayer arena lobbies (just like Richup's live room directory)
+    // 2. Add live community multiplayer arena lobbies
     const mockPublicArenas: PublicRoomInfo[] = [
       {
         roomCode: 'NEO-771',

@@ -30,11 +30,11 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose })
   const [startingCash, setStartingCash] = useState<number>(gameState?.rules.startingCash ?? 1500);
   const [turnTimerSec, setTurnTimerSec] = useState<number>(gameState?.rules.turnTimerSec ?? 30);
 
-  // Richup Game Settings
+  // Arena Match Settings
   const [privateRoom, setPrivateRoom] = useState<boolean>(true);
   const [allowBots, setAllowBots] = useState<boolean>(true);
 
-  // Richup Gameplay Rules Toggles
+  // Arena Gameplay Rules Toggles
   const [doubleRentFullSet, setDoubleRentFullSet] = useState<boolean>(gameState?.rules.doubleRentFullSet ?? true);
   const [vacationCash, setVacationCash] = useState<boolean>(gameState?.rules.vacationCash ?? true);
   const [auction, setAuction] = useState<boolean>(gameState?.rules.auctionOnDecline ?? true);
@@ -116,7 +116,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose })
         }}
         onClick={(e: React.MouseEvent<HTMLDivElement>) => e.stopPropagation()}
       >
-        {/* Header / Profile banner matching Richup */}
+        {/* Header / Profile banner */}
         <div
           style={{
             padding: '16px 20px',

@@ -33,6 +33,7 @@ import { VictoryCelebrationModal } from './components/VictoryCelebrationModal';
 import { LeaderboardModal } from './components/LeaderboardModal';
 import { PublicRoomsModal } from './components/PublicRoomsModal';
 import { ChatDrawer } from './components/ChatDrawer';
+import { YoupiCheckoutModal } from './components/YoupiCheckoutModal';
 import { useTrophyStore } from './trophyStore';
 import { soundFx } from './soundEffects';
 import { GameErrorBoundary } from './components/GameErrorBoundary';
@@ -377,28 +378,44 @@ export function App() {
             ⚙️
           </button>
 
-          {/* Profile Badge */}
+          {/* Account Option */}
           <button
             onClick={() => {
               soundFx.playClick();
               setShowAccountModal(true);
             }}
+            className="arcade-btn arcade-btn-secondary"
             style={{
-              padding: '4px 10px 4px 6px',
-              borderRadius: '20px',
-              border: user.isVip ? '1.5px solid #f59e0b' : '1px solid rgba(255, 255, 255, 0.18)',
-              background: 'rgba(255, 255, 255, 0.06)',
+              padding: '6px 14px',
+              borderRadius: '9999px',
+              border: user.isVip ? '1.5px solid #f59e0b' : '1.5px solid rgba(0, 240, 255, 0.4)',
+              background: user.isVip ? 'rgba(245, 158, 11, 0.12)' : 'rgba(0, 240, 255, 0.08)',
               color: '#ffffff',
-              fontSize: '12px',
+              fontSize: '11.5px',
               fontWeight: 800,
               cursor: 'pointer',
               display: 'flex',
               alignItems: 'center',
-              gap: '6px',
+              gap: '7px',
+              fontFamily: 'Orbitron, sans-serif',
+              letterSpacing: '0.4px',
             }}
+            title="Open Player Account, Bullion Vault & YouPI Gateway"
           >
-            <span style={{ fontSize: '15px' }}>{user.avatar || '👑'}</span>
-            <span>{user.username}</span>
+            <span style={{ fontSize: '13px' }}>👤</span>
+            <span>ACCOUNT</span>
+            <span
+              style={{
+                fontSize: '10px',
+                color: user.isVip ? '#f59e0b' : '#38bdf8',
+                fontFamily: 'JetBrains Mono, monospace',
+                padding: '1px 5px',
+                borderRadius: '4px',
+                backgroundColor: 'rgba(255, 255, 255, 0.08)',
+              }}
+            >
+              {user.username}
+            </span>
           </button>
         </div>
 
@@ -563,6 +580,9 @@ export function App() {
 
       {/* Account & VIP Pass Modal */}
       <AccountModal />
+
+      {/* YouPI PG V2 Direct UPI Checkout Modal */}
+      <YoupiCheckoutModal />
 
       {/* Onboarding & Anon Persona Modal */}
       <OnboardingModal
