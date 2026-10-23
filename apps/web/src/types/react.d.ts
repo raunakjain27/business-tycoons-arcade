@@ -2,13 +2,15 @@
 // Generated type shims for content packages
 // These types are re-exported from the content package
 // and mirrored here so the monorepo typeshed stays self-contained.
-// Do not edit by hand; regenerate from packages/content if the schema changes.
-
-export type { BoardDef, DistrictDef, TileDef, TileType, TileState, PlayerState, Phase, MarketKind, MarketState, TradeBundle, TradeOffer, AuctionState, RuleSet, GameState, Action, GameEvent, ErrorCode } from './generated';
-
+// Do not edit by hand; regenerate from packages/content if the schema changes.export type { BoardDef, DistrictDef, TileDef, TileType, TileState, PlayerState, Phase, MarketKind, MarketState, TradeBundle, TradeOffer, AuctionState, RuleSet, GameState, Action, GameEvent, ErrorCode } from './generated';
 export const defaultBoard: BoardDef;
 export const events: GameEvent[];
 export const boardsData: { [key: string]: BoardDef };
+
+export type ReactNode = any;
+export type ErrorInfo = {
+  componentStack?: string;
+};
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 // Minimal React type shims for standalone bundle build
@@ -51,19 +53,6 @@ declare module 'react' {
     stopPropagation: () => void;
     preventDefault: () => void;
   }
-  export class KeyboardEvent<T = any> {
-    type: string;
-    target: EventTarget | null;
-    currentTarget: EventTarget & T;
-    key: string;
-    code: string;
-    ctrlKey: boolean;
-    shiftKey: boolean;
-    altKey: boolean;
-    metaKey: boolean;
-    preventDefault(): void;
-    stopPropagation(): void;
-  }
   export type FormEvent<T = any> = any;
   export interface TransitionEvent<T = any> {
     stopPropagation: () => void;
@@ -105,6 +94,8 @@ declare module 'react' {
   export default React;
 }
 
+export type { ReactNode, ErrorInfo };
+
 declare module 'react-dom/client' {
   export interface Root {
     render(children: any): void;
@@ -144,7 +135,7 @@ interface ImportMetaEnv {
 }
 
 interface ImportMeta {
-  readonly env: ImportMetaEnv;
+  readonly env?: ImportMetaEnv;
 }
 
 declare global {

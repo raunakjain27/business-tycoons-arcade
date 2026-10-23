@@ -1,5 +1,5 @@
 import React, { Component } from 'react';
-import type { ErrorInfo, ReactNode } from 'react';
+import type { ErrorInfo, ReactNode } from '../types/react';
 import { useHubStore } from '../hubStore';
 import { reportTelemetry } from '../errorTelemetry';
 

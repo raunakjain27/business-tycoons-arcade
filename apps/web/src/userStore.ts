@@ -29,7 +29,7 @@ export function getApiBaseUrl(): string {
       return 'http://localhost:2567';
     }
   }
-  return import.meta.env.VITE_API_URL || 'https://tycoons-arcade-server.onrender.com';
+  return ((import.meta as any).env?.VITE_API_URL as string | undefined) || 'https://tycoons-arcade-server.onrender.com';
 }
 
 export async function syncUserWithCloud(user: UserAccount): Promise<UserAccount | null> {
@@ -271,7 +271,9 @@ export const useUserStore = create<UserStoreState>((set, get) => ({
     localStorage.setItem(STORAGE_KEY, JSON.stringify(user));
     set({ user });
     identifyUser(user.id, { isVip: true });
-    trackEvent('vip_pass_unlocked', { bonusCoins: 1000 });
+    if (trackEvent) {
+      trackEvent('vip_pass_unlocked', { bonusCoins: 1000 });
+    }
     syncUserWithCloud(user).catch(() => {});
   },
 

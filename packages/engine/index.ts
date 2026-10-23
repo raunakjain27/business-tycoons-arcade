@@ -248,9 +248,20 @@ function validatePhaseForAction(phase: GameState['phase'], action: Action): Phas
     case 'BUILD':
     case 'UNMORTGAGE':
     case 'PROPOSE_TRADE':
-    case 'END_TURN':
       if (phase !== 'awaitEndTurn') {
         return { ok: false, error: 'WRONG_PHASE', message: `Action ${action.type} only allowed in awaitEndTurn phase` };
+      }
+      return { ok: true };
+
+    case 'END_TURN':
+      if (phase !== 'awaitEndTurn' && phase !== 'resolveEvent') {
+        return { ok: false, error: 'WRONG_PHASE', message: `Action END_TURN only allowed in awaitEndTurn or resolveEvent phase` };
+      }
+      return { ok: true };
+
+    case 'ACKNOWLEDGE_EVENT':
+      if (phase !== 'resolveEvent' && phase !== 'awaitEndTurn' && phase !== 'awaitRoll') {
+        return { ok: false, error: 'WRONG_PHASE', message: `Cannot acknowledge event in phase ${phase}` };
       }
       return { ok: true };
 
@@ -1398,8 +1409,8 @@ function handleRespondTrade(
         id: newTradeId,
         fromId: playerId,
         toId: trade.fromId,
-        give: counter,
-        want: trade.give,
+        give: trade.want,
+        want: counter,
         status: 'pending',
         expiresAt: ctx.now + 300000,
       };

@@ -404,6 +404,24 @@ export class BotAI {
       return { type: 'RESPOND_TRADE', tradeId: trade.id, response: 'accept' };
     }
 
+    // 4. Strategic Counter-Offer: If trade is close to fair and opponent has cash to bridge the gap
+    const proposer = state.players[trade.fromId];
+    if (proposer && !completesOpponentMonopoly && totalLoss > totalGain && totalGain >= totalLoss * 0.55) {
+      const cashDeficit = Math.round(totalLoss * (this.difficulty === BotDifficulty.Hard ? 1.15 : 1.05) - totalGain);
+      const neededCash = trade.give.cash + cashDeficit;
+      if (neededCash <= proposer.cash && neededCash <= 1200) {
+        return {
+          type: 'RESPOND_TRADE',
+          tradeId: trade.id,
+          response: 'counter',
+          counter: {
+            ...trade.give,
+            cash: neededCash,
+          },
+        };
+      }
+    }
+
     return { type: 'RESPOND_TRADE', tradeId: trade.id, response: 'decline' };
   }
 

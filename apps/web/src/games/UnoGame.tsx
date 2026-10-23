@@ -93,7 +93,7 @@ export const UnoGame: React.FC = () => {
   const [pendingWildCard, setPendingWildCard] = useState<UnoCard | null>(null);
   const game = useUnoGame(initialPlayersFromRoom(room), room.roomCode);
 
-  const resetRoomForGame = useGameRoomStore((s) => s.resetRoomFor);
+  const resetRoomForGame = useGameRoomStore((s) => s.resetGameRoom);
 
   const startMatchFromRoom = useCallback(() => {
     disconnectVoice();

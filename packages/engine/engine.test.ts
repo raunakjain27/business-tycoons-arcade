@@ -848,4 +848,39 @@ describe('Smart Bot AI Trading and Monopoly Intelligence', () => {
       expect(smartTrade.offer.want.tileIds).toEqual([3]);
     }
   });
+
+  it('generates a counter-offer when incoming trade is close to fair value', () => {
+    const ai = new BotAI(BotDifficulty.Medium);
+    const state = makeState();
+
+    // Bot p2 owns tile 1 (worth $60)
+    state.tiles[1].ownerId = 'p2';
+    // p1 offers $40 cash for tile 1 (40 / 60 = 66% of fair value, in negotiable range)
+    const negotiableTrade = {
+      id: 'trade-negotiable',
+      fromId: 'p1',
+      toId: 'p2',
+      give: { tileIds: [], cash: 40, influence: 0, cards: [], rentContracts: [] },
+      want: { tileIds: [1], cash: 0, influence: 0, cards: [], rentContracts: [] },
+      status: 'pending' as const,
+      expiresAt: Date.now() + 60000,
+    };
+
+    const action = ai.evaluateIncomingTrade(state, 'p2', negotiableTrade);
+    expect(action.type).toBe('RESPOND_TRADE');
+    if (action.type === 'RESPOND_TRADE') {
+      expect(action.response).toBe('counter');
+      expect(action.counter).toBeDefined();
+      expect(action.counter!.cash).toBeGreaterThan(40);
+    }
+  });
+
+  it('validates and executes ACKNOWLEDGE_EVENT during resolveEvent phase', () => {
+    const state = makeState();
+    state.phase = 'resolveEvent';
+    const ctx = { now: Date.now(), rng: () => 1 };
+
+    const result = applyAction(state, 'p1', { type: 'ACKNOWLEDGE_EVENT' }, ctx);
+    expect(result.ok).toBe(true);
+  });
 });

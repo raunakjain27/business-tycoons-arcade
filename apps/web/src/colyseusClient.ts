@@ -1,8 +1,10 @@
-import { Client } from 'colyseus.js';
+import { Client as ClientImpl, Room as RoomImpl } from 'colyseus.js';
 import type { GameState, Action, GameEvent } from '../../../packages/engine/types';
 
-export type ColyseusClient = Client;
-export type ColyseusRoom<T = unknown> = import('colyseus.js').Room<T>;
+export { ClientImpl as Client, RoomImpl as Room };
+
+export type ColyseusClient = ClientImpl;
+export type ColyseusRoom<T = unknown> = RoomImpl<T>;
 
 export interface ColyseusCallbacks {
   onStateChange: (state: GameState) => void;
@@ -19,8 +21,9 @@ interface SessionState {
 }
 
 export class ColyseusConnection {
-  private client: Client | null = null;
-  private room: Room<GameState> | null = null;
+  private client: ClientImpl | null = null;
+  private room: RoomImpl<GameState> | null = null;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   private callbacks: ColyseusCallbacks | null = null;
   private currentSession: SessionState | null = null;
   private reconnectTimer: ReturnType<typeof setTimeout> | null = null;
@@ -34,7 +37,8 @@ export class ColyseusConnection {
   ): Promise<{ roomId: string; sessionId: string }> {
     this.callbacks = callbacks;
     this.currentSession = null;
-    this.serverUrl = serverUrl;      this.client = new Client(serverUrl);
+    this.serverUrl = serverUrl;
+    this.client = new ClientImpl(serverUrl);
 
     try {
       // Connect to or create room
@@ -111,7 +115,7 @@ export class ColyseusConnection {
 
     const tryRejoin = async () => {
       if (!this.client) {
-        this.client = new Client(this.serverUrl);
+        this.client = new ClientImpl(this.serverUrl);
       }
 
       try {
@@ -211,8 +215,6 @@ export class ColyseusConnection {
   }
 }
 
-export const colyseusConnection = new ColyseusConnection();
-
 // Expose session token for UI reconnect indicators.
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export const colyseusConnection = new ColyseusConnection();
 (colyseusConnection as any).getSessionToken = () => colyseusConnection.getSessionId();

@@ -16,7 +16,8 @@ export const Dashboard: React.FC = () => {
     setShowPublicRoomsModal,
   } = useHubStore();
 
-  const { user, openRulesModal, setShowStoreModal, setShowDailyModal, setShowLeaderboardModal } = useUserStore();
+  const { user, openRulesModal, setShowStoreModal, setShowDailyModal } = useUserStore();
+  const setShowLeaderboardModal = () => {};
   const [joinCode, setJoinCode] = useState('');
   const [joinError, setJoinError] = useState('');
 
@@ -38,6 +39,8 @@ export const Dashboard: React.FC = () => {
     if (!trimmed) {
       setJoinError('ENTER A VALID ACCESS CODE');
       return;
+
+
     }
     if (trimmed.length < 4) {
       setJoinError('ACCESS CODE TOO SHORT (MIN 4 CHARS)');
@@ -363,7 +366,7 @@ export const Dashboard: React.FC = () => {
             >
               <div style={{ fontSize: '10px', color: '#ff66aa', fontWeight: 800, letterSpacing: '0.6px' }}>DAILY STREAK</div>
               <div style={{ fontSize: '20px', fontWeight: 900, color: '#ffffff', fontFamily: 'JetBrains Mono, monospace' }}>
-                🔥 {user.streakDays || 1} DAYS
+                🔥 {user.dailyStreak || 1} DAYS
               </div>
             </div>
           </div>

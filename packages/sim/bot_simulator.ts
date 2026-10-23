@@ -156,14 +156,15 @@ export class BotSimulator {
       const availableActions = this.getAvailableActions(state, currentPlayerId);
       
       if (availableActions.length > 0) {
-        const action = bot.selectAction(state, currentPlayerId, availableActions);
+        const action = bot.selectAction(state, currentPlayerId);
         
         // Apply action
-        try {          const result = applyAction(state, currentPlayerId, action, {
+        try {
+          const result = applyAction(state, currentPlayerId, action, {
             now: Date.now(),
             rng: () => Math.floor(this.rng() * 6) + 1,
           });
-          if ('state' in result) {
+          if (result.ok && 'state' in result) {
             state = result.state;
           }
         } catch (e) {
@@ -173,8 +174,8 @@ export class BotSimulator {
             const result = applyAction(state, currentPlayerId, endTurnAction, {
               now: Date.now(),
               rng: () => Math.floor(this.rng() * 6) + 1,
-            } as const);
-            if ('state' in result) {
+            });
+            if (result.ok && 'state' in result) {
               state = result.state;
             }
           } catch {

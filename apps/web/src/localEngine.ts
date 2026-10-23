@@ -713,6 +713,31 @@ export function applyLocalAction(
             reason: `Trade agreed and executed between ${sender.name} and ${receiver.name}!`,
           });
         }
+      } else if (action.response === 'counter') {
+        trade.status = 'countered';
+        events.push({
+          type: 'TRADE_COUNTERED',
+          playerId,
+          reason: `${player.name} proposed a strategic counter-offer!`,
+        });
+
+        if (action.counter) {
+          const counterTrade: TradeOffer = {
+            id: `trade_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`,
+            fromId: playerId,
+            toId: trade.fromId,
+            give: trade.want,
+            want: action.counter,
+            status: 'pending',
+            expiresAt: Date.now() + 180000,
+          };
+          state.trades.push(counterTrade);
+          events.push({
+            type: 'TRADE_PROPOSED',
+            playerId,
+            reason: `${player.name} submitted counter-offer requesting $${action.counter.cash} cash.`,
+          });
+        }
       }
       break;
     }
@@ -1548,7 +1573,7 @@ function evaluateIncomingTradeLocal(
   state: GameState,
   botId: PlayerId,
   trade: TradeOffer
-): { response: 'accept' | 'decline'; banter: string } {
+): { response: 'accept' | 'decline' | 'counter'; counter?: TradeBundle; banter: string } {
   const bot = state.players[botId];
   if (!bot) return { response: 'decline', banter: 'No deal.' };
 
@@ -1606,6 +1631,23 @@ function evaluateIncomingTradeLocal(
 
   if (totalGain >= totalLoss * 0.98 && (trade.want.cash <= bot.cash - 120 || trade.want.cash === 0)) {
     return { response: 'accept', banter: 'Trade accepted! Good doing business with you.' };
+  }
+
+  // Strategic Counter-Offer: If trade is close to fair and opponent has cash to bridge the gap
+  const proposer = state.players[trade.fromId];
+  if (proposer && !completesOpponentMonopoly && totalLoss > totalGain && totalGain >= totalLoss * 0.55) {
+    const cashDeficit = Math.round(totalLoss * 1.08 - totalGain);
+    const neededCash = trade.give.cash + cashDeficit;
+    if (neededCash <= proposer.cash && neededCash <= 1200) {
+      return {
+        response: 'counter',
+        counter: {
+          ...trade.give,
+          cash: neededCash,
+        },
+        banter: `Close, but not quite! Add $${cashDeficit} cash ($${neededCash} total) and we have a deal!`,
+      };
+    }
   }
 
   return { response: 'decline', banter: 'Trade declined. The valuation does not work in my favor.' };
@@ -1775,7 +1817,12 @@ export function botStep(state: GameState, botId: PlayerId): { action: Action; de
     } catch (_) {}
 
     return {
-      action: { type: 'RESPOND_TRADE', tradeId: pendingTrade.id, response: evaluation.response },
+      action: {
+        type: 'RESPOND_TRADE',
+        tradeId: pendingTrade.id,
+        response: evaluation.response,
+        counter: evaluation.counter,
+      },
       delayMs: getBotDelay(2200),
     };
   }

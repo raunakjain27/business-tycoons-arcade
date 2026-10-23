@@ -5,21 +5,21 @@
  * - VITE_BUILD_MODE is a custom variable used to gate client-side analytics
  *   and avoid tracking events during automated smoke tests / CI.
  */
-import posthogLib, { type PostHog } from 'posthog-js';
+import posthogLib from 'posthog-js';
 
-const POSTHOG_KEY = import.meta.env.VITE_POSTHOG_KEY as string | undefined;
-const POSTHOG_HOST = import.meta.env.VITE_POSTHOG_HOST as string | undefined;
-const isTrackingEnabled = (import.meta.env.VITE_BUILD_MODE as string | undefined) !== 'test';
+const POSTHOG_KEY = ((import.meta as any).env?.VITE_POSTHOG_KEY as string | undefined);
+const POSTHOG_HOST = ((import.meta as any).env?.VITE_POSTHOG_HOST as string | undefined);
+const isTrackingEnabled = ((import.meta as any).env?.VITE_BUILD_MODE as string | undefined) !== 'test';
 
-// Singleton PostHog instance
-let posthog: PostHog | null = null;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+let posthog: any = null;
 
 /**
  * Initialize PostHog with the configured API key and host.
  */
-export function initPostHog(key?: string, host?: string, debug = false): PostHog {
+export function initPostHog(key?: string, host?: string, debug = false): void {
   if (posthog) {
-    return posthog;
+    return;
   }
   posthog = posthogLib;
   if (key) {
@@ -27,10 +27,8 @@ export function initPostHog(key?: string, host?: string, debug = false): PostHog
       api_host: host || 'https://app.posthog.com',
       debug,
       capture_pageview: false,
-      capture_outgoing_links: false,
     });
   }
-  return posthog;
 }
 
 export function isPostHogReady(): boolean {
@@ -70,8 +68,6 @@ export function onFeatureFlagChange(
 ): void {
   // no-op: feature flags are fetched on demand.
 }
-
-export type PostHogFeatureFlags = Record<string, unknown>;
 
 const trackEvent = captureEvent;
 export { trackEvent };
