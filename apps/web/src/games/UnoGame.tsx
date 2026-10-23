@@ -93,24 +93,28 @@ export const UnoGame: React.FC = () => {
   const [pendingWildCard, setPendingWildCard] = useState<UnoCard | null>(null);
   const game = useUnoGame(initialPlayersFromRoom(room), room.roomCode);
 
+  const resetRoomForGame = useGameRoomStore((s) => s.resetRoomFor);
+
   const startMatchFromRoom = useCallback(() => {
     disconnectVoice();
+    resetRoomForGame('uno');
     const players = initialPlayersFromRoom(room);
     game.resetFromPlayers(players);
     connectVoice(players.map((p) => ({ id: p.id, name: p.name, avatar: p.avatar })));
     setInLobby(false);
-  }, [room, game, connectVoice, disconnectVoice]);
+  }, [room, game, connectVoice, disconnectVoice, resetRoomForGame]);
 
+  // Keep lobby-button behavior faithful: only route to lobby when game is really in lobby.
   const goToLobby = useCallback(() => {
     setInLobby(true);
     disconnectVoice();
   }, [disconnectVoice]);
 
   useEffect(() => {
-    if (inLobby && game.players.length > 0) {
+    if (inLobby) {
       disconnectVoice();
     }
-  }, [inLobby, game.players, disconnectVoice]);
+  }, [inLobby]);
 
   useEffect(() => {
     if (game.winner) {

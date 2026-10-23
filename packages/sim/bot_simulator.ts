@@ -159,8 +159,7 @@ export class BotSimulator {
         const action = bot.selectAction(state, currentPlayerId, availableActions);
         
         // Apply action
-        try {
-          const result = applyAction(state, currentPlayerId, action, {
+        try {          const result = applyAction(state, currentPlayerId, action, {
             now: Date.now(),
             rng: () => Math.floor(this.rng() * 6) + 1,
           });
@@ -174,7 +173,7 @@ export class BotSimulator {
             const result = applyAction(state, currentPlayerId, endTurnAction, {
               now: Date.now(),
               rng: () => Math.floor(this.rng() * 6) + 1,
-            });
+            } as const);
             if ('state' in result) {
               state = result.state;
             }

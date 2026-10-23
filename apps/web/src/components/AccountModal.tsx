@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useUserStore } from '../userStore';
 import { useYoupiStore, PAYMENT_PACKAGES, PaymentPackage } from '../youpiStore';
+import { usePhonePeStore } from '../phonepeStore';
 import { soundFx } from '../soundEffects';
 
 export const AccountModal: React.FC = () => {
@@ -20,12 +21,24 @@ export const AccountModal: React.FC = () => {
     clearHistory,
   } = useYoupiStore();
 
+  const {
+    openPhonePeCheckout,
+    transactions: phonePeTransactions,
+    isOnline: isPhonePeOnline,
+    merchantId: phonePeMerchantId,
+    environment: phonePeEnv,
+    checkGatewayStatus: checkPhonePeStatus,
+    clearTransactions: clearPhonePeHistory,
+  } = usePhonePeStore();
+
   const [activeTab, setActiveTab] = useState<'profile' | 'store' | 'history' | 'config'>('profile');
+  const [selectedGateway, setSelectedGateway] = useState<'phonepe' | 'youpi'>('phonepe');
   const [nameInput, setNameInput] = useState(user.username);
   const [selectedAvatar, setSelectedAvatar] = useState(user.avatar);
   const [copiedKey, setCopiedKey] = useState(false);
   const [savedSuccess, setSavedSuccess] = useState(false);
   const [pingStatus, setPingStatus] = useState<string | null>(null);
+  const [phonepePingStatus, setPhonepePingStatus] = useState<string | null>(null);
 
   useEffect(() => {
     setNameInput(user.username);
@@ -35,6 +48,7 @@ export const AccountModal: React.FC = () => {
   useEffect(() => {
     if (showAccountModal) {
       checkGatewayHealth();
+      checkPhonePeStatus();
     }
   }, [showAccountModal]);
 
@@ -63,6 +77,14 @@ export const AccountModal: React.FC = () => {
     const ok = await checkGatewayHealth();
     setPingStatus(ok ? '✓ Connected to YouPI-PG v2 Gateway (HTTP 200)' : '✕ Gateway offline or port unreachable');
     setTimeout(() => setPingStatus(null), 3500);
+  };
+
+  const handlePingPhonePe = async () => {
+    soundFx.playClick();
+    setPhonepePingStatus('Connecting to PhonePe UAT Gateway...');
+    const ok = await checkPhonePeStatus();
+    setPhonepePingStatus(ok ? '✓ PhonePe Gateway UAT Online (Merchant PGTESTPAYUAT Active)' : '✕ PhonePe service unreachable');
+    setTimeout(() => setPhonepePingStatus(null), 3500);
   };
 
   return (
@@ -189,10 +211,10 @@ export const AccountModal: React.FC = () => {
           }}
         >
           {[
-            { id: 'profile', label: '👤 PROFILE IDENTITY' },
-            { id: 'store', label: '💰 BULLION VAULT (YOUPI)' },
-            { id: 'history', label: `📋 TRANSACTIONS (${transactions.length})` },
-            { id: 'config', label: '⚙️ YOUPI GATEWAY' },
+            { id: 'profile', label: '👤 PROFILE' },
+            { id: 'store', label: '💰 BULLION VAULT & PASS' },
+            { id: 'history', label: `📋 TRANSACTIONS (${transactions.length + phonePeTransactions.length})` },
+            { id: 'config', label: '⚡ GATEWAYS CONFIG' },
           ].map((t) => {
             const isActive = activeTab === t.id;
             return (
@@ -419,49 +441,164 @@ export const AccountModal: React.FC = () => {
             </>
           )}
 
-          {/* TAB 2: BULLION VAULT & YOUPI GATEWAY */}
+          {/* TAB 2: BULLION VAULT & OFFICIAL GATEWAYS */}
           {activeTab === 'store' && (
             <>
-              {/* YouPI Gateway Status Banner */}
-              <div
-                style={{
-                  padding: '12px 16px',
-                  backgroundColor: 'rgba(0, 240, 255, 0.08)',
-                  borderRadius: '14px',
-                  border: '1px solid rgba(0, 240, 255, 0.3)',
-                  display: 'flex',
-                  justifyContent: 'space-between',
-                  alignItems: 'center',
-                }}
-              >
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <div
-                    style={{
-                      width: '8px',
-                      height: '8px',
-                      borderRadius: '50%',
-                      backgroundColor: isGatewayOnline ? '#00ff88' : '#fbbf24',
-                      boxShadow: `0 0 8px ${isGatewayOnline ? '#00ff88' : '#fbbf24'}`,
-                    }}
-                  />
-                  <div>
-                    <span style={{ fontSize: '12px', fontWeight: 800, color: '#ffffff', fontFamily: 'Orbitron, sans-serif' }}>
-                      YOUPI PG V2 PAYMENT GATEWAY
+              {/* Gateway Selection & Status Bar */}
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                {/* PhonePe Gateway Card */}
+                <div
+                  onClick={() => {
+                    soundFx.playClick();
+                    setSelectedGateway('phonepe');
+                  }}
+                  style={{
+                    padding: '14px 16px',
+                    borderRadius: '16px',
+                    cursor: 'pointer',
+                    backgroundColor: selectedGateway === 'phonepe' ? 'rgba(95, 37, 159, 0.28)' : 'rgba(95, 37, 159, 0.08)',
+                    border: selectedGateway === 'phonepe' ? '2px solid #8b5cf6' : '1px solid rgba(139, 92, 246, 0.35)',
+                    boxShadow: selectedGateway === 'phonepe' ? '0 0 25px rgba(139, 92, 246, 0.35)' : 'none',
+                    transition: 'all 0.2s ease',
+                  }}
+                >
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <div
+                        style={{
+                          width: '24px',
+                          height: '24px',
+                          borderRadius: '6px',
+                          background: 'linear-gradient(135deg, #5f259f 0%, #8b5cf6 100%)',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          fontWeight: 900,
+                          fontSize: '13px',
+                          color: '#ffffff',
+                        }}
+                      >
+                        पे
+                      </div>
+                      <span style={{ fontSize: '12px', fontWeight: 900, color: '#ffffff', fontFamily: 'Orbitron, sans-serif' }}>
+                        PHONEPE GATEWAY
+                      </span>
+                    </div>
+                    <span
+                      style={{
+                        fontSize: '9px',
+                        fontWeight: 800,
+                        color: '#00ff88',
+                        border: '1px solid rgba(0, 255, 136, 0.4)',
+                        padding: '1px 6px',
+                        borderRadius: '4px',
+                        fontFamily: 'JetBrains Mono, monospace',
+                      }}
+                    >
+                      ● RBI AUTHORIZED
                     </span>
-                    <span style={{ display: 'block', fontSize: '10px', color: '#94a3b8', fontFamily: 'JetBrains Mono, monospace' }}>
-                      0% GATEWAY FEES • DIRECT P2P UPI SETTLEMENT • ZERO INTERMEDIARY CUT
+                  </div>
+                  <p style={{ margin: 0, fontSize: '11px', color: '#cbd5e1', lineHeight: '1.4' }}>
+                    Official Payment Aggregator • Standard Pay Page • Instant UPI QR • Cards • NetBanking • SHA256 Signed
+                  </p>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '10px' }}>
+                    <span style={{ fontSize: '10px', color: isPhonePeOnline ? '#00ff88' : '#fbbf24', fontFamily: 'JetBrains Mono, monospace' }}>
+                      ● {isPhonePeOnline ? 'UAT ONLINE' : 'STANDBY'}
                     </span>
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handlePingPhonePe();
+                      }}
+                      className="arcade-btn arcade-btn-secondary"
+                      style={{ padding: '3px 8px', fontSize: '9.5px' }}
+                    >
+                      TEST PHONEPE
+                    </button>
                   </div>
                 </div>
 
-                <button
-                  onClick={handlePingGateway}
-                  className="arcade-btn arcade-btn-secondary"
-                  style={{ padding: '4px 10px', fontSize: '10px' }}
+                {/* YouPI Gateway Card */}
+                <div
+                  onClick={() => {
+                    soundFx.playClick();
+                    setSelectedGateway('youpi');
+                  }}
+                  style={{
+                    padding: '14px 16px',
+                    borderRadius: '16px',
+                    cursor: 'pointer',
+                    backgroundColor: selectedGateway === 'youpi' ? 'rgba(0, 240, 255, 0.16)' : 'rgba(0, 240, 255, 0.05)',
+                    border: selectedGateway === 'youpi' ? '2px solid #00f0ff' : '1px solid rgba(0, 240, 255, 0.25)',
+                    boxShadow: selectedGateway === 'youpi' ? '0 0 25px rgba(0, 240, 255, 0.25)' : 'none',
+                    transition: 'all 0.2s ease',
+                  }}
                 >
-                  PING STATUS
-                </button>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <div
+                        style={{
+                          width: '24px',
+                          height: '24px',
+                          borderRadius: '6px',
+                          backgroundColor: 'rgba(0, 240, 255, 0.2)',
+                          border: '1px solid #00f0ff',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          fontWeight: 900,
+                          fontSize: '13px',
+                          color: '#00f0ff',
+                        }}
+                      >
+                        ₹
+                      </div>
+                      <span style={{ fontSize: '12px', fontWeight: 900, color: '#ffffff', fontFamily: 'Orbitron, sans-serif' }}>
+                        YOUPI PG V2
+                      </span>
+                    </div>
+                    <span
+                      style={{
+                        fontSize: '9px',
+                        fontWeight: 800,
+                        color: '#38bdf8',
+                        border: '1px solid rgba(56, 189, 248, 0.4)',
+                        padding: '1px 6px',
+                        borderRadius: '4px',
+                        fontFamily: 'JetBrains Mono, monospace',
+                      }}
+                    >
+                      0% P2P UPI
+                    </span>
+                  </div>
+                  <p style={{ margin: 0, fontSize: '11px', color: '#94a3b8', lineHeight: '1.4' }}>
+                    Self-Hosted P2P UPI Portal • Direct Bank UTR Verification • No Intermediary Aggregator Cut
+                  </p>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '10px' }}>
+                    <span style={{ fontSize: '10px', color: isGatewayOnline ? '#00ff88' : '#fbbf24', fontFamily: 'JetBrains Mono, monospace' }}>
+                      ● {isGatewayOnline ? 'PORT 7050 ONLINE' : 'OFFLINE'}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handlePingGateway();
+                      }}
+                      className="arcade-btn arcade-btn-secondary"
+                      style={{ padding: '3px 8px', fontSize: '9.5px' }}
+                    >
+                      PING STATUS
+                    </button>
+                  </div>
+                </div>
               </div>
+
+              {phonepePingStatus && (
+                <div style={{ fontSize: '11px', color: '#a78bfa', fontFamily: 'JetBrains Mono, monospace', textAlign: 'center' }}>
+                  {phonepePingStatus}
+                </div>
+              )}
 
               {pingStatus && (
                 <div style={{ fontSize: '11px', color: '#00ff88', fontFamily: 'JetBrains Mono, monospace', textAlign: 'center' }}>
@@ -516,119 +653,248 @@ export const AccountModal: React.FC = () => {
                       </div>
                     </div>
 
-                    <button
-                      onClick={() => openCheckout(pkg)}
-                      className="arcade-btn arcade-btn-cyan"
-                      style={{
-                        padding: '10px 18px',
-                        fontSize: '12px',
-                        borderRadius: '10px',
-                        whiteSpace: 'nowrap',
-                        fontWeight: 900,
-                        fontFamily: 'Orbitron, sans-serif',
-                        flexShrink: 0,
-                      }}
-                    >
-                      BUY ₹{pkg.priceInr} ▶
-                    </button>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexShrink: 0 }}>
+                      {/* PhonePe Primary Checkout Button */}
+                      <button
+                        onClick={() => openPhonePeCheckout(pkg)}
+                        style={{
+                          padding: '10px 18px',
+                          fontSize: '12px',
+                          borderRadius: '10px',
+                          whiteSpace: 'nowrap',
+                          fontWeight: 900,
+                          fontFamily: 'Orbitron, sans-serif',
+                          background: 'linear-gradient(135deg, #5f259f 0%, #7c3aed 100%)',
+                          border: '1.5px solid #a78bfa',
+                          color: '#ffffff',
+                          cursor: 'pointer',
+                          boxShadow: '0 0 16px rgba(124, 58, 237, 0.45)',
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '6px',
+                          transition: 'all 0.15s ease',
+                        }}
+                      >
+                        <span>⚡ PHONEPE ₹{pkg.priceInr}</span>
+                      </button>
+
+                      {/* YouPI Alternate Checkout Button */}
+                      <button
+                        onClick={() => openCheckout(pkg)}
+                        className="arcade-btn arcade-btn-secondary"
+                        style={{
+                          padding: '8px 12px',
+                          fontSize: '11px',
+                          borderRadius: '8px',
+                          whiteSpace: 'nowrap',
+                          fontWeight: 700,
+                          fontFamily: 'JetBrains Mono, monospace',
+                          color: '#00f0ff',
+                          borderColor: 'rgba(0, 240, 255, 0.35)',
+                        }}
+                        title="Checkout via YouPI P2P UPI"
+                      >
+                        YouPI P2P
+                      </button>
+                    </div>
                   </div>
                 ))}
               </div>
             </>
           )}
 
-          {/* TAB 3: TRANSACTION HISTORY */}
+          {/* TAB 3: TRANSACTION HISTORY (COMBINED PHONEPE + YOUPI) */}
           {activeTab === 'history' && (
             <>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <span style={{ fontSize: '12px', fontWeight: 800, color: '#94a3b8', fontFamily: 'JetBrains Mono, monospace' }}>
-                  LEDGER: {transactions.length} RECENT TRANSACTIONS
-                </span>
-                {transactions.length > 0 && (
-                  <button
-                    onClick={() => {
-                      soundFx.playClick();
-                      clearHistory();
-                    }}
-                    style={{
-                      background: 'none',
-                      border: 'none',
-                      color: '#f87171',
-                      fontSize: '11px',
-                      cursor: 'pointer',
-                    }}
-                  >
-                    Clear Ledger
-                  </button>
-                )}
-              </div>
+              {(() => {
+                const combined = [
+                  ...phonePeTransactions.map((tx) => ({
+                    id: tx.id,
+                    gateway: 'PHONEPE' as const,
+                    packageName: tx.packageName,
+                    amountInr: tx.amountInr,
+                    bullionsCredited: tx.bullionsCredited,
+                    status: tx.status,
+                    ref: `PP TXN: ${tx.phonepeTransactionId || tx.merchantTransactionId}`,
+                    timestamp: tx.timestamp,
+                  })),
+                  ...transactions.map((tx) => ({
+                    id: tx.id,
+                    gateway: 'YOUPI' as const,
+                    packageName: tx.packageName,
+                    amountInr: tx.amountInr,
+                    bullionsCredited: tx.bullionsCredited,
+                    status: tx.status,
+                    ref: `ORDER: ${tx.orderId} • UTR: ${tx.utr}`,
+                    timestamp: tx.timestamp,
+                  })),
+                ].sort((a, b) => b.timestamp - a.timestamp);
 
-              {transactions.length === 0 ? (
-                <div style={{ textAlign: 'center', padding: '40px 0', color: '#64748b' }}>
-                  <div style={{ fontSize: '32px', marginBottom: '10px' }}>🧾</div>
-                  <div>No payment transactions recorded yet.</div>
-                  <div style={{ fontSize: '11px', marginTop: '4px' }}>Top up bullions via the Bullion Store to test YouPI UPI checkout!</div>
-                </div>
-              ) : (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                  {transactions.map((tx) => (
-                    <div
-                      key={tx.id}
-                      style={{
-                        backgroundColor: 'rgba(255, 255, 255, 0.03)',
-                        borderRadius: '12px',
-                        border: '1px solid rgba(255, 255, 255, 0.08)',
-                        padding: '14px 16px',
-                        display: 'flex',
-                        justifyContent: 'space-between',
-                        alignItems: 'center',
-                        fontSize: '12px',
-                        fontFamily: 'JetBrains Mono, monospace',
-                      }}
-                    >
-                      <div>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                          <strong style={{ color: '#ffffff' }}>{tx.packageName}</strong>
-                          <span style={{ color: '#00ff88', fontSize: '10px', border: '1px solid rgba(0, 255, 136, 0.3)', padding: '1px 5px', borderRadius: '4px' }}>
-                            {tx.status}
-                          </span>
+                return (
+                  <>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <span style={{ fontSize: '12px', fontWeight: 800, color: '#94a3b8', fontFamily: 'JetBrains Mono, monospace' }}>
+                        LEDGER: {combined.length} RECENT TRANSACTIONS
+                      </span>
+                      {combined.length > 0 && (
+                        <div style={{ display: 'flex', gap: '8px' }}>
+                          <button
+                            onClick={() => {
+                              soundFx.playClick();
+                              clearPhonePeHistory();
+                              clearHistory();
+                            }}
+                            style={{
+                              background: 'none',
+                              border: 'none',
+                              color: '#f87171',
+                              fontSize: '11px',
+                              cursor: 'pointer',
+                            }}
+                          >
+                            Clear All Ledgers
+                          </button>
                         </div>
-                        <div style={{ color: '#94a3b8', fontSize: '11px', marginTop: '3px' }}>
-                          ORDER: {tx.orderId} • UTR: {tx.utr}
-                        </div>
-                        <div style={{ color: '#64748b', fontSize: '10px', marginTop: '2px' }}>
-                          {new Date(tx.timestamp).toLocaleString()}
-                        </div>
-                      </div>
-
-                      <div style={{ textAlign: 'right' }}>
-                        <div style={{ fontSize: '15px', fontWeight: 900, color: '#00ff88' }}>
-                          ₹{tx.amountInr}
-                        </div>
-                        <div style={{ fontSize: '10.5px', color: '#fde047' }}>
-                          +{tx.bullionsCredited} Bullions
-                        </div>
-                      </div>
+                      )}
                     </div>
-                  ))}
-                </div>
-              )}
+
+                    {combined.length === 0 ? (
+                      <div style={{ textAlign: 'center', padding: '40px 0', color: '#64748b' }}>
+                        <div style={{ fontSize: '32px', marginBottom: '10px' }}>🧾</div>
+                        <div>No payment transactions recorded yet.</div>
+                        <div style={{ fontSize: '11px', marginTop: '4px' }}>Top up bullions via PhonePe or YouPI UPI to test live settlement!</div>
+                      </div>
+                    ) : (
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                        {combined.map((tx) => (
+                          <div
+                            key={tx.id}
+                            style={{
+                              backgroundColor: 'rgba(255, 255, 255, 0.03)',
+                              borderRadius: '12px',
+                              border: tx.gateway === 'PHONEPE' ? '1px solid rgba(139, 92, 246, 0.35)' : '1px solid rgba(0, 240, 255, 0.25)',
+                              padding: '14px 16px',
+                              display: 'flex',
+                              justifyContent: 'space-between',
+                              alignItems: 'center',
+                              fontSize: '12px',
+                              fontFamily: 'JetBrains Mono, monospace',
+                            }}
+                          >
+                            <div>
+                              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                <strong style={{ color: '#ffffff' }}>{tx.packageName}</strong>
+                                <span
+                                  style={{
+                                    fontSize: '9.5px',
+                                    fontWeight: 900,
+                                    padding: '1px 6px',
+                                    borderRadius: '4px',
+                                    backgroundColor: tx.gateway === 'PHONEPE' ? 'rgba(139, 92, 246, 0.2)' : 'rgba(0, 240, 255, 0.15)',
+                                    color: tx.gateway === 'PHONEPE' ? '#c084fc' : '#38bdf8',
+                                    border: `1px solid ${tx.gateway === 'PHONEPE' ? '#a855f7' : '#0ea5e9'}`,
+                                  }}
+                                >
+                                  {tx.gateway === 'PHONEPE' ? '⚡ PHONEPE' : 'YOUPI-PG'}
+                                </span>
+                                <span style={{ color: '#00ff88', fontSize: '10px', border: '1px solid rgba(0, 255, 136, 0.3)', padding: '1px 5px', borderRadius: '4px' }}>
+                                  {tx.status}
+                                </span>
+                              </div>
+                              <div style={{ color: '#94a3b8', fontSize: '11px', marginTop: '3px' }}>
+                                {tx.ref}
+                              </div>
+                              <div style={{ color: '#64748b', fontSize: '10px', marginTop: '2px' }}>
+                                {new Date(tx.timestamp).toLocaleString()}
+                              </div>
+                            </div>
+
+                            <div style={{ textAlign: 'right' }}>
+                              <div style={{ fontSize: '15px', fontWeight: 900, color: '#00ff88' }}>
+                                ₹{tx.amountInr}
+                              </div>
+                              <div style={{ fontSize: '10.5px', color: '#fde047' }}>
+                                +{tx.bullionsCredited} Bullions
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </>
+                );
+              })()}
             </>
           )}
 
-          {/* TAB 4: YOUPI GATEWAY CONFIG */}
+          {/* TAB 4: GATEWAYS CONFIGURATION & STATUS */}
           {activeTab === 'config' && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+              {/* PhonePe Official Gateway Config Card */}
               <div
                 style={{
-                  padding: '14px',
+                  padding: '16px',
+                  backgroundColor: 'rgba(95, 37, 159, 0.12)',
+                  borderRadius: '16px',
+                  border: '1.5px solid rgba(139, 92, 246, 0.4)',
+                }}
+              >
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <span style={{ fontSize: '16px' }}>⚡</span>
+                    <span style={{ fontSize: '13px', fontWeight: 900, color: '#ffffff', fontFamily: 'Orbitron, sans-serif' }}>
+                      PHONEPE PAYMENT GATEWAY (OFFICIAL & RBI AUTHORIZED)
+                    </span>
+                  </div>
+                  <span style={{ fontSize: '10px', color: '#00ff88', fontWeight: 800, fontFamily: 'JetBrains Mono, monospace' }}>
+                    ● UAT SANDBOX READY
+                  </span>
+                </div>
+                <div style={{ fontSize: '11.5px', color: '#cbd5e1', marginBottom: '14px' }}>
+                  Official PhonePe Standard Checkout with SHA-256 Checksum Signature Verification and Authoritative Server Webhooks.
+                </div>
+
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', fontSize: '12px', fontFamily: 'JetBrains Mono, monospace' }}>
+                  <div>
+                    <span style={{ color: '#94a3b8', display: 'block', marginBottom: '2px' }}>Merchant ID:</span>
+                    <span style={{ color: '#ffffff', fontWeight: 700 }}>{phonePeMerchantId}</span>
+                  </div>
+                  <div>
+                    <span style={{ color: '#94a3b8', display: 'block', marginBottom: '2px' }}>Environment:</span>
+                    <span style={{ color: '#c084fc', fontWeight: 700 }}>{phonePeEnv} (UAT)</span>
+                  </div>
+                  <div>
+                    <span style={{ color: '#94a3b8', display: 'block', marginBottom: '2px' }}>Host Endpoint:</span>
+                    <span style={{ color: '#38bdf8', fontSize: '11px', wordBreak: 'break-all' }}>https://api-preprod.phonepe.com/apis/pg-sandbox</span>
+                  </div>
+                  <div>
+                    <span style={{ color: '#94a3b8', display: 'block', marginBottom: '2px' }}>Checksum Standard:</span>
+                    <span style={{ color: '#00ff88', fontSize: '11px' }}>SHA256(Payload + Salt)###Index</span>
+                  </div>
+                </div>
+
+                <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '12px' }}>
+                  <button
+                    onClick={handlePingPhonePe}
+                    className="arcade-btn arcade-btn-cyan"
+                    style={{ padding: '6px 14px', fontSize: '11px' }}
+                  >
+                    TEST PHONEPE CONNECTION
+                  </button>
+                </div>
+              </div>
+
+              {/* YouPI-PG Gateway Config Card */}
+              <div
+                style={{
+                  padding: '16px',
                   backgroundColor: 'rgba(255, 255, 255, 0.03)',
-                  borderRadius: '14px',
-                  border: '1px solid rgba(255, 255, 255, 0.08)',
+                  borderRadius: '16px',
+                  border: '1px solid rgba(255, 255, 255, 0.1)',
                 }}
               >
                 <div style={{ fontSize: '13px', fontWeight: 800, color: '#ffffff', marginBottom: '4px' }}>
-                  Gateway Topology & Endpoints
+                  YouPI-PG Self-Hosted UPI Gateway Topology
                 </div>
                 <div style={{ fontSize: '11.5px', color: '#94a3b8', marginBottom: '14px' }}>
                   Self-hosted white-label UPI gateway engine configuration for Business Tycoons Arcade.

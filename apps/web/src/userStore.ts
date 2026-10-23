@@ -1,4 +1,4 @@
-import { create } from 'zustand';
+import { create } from 'zustand/react';
 import { identifyUser, trackEvent } from './posthog';
 
 export interface UserAccount {

@@ -1,4 +1,4 @@
-import { create } from 'zustand';
+import { create } from 'zustand/react';
 import { soundFx } from './soundEffects';
 import { useUserStore } from './userStore';
 import { trackEvent } from './posthog';

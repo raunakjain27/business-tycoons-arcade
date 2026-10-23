@@ -1,4 +1,4 @@
-import { create } from 'zustand';
+import { create } from 'zustand/react';
 
 export interface HouseRules {
   startingCash: number;
@@ -135,6 +135,15 @@ export const useGameRoomStore = create<RoomStore>((set, get) => {
       broadcastRooms(updatedRooms);
 
       return newRoom;
+    },
+
+    resetRoomFor: (gameId) => {
+      set((state) => {
+        const next = { ...state.rooms };
+        delete next[gameId];
+        return { rooms: next };
+      });
+      broadcastRooms(get().rooms);
     },
 
 

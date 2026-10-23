@@ -188,37 +188,90 @@ export class ArcadeDatabase {
   }
 
   public syncUser(payload: Partial<PersistedUser> & { id: string }): PersistedUser {
-    const existing = this.state.users[payload.id] || null;
+    // Defensive: sanitize before merging even if the route already validated.
+    const safe = this.sanitizeUserInput(payload);
+    const existing = this.state.users[safe.id] || null;
     const now = Date.now();
 
     const merged: PersistedUser = {
-      id: payload.id,
-      sessionTokenHash: payload.sessionTokenHash || (existing ? existing.sessionTokenHash : this.hashToken(payload.id)),
-      handle: payload.handle || existing?.handle || 'Player',
-      avatarId: payload.avatarId || existing?.avatarId || '👑',
-      // Anti-cheat: coins and XP only increment or take the maximum of client and existing
-      coins: Math.max(payload.coins ?? 0, existing?.coins ?? 0),
-      xp: Math.max(payload.xp ?? 0, existing?.xp ?? 0),
-      level: Math.max(payload.level ?? 1, existing?.level ?? 1),
-      dailyStreak: Math.max(payload.dailyStreak ?? 1, existing?.dailyStreak ?? 1),
-      gamesWon: Math.max(payload.gamesWon ?? 0, existing?.gamesWon ?? 0),
-      isVip: payload.isVip ?? existing?.isVip ?? false,
-      unlockedBoards: Array.from(new Set([...(existing?.unlockedBoards || ['default']), ...(payload.unlockedBoards || [])])),
-      unlockedPegs: Array.from(new Set([...(existing?.unlockedPegs || ['classic']), ...(payload.unlockedPegs || [])])),
-      unlockedSoundPacks: Array.from(new Set([...(existing?.unlockedSoundPacks || ['arcade']), ...(payload.unlockedSoundPacks || [])])),
-      activeSoundPack: payload.activeSoundPack || existing?.activeSoundPack || 'arcade',
-      unlockedCelebrations: Array.from(new Set([...(existing?.unlockedCelebrations || ['confetti']), ...(payload.unlockedCelebrations || [])])),
-      activeCelebration: payload.activeCelebration || existing?.activeCelebration || 'confetti',
-      friendNames: payload.friendNames || existing?.friendNames || [],
-      trophies: Array.from(new Set([...(existing?.trophies || []), ...(payload.trophies || [])])),
+      id: safe.id,
+      sessionTokenHash: safe.sessionTokenHash || (existing ? existing.sessionTokenHash : this.hashToken(safe.id)),
+      handle: safe.handle || existing?.handle || 'Player',
+      avatarId: safe.avatarId || existing?.avatarId || '👑',
+      // Anti-cheat: coins, XP, and achievements only ever increase or merge upward.
+      coins: Math.max(safe.coins ?? 0, existing?.coins ?? 0),
+      xp: Math.max(safe.xp ?? 0, existing?.xp ?? 0),
+      level: Math.max(safe.level ?? 1, existing?.level ?? 1),
+      dailyStreak: Math.max(safe.dailyStreak ?? 1, existing?.dailyStreak ?? 1),
+      gamesWon: Math.max(safe.gamesWon ?? 0, existing?.gamesWon ?? 0),
+      isVip: safe.isVip ?? existing?.isVip ?? false,
+      unlockedBoards: Array.from(new Set([...(existing?.unlockedBoards || ['default']), ...(safe.unlockedBoards || [])])),
+      unlockedPegs: Array.from(new Set([...(existing?.unlockedPegs || ['classic']), ...(safe.unlockedPegs || [])])),
+      unlockedSoundPacks: Array.from(new Set([...(existing?.unlockedSoundPacks || ['arcade']), ...(safe.unlockedSoundPacks || [])])),
+      activeSoundPack: safe.activeSoundPack || existing?.activeSoundPack || 'arcade',
+      unlockedCelebrations: Array.from(new Set([...(existing?.unlockedCelebrations || ['confetti']), ...(safe.unlockedCelebrations || [])])),
+      activeCelebration: safe.activeCelebration || existing?.activeCelebration || 'confetti',
+      friendNames: safe.friendNames || existing?.friendNames || [],
+      trophies: Array.from(new Set([...(existing?.trophies || []), ...(safe.trophies || [])])),
       createdAt: existing?.createdAt || now,
       updatedAt: now,
     };
 
-    this.state.users[payload.id] = merged;
+    this.state.users[safe.id] = merged;
     this.scheduleSave();
     this.syncToSupabase(merged).catch(() => {});
     return merged;
+  }
+
+  private sanitizeUserInput(
+    payload: Partial<PersistedUser> & { id: string }
+  ): Partial<PersistedUser> & { id: string } {
+    const coerce = (val: unknown, fallback: string): string => {
+      if (typeof val === 'string' && val.trim().length > 0) {
+        return val.trim().slice(0, 64);
+      }
+      return fallback;
+    };
+
+    const sanitizeStringArray = (arr: unknown): string[] => {
+      if (!Array.isArray(arr)) return [];
+      return arr
+        .filter((item): item is string => typeof item === 'string')
+        .map((item) => item.trim())
+        .filter((item) => item.length > 0 && item.length <= 64)
+        .slice(0, 256);
+    };
+
+    return {
+      id: coerce(payload.id, 'unknown'),
+      handle: payload.handle != null ? coerce(payload.handle, 'Player') : undefined,
+      avatarId: payload.avatarId != null ? coerce(payload.avatarId, '👑') : undefined,
+      coins: typeof payload.coins === 'number' && Number.isFinite(payload.coins) && payload.coins >= 0
+        ? Math.floor(payload.coins)
+        : undefined,
+      xp: typeof payload.xp === 'number' && Number.isFinite(payload.xp) && payload.xp >= 0
+        ? Math.floor(payload.xp)
+        : undefined,
+      level: typeof payload.level === 'number' && Number.isFinite(payload.level) && payload.level >= 1 && payload.level <= 100
+        ? Math.floor(payload.level)
+        : undefined,
+      dailyStreak: typeof payload.dailyStreak === 'number' && Number.isFinite(payload.dailyStreak) && payload.dailyStreak >= 0
+        ? Math.floor(payload.dailyStreak)
+        : undefined,
+      gamesWon: typeof payload.gamesWon === 'number' && Number.isFinite(payload.gamesWon) && payload.gamesWon >= 0
+        ? Math.floor(payload.gamesWon)
+        : undefined,
+      isVip: payload.isVip == null ? undefined : Boolean(payload.isVip),
+      unlockedBoards: sanitizeStringArray(payload.unlockedBoards),
+      unlockedPegs: sanitizeStringArray(payload.unlockedPegs),
+      unlockedSoundPacks: sanitizeStringArray(payload.unlockedSoundPacks),
+      activeSoundPack: payload.activeSoundPack != null ? coerce(payload.activeSoundPack, 'arcade') : undefined,
+      unlockedCelebrations: sanitizeStringArray(payload.unlockedCelebrations),
+      activeCelebration: payload.activeCelebration != null ? coerce(payload.activeCelebration, 'confetti') : undefined,
+      friendNames: sanitizeStringArray(payload.friendNames),
+      trophies: sanitizeStringArray(payload.trophies),
+      sessionTokenHash: payload.sessionTokenHash != null ? coerce(payload.sessionTokenHash, '') : undefined,
+    };
   }
 
   public getUser(idOrHash: string): PersistedUser | null {
@@ -227,6 +280,20 @@ export class ArcadeDatabase {
     }
     const found = Object.values(this.state.users).find(u => u.sessionTokenHash === idOrHash);
     return found || null;
+  }
+
+  public setUserCoins(idOrHash: string, coins: number): PersistedUser | null {
+    const user = this.getUser(idOrHash);
+    if (!user) return null;
+    const merged = this.syncUser({ ...user, coins });
+    return merged;
+  }
+
+  public incrementCoins(idOrHash: string, delta: number): PersistedUser | null {
+    const user = this.getUser(idOrHash);
+    if (!user) return null;
+    const next = Math.max(0, user.coins + delta);
+    return this.setUserCoins(user.id, next);
   }
 
   public getLeaderboard(limit = 10): {

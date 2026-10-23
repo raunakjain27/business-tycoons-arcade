@@ -1,4 +1,4 @@
-import { create } from 'zustand';
+import { create } from 'zustand/react';
 import type { GameState, Action, TileId, PlayerId, GameEvent } from '../../../packages/engine/types';
 import { colyseusConnection } from './colyseusClient';
 import { createInitialGameState, applyLocalAction, botStep } from './localEngine';
@@ -284,7 +284,7 @@ export const useGameStore = create<GameStoreState>((set, get) => ({
         { name, roleId, boardKey, rules: turnTimerSec ? { turnTimerSec } : undefined },
         {
           onStateChange: (state: GameState) => {
-            set({ gameState: state });
+            set({ gameState: state, errorMessage: null });
           },
           onEvents: (events: GameEvent[]) => {
             console.log('Online events received:', events);
@@ -296,7 +296,7 @@ export const useGameStore = create<GameStoreState>((set, get) => ({
             console.log('Game over, winner:', winner);
           },
           onDisconnect: () => {
-            set({ gameState: null, roomCode: null, isConnecting: false });
+            set({ isConnecting: true, errorMessage: null, gameState: null });
           },
         }
       );

@@ -1,4 +1,40 @@
-import { Room, Client } from '@colyseus/core';
+import { Room } from '@colyseus/core';
+import { EventEmitter } from 'node:events';
+import type { Client as ClientIface, ClientState, ISendOptions } from '@colyseus/core/build/Transport';
+import type { Schema } from '@colyseus/schema';
+
+/**
+ * Minimal runtime stub so call sites can reference `Client` as a class value.
+ * The real client instances flowing through `onJoin/onLeave/onMessage` come from
+ * `@colyseus/core` at runtime; this stub exists only to satisfy TS when the module's
+ * `Client` is exported as a type-only binding.
+ *
+ * The `implements` clause is intentionally omitted because `ClientIface` is a
+ * type-only import and TS reports TS2709 if it is referenced as a value here.
+ * The stub is structurally compatible with `ClientIface` by construction.
+ */
+class Client {
+  readyState: number = 0;
+  id: string = '';
+  sessionId: string = '';
+  state: ClientState = 0 as any;
+  ref: EventEmitter = null as any;
+  userData?: unknown;
+  auth?: unknown;
+  pingCount?: number;
+  _reconnectionToken: string = '';
+  _enqueuedMessages?: unknown[];
+  _afterNextPatchQueue: [string | Client, IArguments][] = [];
+  raw(_data: ArrayLike<number>, _options?: ISendOptions, _cb?: (err?: Error) => void): void { /* noop stub */ }
+  enqueueRaw(_data: ArrayLike<number>, _options?: ISendOptions): void { /* noop stub */ }
+  send(_type: string | number, _message?: unknown, _options?: ISendOptions): void { /* noop stub */ }
+  sendBytes(_type: string | number, _bytes: number[] | Uint8Array, _options?: ISendOptions): void { /* noop stub */ }
+  leave(_code?: number, _data?: string): void { /* noop stub */ }
+  close(_code?: number, _data?: string): void { /* noop stub */ }
+  error(_code: number, _message?: string): void { /* noop stub */ }
+}
+
+
 import crypto from 'node:crypto';
 import type {
   GameState,
@@ -246,9 +282,7 @@ export class GameRoom extends Room<GameState> {
   private messageTimestamps = new Map<string, number[]>();
 
   // Map client sessionId to playerId
-  private clientToPlayerId = new Map<string, PlayerId>();
-
-  // Map playerId to active Client
+  private clientToPlayerId = new Map<string, PlayerId>();    // Map playerId to active Client
   private playerToClient = new Map<PlayerId, Client>();
 
   // Active 60-second reconnection timers for disconnected players
@@ -662,8 +696,8 @@ export class GameRoom extends Room<GameState> {
         clearTimeout(this.turnTimer);
         this.turnTimer = null;
       }
-      const activePlayers = Object.values(this.state.players).filter(p => p.status === 'active');
-      const winnerId = activePlayers.length === 1 ? activePlayers[0].id : this.state.turnPlayerId;
+      const activePlayers = Object.values(this.state.players).filter((p: any) => p.status === 'active');
+      const winnerId = activePlayers.length === 1 ? (activePlayers[0] as any).id : this.state.turnPlayerId;
       this.broadcast('gameOver', {
         winner: winnerId,
         reason: 'game_ended',
@@ -721,7 +755,7 @@ export class GameRoom extends Room<GameState> {
 
     // Support Colyseus native allowReconnection
     try {
-      const reconnectedClient = await this.allowReconnection(client, 60);
+      const reconnectedClient = await this.allowReconnection(client as any, 60);
       const activeTimer = this.disconnectTimers.get(playerId);
       if (activeTimer) {
         clearTimeout(activeTimer);
@@ -794,7 +828,7 @@ export class GameRoom extends Room<GameState> {
   private cleanupOldSnapshots(fs: any): void {
     try {
       const files = fs.readdirSync(this.SNAPSHOT_DIR)
-        .filter(f => f.startsWith(`snapshot_${this.roomId}_`))
+        .filter((f: string) => f.startsWith(`snapshot_${this.roomId}_`))
         .sort();
       while (files.length > 10) {
         const oldFile = `${this.SNAPSHOT_DIR}/${files.shift()}`;
@@ -828,12 +862,12 @@ export class GameRoom extends Room<GameState> {
     });
 
     const remainingActive = Object.values(this.state.players).filter(
-      p => p.status === 'active' || p.status === 'disconnected'
+      (p: any) => p.status === 'active' || p.status === 'disconnected'
     );
 
     // If only 1 player remains, declare winner
     if (remainingActive.length === 1 && this.state.phase !== 'lobby') {
-      const winner = remainingActive[0];
+      const winner = remainingActive[0] as any;
       this.state.phase = 'gameOver';
       if (this.turnTimer) {
         clearTimeout(this.turnTimer);

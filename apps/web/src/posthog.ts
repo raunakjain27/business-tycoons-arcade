@@ -1,88 +1,77 @@
-import posthog from 'posthog-js';
+/**
+ * PostHog analytics wrapper for Cornerstone.
+ *
+ * Environment:
+ * - VITE_BUILD_MODE is a custom variable used to gate client-side analytics
+ *   and avoid tracking events during automated smoke tests / CI.
+ */
+import posthogLib, { type PostHog } from 'posthog-js';
 
-// Environment variables or global window fallback
-const POSTHOG_KEY =
-  (import.meta.env.VITE_POSTHOG_KEY as string | undefined) ||
-  (typeof window !== 'undefined' ? (window as any).__POSTHOG_KEY__ : '') ||
-  'phc_vRgXwVCYu9NcTSQUKgxPGZdMVzprguRN7VqeEVWmTmBT';
+const POSTHOG_KEY = import.meta.env.VITE_POSTHOG_KEY as string | undefined;
+const POSTHOG_HOST = import.meta.env.VITE_POSTHOG_HOST as string | undefined;
+const isTrackingEnabled = (import.meta.env.VITE_BUILD_MODE as string | undefined) !== 'test';
 
-const POSTHOG_HOST =
-  (import.meta.env.VITE_POSTHOG_HOST as string | undefined) ||
-  'https://us.i.posthog.com';
-
-let isInitialized = false;
+// Singleton PostHog instance
+let posthog: PostHog | null = null;
 
 /**
- * Safely initialize PostHog analytics and session recordings.
- * If VITE_POSTHOG_KEY is not configured yet, it stands by safely without errors.
+ * Initialize PostHog with the configured API key and host.
  */
-export function initPostHog(): void {
-  if (typeof window === 'undefined' || isInitialized) return;
-
-  if (!POSTHOG_KEY) {
-    console.info('ℹ️ PostHog: VITE_POSTHOG_KEY not set. Analytics in offline/standby mode.');
-    return;
+export function initPostHog(key?: string, host?: string, debug = false): PostHog {
+  if (posthog) {
+    return posthog;
   }
-
-  try {
-    posthog.init(POSTHOG_KEY, {
-      api_host: POSTHOG_HOST,
-      autocapture: true,
-      capture_pageview: true,
-      capture_pageleave: true,
-      persistence: 'localStorage+cookie',
-      session_recording: {
-        maskAllInputs: false,
-      },
-      loaded: (ph) => {
-        (window as any).posthog = ph;
-        console.log('⚡ PostHog live & connected to project phc_vRgXw...!');
-      },
+  posthog = posthogLib;
+  if (key) {
+    posthog.init(key, {
+      api_host: host || 'https://app.posthog.com',
+      debug,
+      capture_pageview: false,
+      capture_outgoing_links: false,
     });
-    (window as any).posthog = posthog;
-    isInitialized = true;
-  } catch (err) {
-    console.warn('[PostHog Init Warning]', err);
+  }
+  return posthog;
+}
+
+export function isPostHogReady(): boolean {
+  return posthog != null;
+}
+
+export function captureEvent(event: string, properties?: Record<string, unknown>): void {
+  if (posthog && isTrackingEnabled) {
+    posthog.capture(event, properties);
   }
 }
 
-/**
- * Identify a user in PostHog when they set their nickname, avatar, level, or VIP status.
- */
-export function identifyUser(userId: string, properties?: Record<string, any>): void {
-  if (!isInitialized) return;
-  try {
+export function identifyUser(userId: string, properties?: Record<string, unknown>): void {
+  if (posthog && isTrackingEnabled) {
     posthog.identify(userId, properties);
-  } catch (err) {
-    console.warn('[PostHog Identify Warning]', err);
   }
 }
 
-/**
- * Capture a custom game event (e.g. game_started, roll_dice, trade_completed, game_won).
- */
-export function trackEvent(eventName: string, properties?: Record<string, any>): void {
-  if (!isInitialized) {
-    if (import.meta.env.DEV) {
-      console.debug(`[PostHog Track (Standby)] ${eventName}`, properties);
-    }
-    return;
+export async function getFeatureFlag(
+  flagKey: string,
+  userDistinctId: string
+): Promise<unknown> {
+  if (posthog && isTrackingEnabled) {
+    return posthog.featureFlags.get(flagKey, userDistinctId);
   }
-  try {
-    posthog.capture(eventName, properties);
-  } catch (err) {
-    console.warn('[PostHog Capture Warning]', err);
-  }
+  return undefined;
 }
 
-/**
- * Reset PostHog identity on session clear.
- */
-export function resetPostHogUser(): void {
-  if (!isInitialized) return;
-  try {
-    posthog.reset();
-  } catch (err) {}
+export function setFeatureFlagCallback(
+  callback: (flags: Record<string, unknown>) => void
+): void {
+  // no-op: feature flags are fetched on demand.
 }
 
-export { posthog };
+export function onFeatureFlagChange(
+  callback: (flags: Record<string, unknown>) => void
+): void {
+  // no-op: feature flags are fetched on demand.
+}
+
+export type PostHogFeatureFlags = Record<string, unknown>;
+
+const trackEvent = captureEvent;
+export { trackEvent };

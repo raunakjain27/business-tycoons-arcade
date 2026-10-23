@@ -1,8 +1,10 @@
-import React, { useState } from 'react';
-import { useGameRoomStore, DEFAULT_HOUSE_RULES } from '../gameRoomStore';
+import React, { useEffect, useState } from 'react';
+import { useGameRoomStore, DEFAULT_HOUSE_RULES, useGameRoomStore as _useGameRoomStore } from '../gameRoomStore';
 import { useHubStore } from '../hubStore';
 import { soundFx } from '../soundEffects';
 import { trackEvent } from '../posthog';
+import { useGameStore } from '../store';
+import { colyseusConnection } from '../colyseusClient';
 
 interface GameRoomLobbyProps {
   gameId: string;
@@ -35,6 +37,11 @@ export const GameRoomLobby: React.FC<GameRoomLobbyProps> = ({
 
   const room = getOrCreateRoom(gameId, 'You (Host)', maxPlayers, minPlayers);
   const houseRules = room.houseRules || DEFAULT_HOUSE_RULES;
+
+  const gameStore = useGameStore();
+  const isOnlineMode = gameStore.gameMode === 'online';
+  const isConnecting = gameStore.isConnecting;
+  const roomSessionToken = (colyseusConnection as any).getSessionToken?.() ?? null;
   const [showHouseRules, setShowHouseRules] = useState(true);
   const [newPlayerName, setNewPlayerName] = useState('');
   const [copied, setCopied] = useState(false);
@@ -798,12 +805,41 @@ export const GameRoomLobby: React.FC<GameRoomLobbyProps> = ({
                   background: canStart ? '#00ff88' : '#ff0077',
                   boxShadow: `0 0 10px ${canStart ? '#00ff88' : '#ff0077'}`,
                 }}
-              />
-              {canStart
+              />        {canStart
                 ? 'TABLE QUORUM READY TO LAUNCH'
                 : `AWAITING ${emptySlotsCount} MORE COMBATANT(S)`}
-            </span>
-          </div>
+          </span>
+
+          {isOnlineMode && (
+            <div
+              style={{
+                marginTop: '8px',
+                padding: '8px 12px',
+                borderRadius: '10px',
+                background: isConnecting
+                  ? 'rgba(251, 191, 36, 0.15)'
+                  : 'rgba(16, 185, 129, 0.15)',
+                opacity: isOnlineMode ? 1 : 0,
+                pointerEvents: isOnlineMode ? 'auto' : 'none',
+                border: '1px solid',
+                borderColor: isConnecting
+                  ? 'rgba(251, 191, 36, 0.4)'
+                  : 'rgba(16, 185, 129, 0.4)',
+              }}
+            >
+              {isConnecting ? (
+                <span style={{ color: '#fbbf24', fontSize: '12px', fontWeight: 700 }}>
+                  ⚡ Reconnecting to session...
+                </span>
+              ) : (
+                <span style={{ color: '#4ade80', fontSize: '12px', fontWeight: 700 }}>
+                  Connected to live room session
+                  {roomSessionToken ? ` (token ${String(roomSessionToken).slice(0, 8)}...)` : ''}
+                </span>
+              )}
+            </div>
+          )}
+        </div>
 
           {/* Pods Grid */}
           <div

@@ -120,5 +120,8 @@ export function triggerBotQuip(
   if (!quipList || quipList.length === 0) return;
 
   const picked = quipList[Math.floor(Math.random() * quipList.length)];
-  useReactionStore.getState().triggerReaction(picked.emoji, picked.text, personality.name, personality.avatar);
+  // Avoid calling .getState() on the React hook directly; the hook returns a
+  // lightweight facade, not a Zustand store instance.
+  const reactionFacade = useReactionStore();
+  reactionFacade.triggerReaction(picked.emoji, picked.text, personality.name, personality.avatar);
 }

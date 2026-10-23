@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import { useHubStore } from '../hubStore';
 import { useGameRoomStore } from '../gameRoomStore';
 import { useVoiceStore } from '../voiceStore';
@@ -66,7 +66,7 @@ export const SequenceGame: React.FC = () => {
     setLog((prev) => [msg, ...prev.slice(0, 10)]);
   };
 
-  const startMatchFromRoom = () => {
+  const startMatchFromRoom = useCallback(() => {
     setBoard(BASE_LAYOUT.map((row) => row.map((cell) => ({ ...cell, chip: null }))));
     setHand(generateRandomHand());
     connectVoice(room.players.map((p) => ({ id: p.id, name: p.name, avatar: p.avatar })));
@@ -76,9 +76,9 @@ export const SequenceGame: React.FC = () => {
     setWinner(null);
     setInLobby(false);
     setLog([`Sequence match launched in room ${room.roomCode}! Align 5 chips horizontally, vertically, or diagonally.`]);
-  };
+  }, [room]);
 
-  const handleCellClick = (r: number, c: number) => {
+  const handleCellClick = useCallback((r: number, c: number) => {
     if (winner || currentTurn !== 'blue') return;
     if (selectedCardIdx === null) return;
 
@@ -115,11 +115,16 @@ export const SequenceGame: React.FC = () => {
 
     setCurrentTurn('green');
     if (room.allowBots || room.players.length === 1) {
-      setTimeout(() => {
-        botPlayTurn();
+      const timer = setTimeout(() => {
+        const freshTurn = currentTurn;
+        if (freshTurn === 'green') {
+          botPlayTurn();
+        }
       }, 2000);
+      return () => clearTimeout(timer);
     }
-  };
+    return undefined;
+  }, [room, currentTurn]);
 
   const placeChip = (r: number, c: number, color: 'blue' | 'green') => {
     const newBoard = board.map((row, ri) =>

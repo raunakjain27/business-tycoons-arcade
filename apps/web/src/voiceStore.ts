@@ -1,4 +1,4 @@
-import { create } from 'zustand';
+import { create } from 'zustand/react';
 import { webRTCVoiceManager } from './webrtcVoice';
 
 export interface VoiceUser {

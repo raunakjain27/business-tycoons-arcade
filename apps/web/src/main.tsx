@@ -34,6 +34,7 @@ import { LeaderboardModal } from './components/LeaderboardModal';
 import { PublicRoomsModal } from './components/PublicRoomsModal';
 import { ChatDrawer } from './components/ChatDrawer';
 import { YoupiCheckoutModal } from './components/YoupiCheckoutModal';
+import { PhonePeCheckoutModal } from './components/PhonePeCheckoutModal';
 import { useTrophyStore } from './trophyStore';
 import { soundFx } from './soundEffects';
 import { GameErrorBoundary } from './components/GameErrorBoundary';
@@ -580,6 +581,9 @@ export function App() {
 
       {/* Account & VIP Pass Modal */}
       <AccountModal />
+
+      {/* PhonePe Payment Gateway (Official RBI Authorized) Modal */}
+      <PhonePeCheckoutModal />
 
       {/* YouPI PG V2 Direct UPI Checkout Modal */}
       <YoupiCheckoutModal />

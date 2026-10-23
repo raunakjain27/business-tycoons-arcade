@@ -4,6 +4,13 @@
     "noEmit": true,
     "types": ["node"]
   },
-  "include": ["*.ts"],
+  "include": [
+    "*.ts",
+    "package.json",
+    "../engine/**/*.ts",
+    "../protocol/**/*.ts",
+    "../content/**/*.ts",
+    "../bots/**/*.ts"
+  ],
   "exclude": ["node_modules"]
 }
