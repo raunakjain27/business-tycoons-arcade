@@ -9,9 +9,11 @@ import type {
   GameEvent,
   MarketKind,
   TradeOffer,
+  TradeBundle,
 } from '../../../packages/engine/types';
 import { BOARD_DATA, getTileDef, EVENT_CARDS, EventCardDef } from './boardData';
 import { computeRent, ownsFullDistrict } from './computeRent';
+import { useChatStore } from './chatStore';
 
 /**
  * Creates an authoritative initial GameState for a local or new game.
@@ -1456,8 +1458,6 @@ function handleBankruptcy(state: GameState, playerId: PlayerId, events: GameEven
   }
 }
 
-import { useChatStore } from './chatStore';
-
 interface DistrictStats {
   districtId: string;
   totalTiles: number;
@@ -1771,6 +1771,7 @@ function getBotDelay(baseMs: number): number {
  * Automates one action step for a bot player during local games.
  * Powered by full monopoly strategic intelligence with deliberate, human-observable pacing.
  */
+
 export function botStep(state: GameState, botId: PlayerId): { action: Action; delayMs: number } | null {
   const bot = state.players[botId];
   if (!bot || bot.status !== 'active') return null;

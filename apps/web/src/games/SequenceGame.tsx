@@ -116,10 +116,7 @@ export const SequenceGame: React.FC = () => {
     setCurrentTurn('green');
     if (room.allowBots || room.players.length === 1) {
       const timer = setTimeout(() => {
-        const freshTurn = currentTurn;
-        if (freshTurn === 'green') {
-          botPlayTurn();
-        }
+        botPlayTurn();
       }, 2000);
       return () => clearTimeout(timer);
     }

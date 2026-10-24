@@ -133,20 +133,24 @@ export const LudoGame: React.FC = () => {
   const [winner, setWinner] = useState<LudoPlayer | null>(null);
   const [gameLog, setGameLog] = useState<string[]>(['Royal Pachisi Match initiated. Roll a 6 to release tokens from base!']);
 
-  const timerRegistry = useRef<NodeJS.Timeout[]>([]);
-  const intervalRegistry = useRef<NodeJS.Timeout | null>(null);
+  const timerRegistry = useRef<any[]>([]);
+  const intervalRegistry = useRef<any>(null);
 
   const clearTimers = useCallback(() => {
-    timerRegistry.current.forEach(clearTimeout);
-    timerRegistry.current = [];
+    if (timerRegistry.current) {
+      timerRegistry.current.forEach(clearTimeout);
+      timerRegistry.current = [];
+    }
     if (intervalRegistry.current) {
       clearInterval(intervalRegistry.current);
       intervalRegistry.current = null;
     }
   }, []);
 
-  const pushTimer = useCallback((t: NodeJS.Timeout) => {
-    timerRegistry.current.push(t);
+  const pushTimer = useCallback((t: any) => {
+    if (timerRegistry.current) {
+      timerRegistry.current.push(t);
+    }
   }, []);
 
   useEffect(() => {

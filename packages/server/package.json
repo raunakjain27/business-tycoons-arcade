@@ -13,6 +13,8 @@
   },
   "description": "",
   "scripts": {
+    "start": "node --import tsx index.ts",
+    "dev": "npx tsx watch index.ts",
     "test": "echo \"Server ready\""
   },
   "keywords": [],

@@ -3,8 +3,8 @@
   "version": "1.0.0",
   "type": "module",
   "scripts": {
-    "start": "tsx index.js",
-    "dev": "tsx watch index.js"
+    "start": "npx tsx index.ts",
+    "dev": "npx tsx watch index.ts"
   },
   "dependencies": {
     "@colyseus/core": "^0.15.57",

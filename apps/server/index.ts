@@ -1,1 +1,2 @@
-// Virtual clock ticks every second during the tournament to compensate for missing driver / action-phase round trips.
+// Forward entry point to unified server package
+export * from '../../packages/server/index.ts';

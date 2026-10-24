@@ -1,19 +1,30 @@
 services:
-  # Colyseus Real-Time WebSocket Game Server (Free / Production on Render)
   - type: web
     name: tycoons-arcade-server
-    runtime: node
-    plan: free
+    env: docker
+    dockerfilePath: Dockerfile
+    plan: starter
     region: oregon
-    buildCommand: npm install && npm run build
-    startCommand: node --import tsx packages/server/index.ts
     healthCheckPath: /health
+    autoDeploy: true
     envVars:
+      - key: PORT
+        value: 2567
       - key: NODE_ENV
         value: production
-      - key: PORT
-        value: 10000
       - key: CORS_ORIGIN
-        value: "*"
+        sync: false
       - key: JWT_SECRET
         generateValue: true
+      - key: SUPABASE_URL
+        sync: false
+      - key: SUPABASE_ANON_KEY
+        sync: false
+      - key: PHONEPE_ENV
+        value: SANDBOX
+      - key: PHONEPE_MERCHANT_ID
+        value: PGTESTPAYUAT
+      - key: PHONEPE_SALT_KEY
+        value: 099eb0cd-02cf-4e2a-8aca-3e6c6aff0399
+      - key: PHONEPE_SALT_INDEX
+        value: "1"
